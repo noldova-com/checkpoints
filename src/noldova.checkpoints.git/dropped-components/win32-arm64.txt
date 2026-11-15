@@ -1,0 +1,2 @@
+mingw-w64-clang-aarch64-ca-certificates 20260816-3
+mingw-w64-clang-aarch64-git-credential-manager 2.9.1-1

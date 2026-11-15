@@ -1,0 +1,23 @@
+# Changelog
+
+**Scope:** What each published version of Checkpoints' packages holds, newest first.
+
+Each version's section is written by the pull request that changes the version, from the pull requests merged since the previous version; other pull requests don't edit this file.
+
+## 0.0.1
+
+- The first version of `@noldova/checkpoints` and `@noldova/checkpoints.protocol`, under the MIT License, and of the six `@noldova/checkpoints.git.<os>-<arch>` packages, under the licences of the Git builds they hold.
+  The eight packages move together.
+- `@noldova/checkpoints` holds `module.json` and the runtime part, and exports `./runtime`.
+  - `./runtime` exports `StoreAnswersMismatchException` and `TreeLineMalformedException`, the two `StoreException` subclasses a compare, a read, a preview or a restore can reject with.
+  - `GitManifestInvalidException` is also the cause when the Git build's manifest isn't JSON or can't be read; for a manifest Node refused while the module looked for the build, its `manifestFile` is the manifest as the module asked for it, `@noldova/checkpoints.git.<platform>-<arch>/package.json`.
+  - A compare, a preview or a restore of a checkpoint whose ignore file the store lacks, or gives as something other than a file's content, rejects with `StoreObjectMissingException` or `StoreObjectNotABlobException` instead of reading that ignore file as empty.
+  - The runtime part publishes its service and registers its methods before it starts its background work, so an activation that fails there leaves nothing running.
+- `@noldova/checkpoints.protocol` holds the requests, results and events of the runtime methods, with the folders and checkpoints they name.
+  - The last constructor parameter of `UnreadPath(path, reason, code)`, `PreviewRequest(folder, checkpoint, paths)` and `RestorePlan(..., state, paths)` is required, passed as `null` for none.
+  - `JsonObjectReader` reads a list of text with `readStringList`, and one that may be `null` with `readStringListOrNull`; both refuse a missing field.
+  - `InvalidRelativePathException`'s message for a scope path that breaks only the `\` rule names that rule.
+- A checkpoint's `checkpoint.json` is at format version 2, which keeps each unread path's `code`; the module also reads version 1, which holds no `code`, as paths with none.
+- Both packages' `@noldova/context.exceptions` peer is the range `>=0.0.7 <0.1.0`.
+- Each Git package holds one target's upstream Git build, MinGit on Windows and dugite-native's on macOS and Linux, with every bundled component's licence in its `licenses/` folder, and names the upstream source each build came from.
+- Each Git package names every file of its build in `noldovaDesktop.unpacked`, so Noldova Desktop unpacks them, and the module runs Git from those unpacked copies in a packaged app.

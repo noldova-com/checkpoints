@@ -1,0 +1,12 @@
+{
+  "extends": "./tsconfig-base.json",
+  "compilerOptions": {
+    "types": [
+      "node"
+    ]
+  },
+  "files": [
+    "src/noldova.checkpoints.protocol/src/api/index.d.ts",
+    "src/noldova.checkpoints/src/api/index.d.ts"
+  ]
+}

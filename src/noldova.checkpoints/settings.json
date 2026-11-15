@@ -1,0 +1,15 @@
+{
+  "settings": [
+    {
+      "name": "checkpoints.followIgnoreFiles",
+      "title": "Follow .gitignore files",
+      "description": "Whether a checkpoint leaves out the files the folder's .gitignore files ignore. Each .git folder is always left out.",
+      "type": { "kind": "Boolean" },
+      "default": false,
+      "locality": "Shared",
+      "scopes": [],
+      "page": "Checkpoints",
+      "group": "Files"
+    }
+  ]
+}

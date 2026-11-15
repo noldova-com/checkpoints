@@ -1,0 +1,534 @@
+[
+  {
+    "name": "gawk",
+    "version": "5.4.1-1",
+    "license": "GPL-3.0-or-later",
+    "texts": [
+      "licenses/gpl-3.0/COPYING"
+    ]
+  },
+  {
+    "name": "coreutils",
+    "version": "8.32-5",
+    "license": "GPL-3.0-or-later",
+    "texts": [
+      "licenses/gpl-3.0/COPYING"
+    ]
+  },
+  {
+    "name": "diffutils",
+    "version": "3.12-1",
+    "license": "GPL-3.0-or-later",
+    "texts": [
+      "licenses/gpl-3.0/COPYING"
+    ]
+  },
+  {
+    "name": "findutils",
+    "version": "4.11.0-2",
+    "license": "GPL-3.0-or-later",
+    "texts": [
+      "licenses/gpl-3.0/COPYING"
+    ]
+  },
+  {
+    "name": "gcc-libs",
+    "version": "16.2.0-1",
+    "license": "LGPL-2.1-or-later AND GPL-3.0-or-later WITH GCC-exception-3.1 AND GFDL-1.3-or-later",
+    "texts": [
+      "build/usr/share/licenses/gcc-libs/RUNTIME.LIBRARY.EXCEPTION",
+      "build/usr/share/licenses/gcc-libs/COPYING3",
+      "build/usr/share/licenses/gcc-libs/COPYING.LIB"
+    ]
+  },
+  {
+    "name": "gmp",
+    "version": "6.3.0-2",
+    "license": "LGPL-3.0-or-later OR GPL-2.0-or-later",
+    "texts": [
+      "licenses/lgpl-3.0/COPYING.LESSERv3",
+      "licenses/gpl-3.0/COPYING",
+      "licenses/gpl-2.0/COPYINGv2"
+    ]
+  },
+  {
+    "name": "grep",
+    "version": "1~3.0-7",
+    "license": "GPL-3.0-or-later",
+    "texts": [
+      "licenses/gpl-3.0/COPYING"
+    ]
+  },
+  {
+    "name": "heimdal-libs",
+    "version": "7.8.0-5",
+    "license": "LicenseRef-Heimdal",
+    "texts": [
+      "licenses/heimdal/LICENSE"
+    ]
+  },
+  {
+    "name": "libcbor",
+    "version": "0.11.0-1",
+    "license": "MIT",
+    "texts": [
+      "licenses/libcbor/LICENSE.md"
+    ]
+  },
+  {
+    "name": "libfido2",
+    "version": "1.15.0-1",
+    "license": "BSD-2-Clause",
+    "texts": [
+      "licenses/libfido2/LICENSE"
+    ]
+  },
+  {
+    "name": "libiconv",
+    "version": "1.19-1",
+    "license": "LGPL-2.1-or-later AND GPL-3.0-or-later",
+    "texts": [
+      "licenses/lgpl-2.1/COPYING.LIB",
+      "licenses/gpl-3.0/COPYING"
+    ]
+  },
+  {
+    "name": "libintl",
+    "version": "0.22.5-1",
+    "license": "LGPL-2.1-or-later",
+    "texts": [
+      "licenses/lgpl-2.1/COPYING.LIB"
+    ]
+  },
+  {
+    "name": "libopenssl",
+    "version": "3.5.9-1",
+    "license": "Apache-2.0",
+    "texts": [
+      "build/usr/share/licenses/libopenssl/LICENSE.txt"
+    ]
+  },
+  {
+    "name": "libpcre",
+    "version": "8.45-5",
+    "license": "BSD-3-Clause",
+    "texts": [
+      "licenses/libpcre/LICENCE"
+    ]
+  },
+  {
+    "name": "libreadline",
+    "version": "8.3.006-1",
+    "license": "GPL-3.0-or-later",
+    "texts": [
+      "licenses/gpl-3.0/COPYING"
+    ]
+  },
+  {
+    "name": "libsqlite",
+    "version": "3.54.0-1",
+    "license": "blessing",
+    "texts": [
+      "build/usr/share/licenses/libsqlite/LICENSE"
+    ]
+  },
+  {
+    "name": "libxcrypt",
+    "version": "4.5.2-1",
+    "license": "LGPL-2.1-or-later",
+    "texts": [
+      "licenses/libxcrypt/LICENSING",
+      "licenses/lgpl-2.1/COPYING.LIB"
+    ]
+  },
+  {
+    "name": "mingw-w64-ucrt-x86_64-brotli",
+    "version": "1.2.1-1",
+    "license": "MIT",
+    "texts": [
+      "build/ucrt64/share/licenses/brotli/LICENSE"
+    ]
+  },
+  {
+    "name": "mingw-w64-ucrt-x86_64-cc-libs",
+    "version": "16.2.0-6",
+    "license": "GPL-3.0-or-later WITH GCC-exception-3.1",
+    "texts": [
+      "build/ucrt64/share/licenses/libgcc/COPYING3",
+      "build/ucrt64/share/licenses/libgcc/COPYING.RUNTIME"
+    ]
+  },
+  {
+    "name": "mingw-w64-ucrt-x86_64-curl-winssl",
+    "version": "8.23.0-1",
+    "license": "curl",
+    "texts": [
+      "build/ucrt64/share/licenses/curl/LICENSE"
+    ]
+  },
+  {
+    "name": "mingw-w64-ucrt-x86_64-curl-openssl-alternate",
+    "version": "8.23.0-1",
+    "license": "curl",
+    "texts": [
+      "build/ucrt64/share/licenses/curl/LICENSE"
+    ]
+  },
+  {
+    "name": "mingw-w64-ucrt-x86_64-docx2txt-rs",
+    "version": "0.2.0-1",
+    "license": "GPL-3.0-or-later",
+    "texts": [
+      "build/ucrt64/share/licenses/docx2txt-rs/COPYING"
+    ]
+  },
+  {
+    "name": "mingw-w64-ucrt-x86_64-expat",
+    "version": "2.9.0-1",
+    "license": "MIT",
+    "texts": [
+      "build/ucrt64/share/licenses/expat/COPYING"
+    ]
+  },
+  {
+    "name": "mingw-w64-ucrt-x86_64-gcc-libs",
+    "version": "16.2.0-6",
+    "license": "GPL-3.0-or-later WITH GCC-exception-3.1",
+    "texts": [
+      "build/ucrt64/share/licenses/libgcc/COPYING3",
+      "build/ucrt64/share/licenses/libgcc/COPYING.RUNTIME"
+    ]
+  },
+  {
+    "name": "mingw-w64-ucrt-x86_64-gettext-runtime",
+    "version": "1.0-1",
+    "license": "GPL-3.0-or-later AND LGPL-2.1-or-later",
+    "texts": [
+      "build/ucrt64/share/licenses/gettext-runtime/COPYING",
+      "build/ucrt64/share/licenses/gettext-runtime/intl/COPYING.LIB",
+      "build/ucrt64/share/licenses/gettext-runtime/libasprintf/COPYING",
+      "build/ucrt64/share/licenses/gettext-runtime/libasprintf/COPYING.LIB"
+    ]
+  },
+  {
+    "name": "mingw-w64-ucrt-x86_64-git",
+    "version": "2.56.0.4-1",
+    "license": "GPL-2.0-only",
+    "texts": [
+      "licenses/git/COPYING",
+      "licenses/git/LGPL-2.1"
+    ]
+  },
+  {
+    "name": "mingw-w64-ucrt-x86_64-git-credential-wincred",
+    "version": "2.56.0.4-1",
+    "license": "GPL-2.0-only",
+    "texts": [
+      "licenses/git/COPYING"
+    ]
+  },
+  {
+    "name": "mingw-w64-ucrt-x86_64-git-extra",
+    "version": "1.1.715.85f886165-1",
+    "license": "GPL-2.0-only",
+    "texts": [
+      "licenses/git/COPYING"
+    ]
+  },
+  {
+    "name": "mingw-w64-ucrt-x86_64-git-for-windows-addons",
+    "version": "2.56.0.4-1",
+    "license": "GPL-2.0-only",
+    "texts": [
+      "licenses/git/COPYING"
+    ]
+  },
+  {
+    "name": "mingw-w64-ucrt-x86_64-git-gui",
+    "version": "2.56.0.4-1",
+    "license": "GPL-2.0-or-later",
+    "texts": [
+      "licenses/git/COPYING"
+    ]
+  },
+  {
+    "name": "mingw-w64-ucrt-x86_64-git-perl",
+    "version": "2.56.0.4-1",
+    "license": "GPL-2.0-only",
+    "texts": [
+      "licenses/git/COPYING"
+    ]
+  },
+  {
+    "name": "mingw-w64-ucrt-x86_64-git-send-email",
+    "version": "2.56.0.4-1",
+    "license": "GPL-2.0-only",
+    "texts": [
+      "licenses/git/COPYING"
+    ]
+  },
+  {
+    "name": "mingw-w64-ucrt-x86_64-git-subtree",
+    "version": "2.56.0.4-1",
+    "license": "GPL-2.0-only",
+    "texts": [
+      "licenses/git/COPYING"
+    ]
+  },
+  {
+    "name": "mingw-w64-ucrt-x86_64-gitk",
+    "version": "2.56.0.4-1",
+    "license": "GPL-2.0-or-later",
+    "texts": [
+      "licenses/git/COPYING"
+    ]
+  },
+  {
+    "name": "mingw-w64-ucrt-x86_64-libatomic",
+    "version": "16.2.0-6",
+    "license": "GPL-3.0-or-later WITH GCC-exception-3.1",
+    "texts": [
+      "build/ucrt64/share/licenses/libatomic/COPYING3",
+      "build/ucrt64/share/licenses/libatomic/COPYING.RUNTIME"
+    ]
+  },
+  {
+    "name": "mingw-w64-ucrt-x86_64-libffi",
+    "version": "3.8.0-1",
+    "license": "MIT",
+    "texts": [
+      "build/ucrt64/share/licenses/libffi/LICENSE"
+    ]
+  },
+  {
+    "name": "mingw-w64-ucrt-x86_64-libgcc",
+    "version": "16.2.0-6",
+    "license": "GPL-3.0-or-later WITH GCC-exception-3.1",
+    "texts": [
+      "build/ucrt64/share/licenses/libgcc/COPYING3",
+      "build/ucrt64/share/licenses/libgcc/COPYING.RUNTIME"
+    ]
+  },
+  {
+    "name": "mingw-w64-ucrt-x86_64-libgomp",
+    "version": "16.2.0-6",
+    "license": "GPL-3.0-or-later WITH GCC-exception-3.1",
+    "texts": [
+      "build/ucrt64/share/licenses/libgomp/COPYING3",
+      "build/ucrt64/share/licenses/libgomp/COPYING.RUNTIME"
+    ]
+  },
+  {
+    "name": "mingw-w64-ucrt-x86_64-libiconv",
+    "version": "1.19-1",
+    "license": "LGPL-2.1-or-later AND GPL-3.0-or-later",
+    "texts": [
+      "build/ucrt64/share/licenses/libiconv/COPYING",
+      "build/ucrt64/share/licenses/libiconv/COPYING.LIB",
+      "build/ucrt64/share/licenses/libiconv/libcharset/COPYING.LIB"
+    ]
+  },
+  {
+    "name": "mingw-w64-ucrt-x86_64-libidn2",
+    "version": "2.3.8-4",
+    "license": "(LGPL-3.0-or-later OR GPL-2.0-or-later) AND Unicode-DFS-2016",
+    "texts": [
+      "licenses/lgpl-3.0/COPYING.LESSERv3",
+      "licenses/gpl-2.0/COPYINGv2",
+      "licenses/gpl-3.0/COPYING",
+      "licenses/libidn2/COPYING.unicode"
+    ]
+  },
+  {
+    "name": "mingw-w64-ucrt-x86_64-libpsl",
+    "version": "0.21.5-3",
+    "license": "MIT",
+    "texts": [
+      "build/ucrt64/share/licenses/libpsl/COPYING"
+    ]
+  },
+  {
+    "name": "mingw-w64-ucrt-x86_64-libquadmath",
+    "version": "16.2.0-6",
+    "license": "LGPL-2.1-or-later",
+    "texts": [
+      "build/ucrt64/share/licenses/libquadmath/COPYING.LIB"
+    ]
+  },
+  {
+    "name": "mingw-w64-ucrt-x86_64-libssh2-wincng",
+    "version": "1.11.1-2",
+    "license": "BSD-3-Clause",
+    "texts": [
+      "build/ucrt64/share/licenses/libssh2/LICENSE"
+    ]
+  },
+  {
+    "name": "mingw-w64-ucrt-x86_64-libstdc++",
+    "version": "16.2.0-6",
+    "license": "GPL-3.0-or-later WITH GCC-exception-3.1",
+    "texts": [
+      "build/ucrt64/share/licenses/libstdc++/COPYING3",
+      "build/ucrt64/share/licenses/libstdc++/COPYING.RUNTIME"
+    ]
+  },
+  {
+    "name": "mingw-w64-ucrt-x86_64-libtasn1",
+    "version": "4.21.0-1",
+    "license": "LGPL-2.1-or-later AND GPL-3.0-or-later",
+    "texts": [
+      "build/ucrt64/share/licenses/libtasn1/COPYING.LESSERv2",
+      "build/ucrt64/share/licenses/libtasn1/COPYING"
+    ]
+  },
+  {
+    "name": "mingw-w64-ucrt-x86_64-libunistring",
+    "version": "1.4.2-1",
+    "license": "LGPL-3.0-or-later OR GPL-2.0-or-later",
+    "texts": [
+      "build/ucrt64/share/licenses/libunistring/LICENSE.LIB",
+      "build/ucrt64/share/licenses/libunistring/LICENSE"
+    ]
+  },
+  {
+    "name": "mingw-w64-ucrt-x86_64-libwinpthread",
+    "version": "14.0.0.r532.gdbbc8e99d-1",
+    "license": "MIT",
+    "texts": [
+      "build/ucrt64/share/licenses/libwinpthread/COPYING"
+    ]
+  },
+  {
+    "name": "mingw-w64-ucrt-x86_64-nghttp2",
+    "version": "1.70.0-1",
+    "license": "MIT",
+    "texts": [
+      "build/ucrt64/share/licenses/nghttp2/COPYING"
+    ]
+  },
+  {
+    "name": "mingw-w64-ucrt-x86_64-openssl",
+    "version": "3.5.9-1",
+    "license": "Apache-2.0",
+    "texts": [
+      "build/ucrt64/share/licenses/openssl/LICENSE"
+    ]
+  },
+  {
+    "name": "mingw-w64-ucrt-x86_64-pcre2",
+    "version": "10.49-1",
+    "license": "BSD-3-Clause WITH PCRE2-exception",
+    "texts": [
+      "build/ucrt64/share/licenses/pcre2/LICENCE.md"
+    ]
+  },
+  {
+    "name": "mingw-w64-ucrt-x86_64-zlib",
+    "version": "1.3.2-3",
+    "license": "Zlib",
+    "texts": [
+      "build/ucrt64/share/licenses/zlib/LICENSE"
+    ]
+  },
+  {
+    "name": "mingw-w64-ucrt-x86_64-zstd",
+    "version": "1.5.7-2",
+    "license": "BSD-3-Clause",
+    "texts": [
+      "build/ucrt64/share/licenses/zstd/LICENSE"
+    ]
+  },
+  {
+    "name": "mpfr",
+    "version": "4.2.2-1",
+    "license": "LGPL-3.0-or-later",
+    "texts": [
+      "licenses/lgpl-3.0/COPYING.LESSERv3",
+      "licenses/gpl-3.0/COPYING"
+    ]
+  },
+  {
+    "name": "msys2-runtime",
+    "version": "3.6.10-4",
+    "license": "LicenseRef-Cygwin",
+    "texts": [
+      "licenses/msys2-runtime/CYGWIN_LICENSE",
+      "licenses/msys2-runtime/COPYING.NEWLIB",
+      "licenses/lgpl-3.0/COPYING.LESSERv3",
+      "licenses/gpl-3.0/COPYING"
+    ]
+  },
+  {
+    "name": "ncurses",
+    "version": "6.6-2",
+    "license": "X11-distribute-modifications-variant",
+    "texts": [
+      "build/usr/share/licenses/ncurses/LICENSE"
+    ]
+  },
+  {
+    "name": "openssh",
+    "version": "10.6p1-1",
+    "license": "SSH-OpenSSH",
+    "texts": [
+      "build/usr/share/licenses/openssh/LICENCE"
+    ]
+  },
+  {
+    "name": "openssl",
+    "version": "3.5.9-1",
+    "license": "Apache-2.0",
+    "texts": [
+      "build/usr/share/licenses/libopenssl/LICENSE.txt"
+    ]
+  },
+  {
+    "name": "sed",
+    "version": "4.9-1",
+    "license": "GPL-3.0-or-later",
+    "texts": [
+      "licenses/gpl-3.0/COPYING"
+    ]
+  },
+  {
+    "name": "bash",
+    "version": "5.3.015-2",
+    "license": "GPL-3.0-or-later",
+    "texts": [
+      "licenses/gpl-3.0/COPYING"
+    ]
+  },
+  {
+    "name": "zlib",
+    "version": "1.3.2-1",
+    "license": "Zlib",
+    "texts": [
+      "build/usr/share/licenses/zlib/LICENSE"
+    ]
+  },
+  {
+    "name": "filesystem",
+    "version": "2026.10.17-1",
+    "license": "BSD-3-Clause",
+    "texts": [
+      "licenses/filesystem/LICENSE"
+    ]
+  },
+  {
+    "name": "dash",
+    "version": "0.5.13.5-1",
+    "license": "BSD-3-Clause AND GPL-2.0-or-later",
+    "texts": [
+      "licenses/dash/COPYING",
+      "licenses/gpl-2.0/COPYINGv2"
+    ]
+  },
+  {
+    "name": "rebase",
+    "version": "4.5.0-5",
+    "license": "GPL-2.0-or-later",
+    "texts": [
+      "licenses/gpl-2.0/COPYINGv2"
+    ]
+  }
+]

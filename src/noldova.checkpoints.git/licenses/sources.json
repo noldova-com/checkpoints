@@ -1,0 +1,92 @@
+[
+  {
+    "file": "licenses/dash/COPYING",
+    "source": "https://git.kernel.org/pub/scm/utils/dash/dash.git/tree/COPYING?h=v0.5.13",
+    "blob": "37f8189c02b0510058fd5c206033ddb22e710023"
+  },
+  {
+    "file": "licenses/filesystem/LICENSE",
+    "source": "https://github.com/msys2/MSYS2-packages/blob/78bf1a3cf5ce664efffd361f3874837b9b33fe75/LICENSE",
+    "blob": "e0f07ba679cbd516eb5feaff40e959f88f9a6ed1"
+  },
+  {
+    "file": "licenses/git/COPYING",
+    "source": "https://github.com/git/git/blob/v2.56.0/COPYING",
+    "blob": "536e55524db72bd2acf175208aef4f3dfc148d42"
+  },
+  {
+    "file": "licenses/git/LGPL-2.1",
+    "source": "https://github.com/git/git/blob/v2.56.0/LGPL-2.1",
+    "blob": "d38b1b92bdb2893eb4505667375563f2d6d4086b"
+  },
+  {
+    "file": "licenses/gpl-2.0/COPYINGv2",
+    "source": "https://github.com/libidn/libidn2/blob/v2.3.8/COPYINGv2",
+    "blob": "9efa6fbc962836e243e20f7f23db062e2c077d28"
+  },
+  {
+    "file": "licenses/gpl-3.0/COPYING",
+    "source": "https://github.com/coreutils/coreutils/blob/v8.32/COPYING",
+    "blob": "f288702d2fa16d3cdf0035b15a9fcbc552cd88e7"
+  },
+  {
+    "file": "licenses/heimdal/LICENSE",
+    "source": "https://github.com/heimdal/heimdal/blob/heimdal-7.8.0/LICENSE",
+    "blob": "c76fc234a12eca9f6ec27b0df5389f9e3084bef4"
+  },
+  {
+    "file": "licenses/lgpl-2.1/COPYING.LIB",
+    "source": "https://github.com/besser82/libxcrypt/blob/v4.5.2/COPYING.LIB",
+    "blob": "4362b49151d7b34ef83b3067a8f9c9f877d72a0e"
+  },
+  {
+    "file": "licenses/lgpl-3.0/COPYING.LESSERv3",
+    "source": "https://github.com/libidn/libidn2/blob/v2.3.8/COPYING.LESSERv3",
+    "blob": "0a041280bd00a9d068f503b8ee7ce35214bd24a1"
+  },
+  {
+    "file": "licenses/libcbor/LICENSE.md",
+    "source": "https://github.com/PJK/libcbor/blob/v0.11.0/LICENSE.md",
+    "blob": "49e9b5390364c71a2619d8059b7e1511b8df1e84"
+  },
+  {
+    "file": "licenses/libfido2/LICENSE",
+    "source": "https://github.com/Yubico/libfido2/blob/1.15.0/LICENSE",
+    "blob": "bfafcbe131292d1a4e5360038e7b7fbfaab94096"
+  },
+  {
+    "file": "licenses/libidn2/COPYING.unicode",
+    "source": "https://github.com/libidn/libidn2/blob/v2.3.8/COPYING.unicode",
+    "blob": "292bc7f4d8ba1110a90b54c7db43595700237b58"
+  },
+  {
+    "file": "licenses/libpcre/LICENCE",
+    "source": "https://github.com/PCRE2Project/pcre1/blob/c52be808155d837c54fd1bfde3d2b21e4d8900f7/LICENCE",
+    "blob": "803b4119e50fb5f4ce36949e855e5daeef453cc0"
+  },
+  {
+    "file": "licenses/libxcrypt/LICENSING",
+    "source": "https://github.com/besser82/libxcrypt/blob/v4.5.2/LICENSING",
+    "blob": "6cee277eca00a2bc4947666f1d6a1e6e296c86bc"
+  },
+  {
+    "file": "licenses/msys2-runtime/COPYING.NEWLIB",
+    "source": "https://github.com/cygwin/cygwin/blob/cygwin-3.6.10/COPYING.NEWLIB",
+    "blob": "9a2680d0995d02d568346a7636aa461eabb5007f"
+  },
+  {
+    "file": "licenses/msys2-runtime/CYGWIN_LICENSE",
+    "source": "https://github.com/cygwin/cygwin/blob/cygwin-3.6.10/winsup/CYGWIN_LICENSE",
+    "blob": "dba58e8dbfb2a9e833d8a05b9f8cfdf808e0f992"
+  },
+  {
+    "file": "licenses/perl/Artistic",
+    "source": "https://github.com/Perl/perl5/blob/v5.42.0/Artistic",
+    "blob": "4ece078a5d852aedbc843d0adc323e61c552eb0e"
+  },
+  {
+    "file": "licenses/perl/Copying",
+    "source": "https://github.com/Perl/perl5/blob/v5.42.0/Copying",
+    "blob": "1cbf3939b560a096cd1abbc2945b24111da2c58d"
+  }
+]

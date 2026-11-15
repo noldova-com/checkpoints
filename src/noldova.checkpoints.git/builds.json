@@ -1,0 +1,64 @@
+{
+  "targets": {
+    "win32-x64": {
+      "url": "https://github.com/git-for-windows/git/releases/download/v2.56.0.windows.4/MinGit-2.56.0.4-64-bit.zip",
+      "size": 39846926,
+      "sha256": "e3bf78351fe777fba47ddee5950082f8a98bb0f02604fdc7ba3ee2cb68ffa877",
+      "gitVersion": "2.56.0.windows.4",
+      "source": "https://github.com/git-for-windows/git/tree/v2.56.0.windows.4",
+      "program": "ucrt64/bin/git.exe",
+      "execPath": "ucrt64/libexec/git-core",
+      "path": ["ucrt64/bin", "usr/bin"]
+    },
+    "win32-arm64": {
+      "url": "https://github.com/git-for-windows/git/releases/download/v2.56.0.windows.4/MinGit-2.56.0.4-arm64.zip",
+      "size": 37980967,
+      "sha256": "70f7649f78088c1db1d2f3571ca46a04d5bef06e4e9d56d8ed7f9829e8c6c4db",
+      "gitVersion": "2.56.0.windows.4",
+      "source": "https://github.com/git-for-windows/git/tree/v2.56.0.windows.4",
+      "program": "clangarm64/bin/git.exe",
+      "execPath": "clangarm64/libexec/git-core",
+      "path": ["clangarm64/bin", "usr/bin"]
+    },
+    "darwin-x64": {
+      "url": "https://github.com/desktop/dugite-native/releases/download/v2.56.0-2/dugite-native-v2.56.0-a44aeca-macOS-x64.tar.gz",
+      "size": 67470398,
+      "sha256": "52cc663281e1ec2f1d76ba781193ca4847e62dbbf767f6c99ec9ec5b978a7659",
+      "gitVersion": "2.56.0",
+      "source": "https://github.com/git/git/tree/v2.56.0",
+      "program": "bin/git",
+      "execPath": "libexec/git-core",
+      "path": ["bin"]
+    },
+    "darwin-arm64": {
+      "url": "https://github.com/desktop/dugite-native/releases/download/v2.56.0-2/dugite-native-v2.56.0-a44aeca-macOS-arm64.tar.gz",
+      "size": 63488287,
+      "sha256": "1110de343de11cc6f469b782b60f36217b9199b5e06875dd65baa26dd60563c7",
+      "gitVersion": "2.56.0",
+      "source": "https://github.com/git/git/tree/v2.56.0",
+      "program": "bin/git",
+      "execPath": "libexec/git-core",
+      "path": ["bin"]
+    },
+    "linux-x64": {
+      "url": "https://github.com/desktop/dugite-native/releases/download/v2.56.0-2/dugite-native-v2.56.0-a44aeca-ubuntu-x64.tar.gz",
+      "size": 67467493,
+      "sha256": "1efd8ce0516b670b6b6d0f49ecaf395ceb8cf7fff3f5857259763d97a1238df9",
+      "gitVersion": "2.56.0",
+      "source": "https://github.com/git/git/tree/v2.56.0",
+      "program": "bin/git",
+      "execPath": "libexec/git-core",
+      "path": ["bin"]
+    },
+    "linux-arm64": {
+      "url": "https://github.com/desktop/dugite-native/releases/download/v2.56.0-2/dugite-native-v2.56.0-a44aeca-ubuntu-arm64.tar.gz",
+      "size": 25250010,
+      "sha256": "d5ce120515bf3013a014e6a918aa87ec0f7a6f5f9687c48d50127e637cb9b6c2",
+      "gitVersion": "2.56.0",
+      "source": "https://github.com/git/git/tree/v2.56.0",
+      "program": "bin/git",
+      "execPath": "libexec/git-core",
+      "path": ["bin"]
+    }
+  }
+}

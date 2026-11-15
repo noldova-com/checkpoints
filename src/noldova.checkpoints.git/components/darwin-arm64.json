@@ -1,0 +1,11 @@
+[
+  {
+    "name": "git",
+    "version": "2.56.0",
+    "license": "GPL-2.0-only",
+    "texts": [
+      "licenses/git/COPYING",
+      "licenses/git/LGPL-2.1"
+    ]
+  }
+]

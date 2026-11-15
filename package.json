@@ -1,0 +1,29 @@
+{
+  "name": "@noldova/checkpoints",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "license": "MIT",
+  "packageManager": "npm@11.19.0",
+  "engines": {
+    "node": "24.21.0",
+    "npm": "11.19.0"
+  },
+  "scripts": {
+    "build": "node scripts/build.ts",
+    "peers:newest": "node scripts/move-peers.ts",
+    "test": "node scripts/test.ts",
+    "test:timing": "node scripts/test-timing.ts"
+  },
+  "devDependencies": {
+    "@noldova/context.collections": "0.0.8",
+    "@noldova/context.core": "0.0.8",
+    "@noldova/context.exceptions": "0.0.8",
+    "@noldova/context.json": "0.0.8",
+    "@noldova/context.text": "0.0.8",
+    "@noldova/desktop.protocol": "0.0.1",
+    "@noldova/desktop.runtime": "0.0.1",
+    "@types/node": "24.19.2",
+    "typescript": "7.0.2"
+  }
+}

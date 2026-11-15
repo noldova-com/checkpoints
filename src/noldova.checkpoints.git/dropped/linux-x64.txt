@@ -1,0 +1,6 @@
+libexec/git-core/git-credential-manager
+libexec/git-core/git-lfs
+libexec/git-core/libHarfBuzzSharp.so
+libexec/git-core/libSkiaSharp.so
+libexec/git-core/NOTICE
+ssl/

@@ -1,0 +1,488 @@
+folder	0	bin/
+folder	0	libexec/
+folder	0	etc/
+folder	0	share/
+folder	0	share/git-core/
+folder	0	share/bash-completion/
+folder	0	share/bash-completion/completions/
+file	96261	share/bash-completion/completions/git
+folder	0	share/git-core/templates/
+folder	0	share/git-core/templates/info/
+file	73	share/git-core/templates/description
+folder	0	share/git-core/templates/hooks/
+file	1972	share/git-core/templates/hooks/commit-msg.sample
+file	4898	share/git-core/templates/hooks/pre-rebase.sample
+file	2308	share/git-core/templates/hooks/sendemail-validate.sample
+file	1649	share/git-core/templates/hooks/pre-commit.sample
+file	478	share/git-core/templates/hooks/applypatch-msg.sample
+file	4611	share/git-core/templates/hooks/fsmonitor-watchman.sample
+file	544	share/git-core/templates/hooks/pre-receive.sample
+file	1492	share/git-core/templates/hooks/prepare-commit-msg.sample
+file	189	share/git-core/templates/hooks/post-update.sample
+file	416	share/git-core/templates/hooks/pre-merge-commit.sample
+file	424	share/git-core/templates/hooks/pre-applypatch.sample
+file	1374	share/git-core/templates/hooks/pre-push.sample
+file	3650	share/git-core/templates/hooks/update.sample
+file	2783	share/git-core/templates/hooks/push-to-checkout.sample
+file	240	share/git-core/templates/info/exclude
+file	630	etc/gitconfig
+folder	0	libexec/git-core/
+symlink	0	libexec/git-core/git-mailsplit	-> git
+file	795984	libexec/git-core/Microsoft.CSharp.dll
+symlink	0	libexec/git-core/git-fetch	-> git
+file	15184	libexec/git-core/System.Web.dll
+file	16208	libexec/git-core/System.Diagnostics.Contracts.dll
+file	16720	libexec/git-core/System.ServiceModel.Web.dll
+file	42832	libexec/git-core/System.Diagnostics.FileVersionInfo.dll
+file	14452480	libexec/git-core/git-lfs
+symlink	0	libexec/git-core/git-version	-> git
+file	17232	libexec/git-core/System.Runtime.Intrinsics.dll
+symlink	0	libexec/git-core/git-clean	-> git
+file	756560	libexec/git-core/System.Net.Security.dll
+symlink	0	libexec/git-core/git-diff	-> git
+symlink	0	libexec/git-core/git-log	-> git
+folder	0	libexec/git-core/zh-Hans/
+file	16720	libexec/git-core/System.Xml.XPath.XDocument.dll
+file	15696	libexec/git-core/System.Xml.Linq.dll
+file	359	libexec/git-core/git-credential-manager.runtimeconfig.json
+file	90448	libexec/git-core/System.Net.WebSockets.Client.dll
+folder	0	libexec/git-core/zh-Hant/
+file	173968	libexec/git-core/createdump
+file	2245464	libexec/git-core/git-http-push
+file	15696	libexec/git-core/System.IO.dll
+file	16208	libexec/git-core/System.Dynamic.Runtime.dll
+file	16720	libexec/git-core/System.Runtime.Serialization.Xml.dll
+symlink	0	libexec/git-core/git-commit	-> git
+file	10908	libexec/git-core/git-mergetool--lib
+symlink	0	libexec/git-core/git-merge-index	-> git
+file	15184	libexec/git-core/System.Security.Principal.dll
+file	16208	libexec/git-core/System.Reflection.dll
+symlink	0	libexec/git-core/git-merge-recursive	-> git
+symlink	0	libexec/git-core/git-revert	-> git
+file	15696	libexec/git-core/System.Threading.ThreadPool.dll
+file	70144	libexec/git-core/Avalonia.Remote.Protocol.dll
+file	17232	libexec/git-core/System.Net.dll
+file	15184	libexec/git-core/System.IO.Compression.FileSystem.dll
+symlink	0	libexec/git-core/git-blame	-> git
+symlink	0	libexec/git-core/git-check-attr	-> git
+file	1147728	libexec/git-core/System.Reflection.Metadata.dll
+symlink	0	libexec/git-core/git-stash	-> git
+file	175616	libexec/git-core/Tmds.DBus.Protocol.dll
+folder	0	libexec/git-core/pl/
+file	16208	libexec/git-core/System.Security.Cryptography.Cng.dll
+symlink	0	libexec/git-core/git-grep	-> git
+symlink	0	libexec/git-core/git-clone	-> git
+symlink	0	libexec/git-core/git-notes	-> git
+symlink	0	libexec/git-core/git-unpack-objects	-> git
+file	35664	libexec/git-core/System.ComponentModel.EventBasedAsync.dll
+symlink	0	libexec/git-core/git-remote-ftps	-> git-remote-http
+file	498000	libexec/git-core/System.Diagnostics.DiagnosticSource.dll
+file	44899	libexec/git-core/git-credential-manager.deps.json
+file	100	libexec/git-core/git-send-email
+file	18768	libexec/git-core/System.Runtime.CompilerServices.VisualC.dll
+symlink	0	libexec/git-core/git-update-ref	-> git
+file	83456	libexec/git-core/Avalonia.Markup.Xaml.dll
+file	73552	libexec/git-core/System.Threading.dll
+symlink	0	libexec/git-core/git-verify-tag	-> git
+file	569856	libexec/git-core/Avalonia.Themes.Fluent.dll
+file	123392	libexec/git-core/Avalonia.Skia.dll
+symlink	0	libexec/git-core/git-cat-file	-> git
+file	100688	libexec/git-core/netstandard.dll
+symlink	0	libexec/git-core/git-ls-files	-> git
+symlink	0	libexec/git-core/git-read-tree	-> git
+file	17232	libexec/git-core/Microsoft.VisualBasic.dll
+symlink	0	libexec/git-core/git-mailinfo	-> git
+file	15696	libexec/git-core/System.IO.UnmanagedMemoryStream.dll
+file	71504	libexec/git-core/System.Net.ServerSentEvents.dll
+symlink	0	libexec/git-core/git-receive-pack	-> git
+symlink	0	libexec/git-core/git-merge-base	-> git
+symlink	0	libexec/git-core/git-add	-> git
+file	1226	libexec/git-core/git-merge-resolve
+file	33104	libexec/git-core/System.IO.FileSystem.AccessControl.dll
+symlink	0	libexec/git-core/git-remote-ext	-> git
+file	2245152	libexec/git-core/git-imap-send
+file	15696	libexec/git-core/System.Xml.XPath.dll
+symlink	0	libexec/git-core/git-symbolic-ref	-> git
+file	15696	libexec/git-core/System.Xml.XmlDocument.dll
+file	2660	libexec/git-core/git-difftool--helper
+symlink	0	libexec/git-core/git-branch	-> git
+file	269312	libexec/git-core/Avalonia.Native.dll
+symlink	0	libexec/git-core/git-commit-tree	-> git
+file	19280	libexec/git-core/System.Configuration.dll
+file	100	libexec/git-core/git-instaweb
+symlink	0	libexec/git-core/git-interpret-trailers	-> git
+symlink	0	libexec/git-core/git-name-rev	-> git
+file	42320	libexec/git-core/System.Resources.Writer.dll
+file	198992	libexec/git-core/System.Console.dll
+symlink	0	libexec/git-core/git-show-ref	-> git
+file	6537808	libexec/git-core/libcoreclr.dylib
+symlink	0	libexec/git-core/git-checkout-index	-> git
+file	603984	libexec/git-core/System.Net.Sockets.dll
+file	1754960	libexec/git-core/System.Net.Http.dll
+file	52048	libexec/git-core/System.Web.HttpUtility.dll
+symlink	0	libexec/git-core/git-range-diff	-> git
+file	1328464	libexec/git-core/System.Linq.AsyncEnumerable.dll
+file	15696	libexec/git-core/System.Text.Encoding.Extensions.dll
+file	135504	libexec/git-core/System.Net.NetworkInformation.dll
+file	60928	libexec/git-core/Avalonia.Markup.dll
+symlink	0	libexec/git-core/git-history	-> git
+file	1166160	libexec/git-core/Microsoft.VisualBasic.Core.dll
+symlink	0	libexec/git-core/git-show	-> git
+file	4096	libexec/git-core/Avalonia.dll
+folder	0	libexec/git-core/mergetools/
+symlink	0	libexec/git-core/git-stage	-> git
+file	8398	libexec/git-core/git-sh-setup
+symlink	0	libexec/git-core/git-update-index	-> git
+file	38736	libexec/git-core/System.Security.Principal.Windows.dll
+symlink	0	libexec/git-core/git-remote-fd	-> git
+symlink	0	libexec/git-core/git-write-tree	-> git
+symlink	0	libexec/git-core/git-prune-packed	-> git
+symlink	0	libexec/git-core/git-config	-> git
+file	92496	libexec/git-core/System.Security.Claims.dll
+file	437288	libexec/git-core/SkiaSharp.dll
+file	94720	libexec/git-core/Avalonia.OpenGL.dll
+file	70480	libexec/git-core/System.ComponentModel.Primitives.dll
+file	81744	libexec/git-core/System.IO.FileSystem.DriveInfo.dll
+file	133888	libexec/git-core/libSystem.Native.dylib
+file	992	libexec/git-core/uninstall.sh
+file	73552	libexec/git-core/System.IO.Compression.Brotli.dll
+file	24400	libexec/git-core/System.IO.Pipes.AccessControl.dll
+file	2171280	libexec/git-core/git-sh-i18n--envsubst
+file	16720	libexec/git-core/System.Security.Cryptography.X509Certificates.dll
+file	15696	libexec/git-core/System.Reflection.Primitives.dll
+symlink	0	libexec/git-core/git-verify-commit	-> git
+file	342864	libexec/git-core/System.Runtime.Numerics.dll
+symlink	0	libexec/git-core/git-pull	-> git
+file	105808	libexec/git-core/System.IO.FileSystem.Watcher.dll
+symlink	0	libexec/git-core/git-for-each-ref	-> git
+symlink	0	libexec/git-core/git-pack-objects	-> git
+file	130896	libexec/git-core/System.Diagnostics.TraceSource.dll
+file	2714688	libexec/git-core/libHarfBuzzSharp.dylib
+file	15696	libexec/git-core/System.Reflection.Emit.Lightweight.dll
+symlink	0	libexec/git-core/git-bugreport	-> git
+symlink	0	libexec/git-core/git-hash-object	-> git
+file	852304	libexec/git-core/System.Text.Encoding.CodePages.dll
+file	3725136	libexec/git-core/System.Linq.Expressions.dll
+file	15184	libexec/git-core/System.Threading.Timer.dll
+file	1372448	libexec/git-core/libAvaloniaNative.dylib
+file	102224	libexec/git-core/System.Runtime.InteropServices.dll
+file	127312	libexec/git-core/System.IO.Pipes.dll
+file	100	libexec/git-core/git-archimport
+file	122656	libexec/git-core/git-credential-manager
+symlink	0	libexec/git-core/git-prune	-> git
+file	291664	libexec/git-core/System.Net.HttpListener.dll
+symlink	0	libexec/git-core/git-format-patch	-> git
+file	275792	libexec/git-core/System.Formats.Tar.dll
+file	175104	libexec/git-core/Avalonia.Vulkan.dll
+file	14848	libexec/git-core/Avalonia.Desktop.dll
+file	1036112	libexec/git-core/System.Text.RegularExpressions.dll
+symlink	0	libexec/git-core/git-ls-remote	-> git
+symlink	0	libexec/git-core/git-update-server-info	-> git
+folder	0	libexec/git-core/ja/
+file	13824	libexec/git-core/Avalonia.Metal.dll
+file	16720	libexec/git-core/System.Runtime.Serialization.dll
+file	416080	libexec/git-core/System.IO.Compression.dll
+symlink	0	libexec/git-core/git-pack-refs	-> git
+file	1065088	libexec/git-core/libSystem.IO.Compression.Native.dylib
+file	121168	libexec/git-core/System.Threading.Tasks.Parallel.dll
+file	1125920	libexec/git-core/libclrgcexp.dylib
+file	16208	libexec/git-core/WindowsBase.dll
+file	7902032	libexec/git-core/System.Private.Xml.dll
+symlink	0	libexec/git-core/git-tag	-> git
+file	15696	libexec/git-core/System.Data.DataSetExtensions.dll
+file	92496	libexec/git-core/System.Collections.NonGeneric.dll
+symlink	0	libexec/git-core/git-replace	-> git
+file	11693	libexec/git-core/git-mergetool
+file	227664	libexec/git-core/System.Collections.Concurrent.dll
+symlink	0	libexec/git-core/git-whatchanged	-> git
+file	1702	libexec/git-core/git-sh-i18n
+file	345424	libexec/git-core/System.Net.Quic.dll
+symlink	0	libexec/git-core/git-show-branch	-> git
+symlink	0	libexec/git-core/git-credential-store	-> git
+symlink	0	libexec/git-core/git-diff-files	-> git
+folder	0	libexec/git-core/it/
+file	15696	libexec/git-core/System.Threading.Overlapped.dll
+symlink	0	libexec/git-core/git-diff-index	-> git
+symlink	0	libexec/git-core/git-bisect	-> git
+folder	0	libexec/git-core/cs/
+file	3992	libexec/git-core/git-request-pull
+symlink	0	libexec/git-core/git-merge-ours	-> git
+file	113488	libexec/git-core/System.Text.Encodings.Web.dll
+file	16208	libexec/git-core/System.Xml.Serialization.dll
+file	15696	libexec/git-core/System.Runtime.Handles.dll
+file	32592	libexec/git-core/System.Net.WebProxy.dll
+file	1882448	libexec/git-core/System.Text.Json.dll
+file	69456	libexec/git-core/System.ObjectModel.dll
+symlink	0	libexec/git-core/git-init	-> git
+file	116768	libexec/git-core/HarfBuzzSharp.dll
+file	15565136	libexec/git-core/System.Private.CoreLib.dll
+symlink	0	libexec/git-core/git-bundle	-> git
+file	54608	libexec/git-core/System.Net.WebHeaderCollection.dll
+symlink	0	libexec/git-core/git-am	-> git
+symlink	0	libexec/git-core/git-merge-subtree	-> git
+symlink	0	libexec/git-core/git-stripspace	-> git
+file	15184	libexec/git-core/System.Runtime.InteropServices.RuntimeInformation.dll
+file	759632	libexec/git-core/System.ComponentModel.TypeConverter.dll
+folder	0	libexec/git-core/ru/
+symlink	0	libexec/git-core/git-fmt-merge-msg	-> git
+symlink	0	libexec/git-core/git-cherry	-> git
+symlink	0	libexec/git-core/git-difftool	-> git
+file	479056	libexec/git-core/System.Net.Mail.dll
+symlink	0	libexec/git-core/git-ls-tree	-> git
+file	15696	libexec/git-core/System.Threading.Tasks.Extensions.dll
+symlink	0	libexec/git-core/git-cherry-pick	-> git
+file	776016	libexec/git-core/System.Linq.Parallel.dll
+file	15696	libexec/git-core/System.Xml.XDocument.dll
+symlink	0	libexec/git-core/git-upload-archive	-> git
+symlink	0	libexec/git-core/git-backfill	-> git
+file	15696	libexec/git-core/System.Security.SecureString.dll
+symlink	0	libexec/git-core/git-unpack-file	-> git
+symlink	0	libexec/git-core/git-format-rev	-> git
+file	191312	libexec/git-core/System.ComponentModel.Annotations.dll
+symlink	0	libexec/git-core/git-reflog	-> git
+symlink	0	libexec/git-core/git-patch-id	-> git
+file	10493	libexec/git-core/git-submodule
+file	39760	libexec/git-core/System.Runtime.InteropServices.JavaScript.dll
+file	100	libexec/git-core/git-cvsimport
+symlink	0	libexec/git-core/git-fsck-objects	-> git
+file	2071376	libexec/git-core/System.Private.DataContractSerialization.dll
+file	15184	libexec/git-core/System.IO.FileSystem.Primitives.dll
+file	59728	libexec/git-core/mscorlib.dll
+file	120144	libexec/git-core/System.Net.Http.Json.dll
+symlink	0	libexec/git-core/git-mktag	-> git
+symlink	0	libexec/git-core/git-remote-ftp	-> git-remote-http
+symlink	0	libexec/git-core/git-repack	-> git
+symlink	0	libexec/git-core/git-column	-> git
+file	15696	libexec/git-core/System.Security.Cryptography.Primitives.dll
+file	98640	libexec/git-core/System.IO.Compression.ZipFile.dll
+file	15696	libexec/git-core/System.Windows.dll
+file	178512	libexec/git-core/System.Linq.Queryable.dll
+file	15696	libexec/git-core/System.Resources.ResourceManager.dll
+file	15184	libexec/git-core/System.Resources.Reader.dll
+symlink	0	libexec/git-core/git-status	-> git
+file	288592	libexec/git-core/System.Collections.dll
+file	15696	libexec/git-core/System.Reflection.Emit.ILGeneration.dll
+symlink	0	libexec/git-core/git-restore	-> git
+symlink	0	libexec/git-core/git-fsck	-> git
+file	3696	libexec/git-core/git-quiltimport
+file	2803024	libexec/git-core/System.Data.Common.dll
+file	2597	libexec/git-core/NOTICE
+file	97616	libexec/git-core/System.Net.NameResolution.dll
+file	15115904	libexec/git-core/libSkiaSharp.dylib
+symlink	0	libexec/git-core/git-get-tar-commit-id	-> git
+symlink	0	libexec/git-core/git-hook	-> git
+symlink	0	libexec/git-core/git-repo	-> git
+symlink	0	libexec/git-core/git-rev-list	-> git
+file	17232	libexec/git-core/System.ComponentModel.dll
+symlink	0	libexec/git-core/git-apply	-> git
+symlink	0	libexec/git-core/git-credential-cache	-> git
+file	245072	libexec/git-core/System.Private.Uri.dll
+file	15360	libexec/git-core/Avalonia.MicroCom.dll
+file	15696	libexec/git-core/System.Runtime.Loader.dll
+symlink	0	libexec/git-core/git-checkout--worker	-> git
+file	21840	libexec/git-core/System.Xml.ReaderWriter.dll
+file	134800	libexec/git-core/libSystem.Globalization.Native.dylib
+file	16720	libexec/git-core/System.Threading.Tasks.dll
+file	16208	libexec/git-core/System.Diagnostics.Tracing.dll
+symlink	0	libexec/git-core/git-check-ignore	-> git
+file	122368	libexec/git-core/git-credential-manager.dll
+symlink	0	libexec/git-core/git-multi-pack-index	-> git
+file	2188248	libexec/git-core/git-daemon
+file	15184	libexec/git-core/System.AppContext.dll
+file	15184	libexec/git-core/System.Buffers.dll
+symlink	0	libexec/git-core/git-annotate	-> git
+file	16208	libexec/git-core/System.Security.Cryptography.Csp.dll
+file	205216	libexec/git-core/System.CommandLine.dll
+file	146432	libexec/git-core/GitHub.dll
+symlink	0	libexec/git-core/git-rerere	-> git
+symlink	0	libexec/git-core/git-checkout	-> git
+symlink	0	libexec/git-core/git-credential	-> git
+symlink	0	libexec/git-core/git-describe	-> git
+file	58704	libexec/git-core/System.Diagnostics.TextWriterTraceListener.dll
+file	19504	libexec/git-core/Microsoft.IdentityModel.Abstractions.dll
+symlink	0	libexec/git-core/git-credential-cache--daemon	-> git
+symlink	0	libexec/git-core/git-help	-> git
+file	1220960	libexec/git-core/Microsoft.Identity.Client.dll
+symlink	0	libexec/git-core/git-diagnose	-> git
+file	61440	libexec/git-core/GitLab.dll
+file	60928	libexec/git-core/Microsoft.AzureRepos.dll
+symlink	0	libexec/git-core/git-sparse-checkout	-> git
+file	2138448	libexec/git-core/System.Security.Cryptography.dll
+symlink	0	libexec/git-core/git-for-each-repo	-> git
+symlink	0	libexec/git-core/git-init-db	-> git
+symlink	0	libexec/git-core/git-submodule--helper	-> git
+file	159584	libexec/git-core/libSystem.Security.Cryptography.Native.Apple.dylib
+file	15696	libexec/git-core/System.Text.Encoding.dll
+file	2425552	libexec/git-core/libmscordaccore.dylib
+file	16720	libexec/git-core/System.Transactions.dll
+file	470864	libexec/git-core/System.Threading.Tasks.Dataflow.dll
+file	181584	libexec/git-core/System.IO.Pipelines.dll
+file	83792	libexec/git-core/System.IO.MemoryMappedFiles.dll
+symlink	0	libexec/git-core/git-rm	-> git
+symlink	0	libexec/git-core/git-diff-pairs	-> git
+file	15696	libexec/git-core/System.Security.Cryptography.OpenSsl.dll
+file	15184	libexec/git-core/System.Runtime.CompilerServices.Unsafe.dll
+symlink	0	libexec/git-core/git-rev-parse	-> git
+symlink	0	libexec/git-core/git-archive	-> git
+file	34128	libexec/git-core/Microsoft.Win32.Registry.dll
+file	15696	libexec/git-core/System.Globalization.dll
+file	92496	libexec/git-core/System.Collections.Specialized.dll
+file	25232	libexec/git-core/System.Security.Cryptography.ProtectedData.dll
+symlink	0	libexec/git-core/git-fast-export	-> git
+folder	0	libexec/git-core/pt-BR/
+file	15696	libexec/git-core/System.ValueTuple.dll
+file	417664	libexec/git-core/libhostfxr.dylib
+symlink	0	libexec/git-core/git-index-pack	-> git
+file	53344	libexec/git-core/libSystem.Net.Security.Native.dylib
+symlink	0	libexec/git-core/git-merge	-> git
+file	1021952	libexec/git-core/Avalonia.Controls.dll
+file	44880	libexec/git-core/System.Runtime.dll
+file	15184	libexec/git-core/System.Net.ServicePoint.dll
+file	17744	libexec/git-core/System.Xml.XmlSerializer.dll
+symlink	0	libexec/git-core/git-mktree	-> git
+file	15184	libexec/git-core/System.Reflection.Extensions.dll
+file	15184	libexec/git-core/System.Globalization.Extensions.dll
+symlink	0	libexec/git-core/git-worktree	-> git
+file	3695	libexec/git-core/git-merge-one-file
+file	17744	libexec/git-core/System.Runtime.Extensions.dll
+folder	0	libexec/git-core/de/
+file	25424	libexec/git-core/System.Data.dll
+file	50512	libexec/git-core/System.dll
+file	15696	libexec/git-core/System.Security.Cryptography.Encoding.dll
+file	208384	libexec/git-core/Avalonia.DesignerSupport.dll
+file	2249184	libexec/git-core/git-remote-http
+symlink	0	libexec/git-core/git-switch	-> git
+file	76624	libexec/git-core/System.IO.IsolatedStorage.dll
+file	1740288	libexec/git-core/libmscordbi.dylib
+symlink	0	libexec/git-core/git-fsmonitor--daemon	-> git
+symlink	0	libexec/git-core/git-fast-import	-> git
+file	34640	libexec/git-core/System.Threading.AccessControl.dll
+folder	0	libexec/git-core/ko/
+file	4401	libexec/git-core/git-web--browse
+file	59728	libexec/git-core/System.Security.AccessControl.dll
+symlink	0	libexec/git-core/git-check-mailmap	-> git
+file	100	libexec/git-core/git-cvsserver
+file	32080	libexec/git-core/System.Reflection.TypeExtensions.dll
+symlink	0	libexec/git-core/git-url-parse	-> git
+symlink	0	libexec/git-core/git-replay	-> git
+symlink	0	libexec/git-core/git-refs	-> git
+file	15696	libexec/git-core/System.Globalization.Calendars.dll
+file	367440	libexec/git-core/System.Net.Requests.dll
+folder	0	libexec/git-core/fr/
+file	2171296	libexec/git-core/git-shell
+file	235856	libexec/git-core/System.Net.WebSockets.dll
+file	479744	libexec/git-core/gcmcore.dll
+file	302928	libexec/git-core/System.Reflection.Emit.dll
+file	15696	libexec/git-core/System.IO.FileSystem.dll
+file	15696	libexec/git-core/System.Runtime.Serialization.Json.dll
+file	17232	libexec/git-core/System.Security.Cryptography.Algorithms.dll
+file	100	libexec/git-core/git-cvsexportcommit
+folder	0	libexec/git-core/es/
+file	2236840	libexec/git-core/git-http-fetch
+file	15696	libexec/git-core/System.Threading.Thread.dll
+file	15696	libexec/git-core/System.Numerics.Vectors.dll
+file	15696	libexec/git-core/System.ServiceProcess.dll
+file	15791	libexec/git-core/git-filter-branch
+symlink	0	libexec/git-core/git-var	-> git
+file	95744	libexec/git-core/Atlassian.Bitbucket.dll
+symlink	0	libexec/git-core/git-show-index	-> git
+file	403968	libexec/git-core/libhostpolicy.dylib
+file	696656	libexec/git-core/System.Linq.dll
+file	235856	libexec/git-core/System.Diagnostics.Process.dll
+file	15184	libexec/git-core/System.Numerics.dll
+file	23376	libexec/git-core/System.Xml.dll
+symlink	0	libexec/git-core/git-upload-pack	-> git
+symlink	0	libexec/git-core/git-merge-tree	-> git
+file	15184	libexec/git-core/System.Diagnostics.Tools.dll
+file	984400	libexec/git-core/System.Collections.Immutable.dll
+symlink	0	libexec/git-core/git-reset	-> git
+file	66400	libexec/git-core/Microsoft.Identity.Client.Extensions.Msal.dll
+symlink	0	libexec/git-core/git-last-modified	-> git
+symlink	0	libexec/git-core/git-remote-https	-> git-remote-http
+file	15696	libexec/git-core/System.Diagnostics.Debug.dll
+file	2477	libexec/git-core/git-merge-octopus
+file	714240	libexec/git-core/Avalonia.Win32.dll
+file	2222096	libexec/git-core/scalar
+symlink	0	libexec/git-core/git-commit-graph	-> git
+file	15696	libexec/git-core/Microsoft.Win32.Primitives.dll
+symlink	0	libexec/git-core/git-maintenance	-> git
+file	309248	libexec/git-core/Avalonia.X11.dll
+symlink	0	libexec/git-core/git-shortlog	-> git
+symlink	0	libexec/git-core/git-push	-> git
+file	28496	libexec/git-core/System.Runtime.Serialization.Primitives.dll
+symlink	0	libexec/git-core/git-verify-pack	-> git
+file	1907200	libexec/git-core/Avalonia.Base.dll
+symlink	0	libexec/git-core/git-merge-file	-> git
+file	356688	libexec/git-core/System.Transactions.Local.dll
+file	123216	libexec/git-core/System.Drawing.Primitives.dll
+file	2179536	libexec/git-core/git-http-backend
+file	20304	libexec/git-core/System.Drawing.dll
+file	116048	libexec/git-core/System.Runtime.Serialization.Formatters.dll
+file	89424	libexec/git-core/System.Net.Ping.dll
+symlink	0	libexec/git-core/git-fetch-pack	-> git
+symlink	0	libexec/git-core/git-rebase	-> git
+file	34640	libexec/git-core/System.Diagnostics.StackTrace.dll
+file	18256	libexec/git-core/System.Security.dll
+symlink	0	libexec/git-core/git-mv	-> git
+file	3871784	libexec/git-core/git
+folder	0	libexec/git-core/tr/
+symlink	0	libexec/git-core/git-gc	-> git
+file	66896	libexec/git-core/System.Reflection.DispatchProxy.dll
+file	3358928	libexec/git-core/libclrjit.dylib
+symlink	0	libexec/git-core/git-check-ref-format	-> git
+file	1042896	libexec/git-core/libclrgc.dylib
+symlink	0	libexec/git-core/git-count-objects	-> git
+file	23376	libexec/git-core/System.Core.dll
+file	156496	libexec/git-core/System.Net.WebClient.dll
+file	224080	libexec/git-core/System.Formats.Asn1.dll
+symlink	0	libexec/git-core/git-diff-tree	-> git
+file	16720	libexec/git-core/System.ComponentModel.DataAnnotations.dll
+file	388432	libexec/git-core/System.Private.Xml.Linq.dll
+file	152400	libexec/git-core/System.Memory.dll
+symlink	0	libexec/git-core/git-remote	-> git
+symlink	0	libexec/git-core/git-send-pack	-> git
+file	214864	libexec/git-core/System.Net.Primitives.dll
+file	242176	libexec/git-core/Avalonia.Dialogs.dll
+file	14336	libexec/git-core/MicroCom.Runtime.dll
+file	149328	libexec/git-core/System.Threading.Channels.dll
+symlink	0	libexec/git-core/git-pack-redundant	-> git
+file	201216	libexec/git-core/Avalonia.FreeDesktop.dll
+file	19360	libexec/git-core/tr/System.CommandLine.resources.dll
+file	19360	libexec/git-core/es/System.CommandLine.resources.dll
+file	19360	libexec/git-core/fr/System.CommandLine.resources.dll
+file	19344	libexec/git-core/ko/System.CommandLine.resources.dll
+file	19360	libexec/git-core/de/System.CommandLine.resources.dll
+file	19360	libexec/git-core/pt-BR/System.CommandLine.resources.dll
+file	19344	libexec/git-core/ru/System.CommandLine.resources.dll
+file	19360	libexec/git-core/cs/System.CommandLine.resources.dll
+file	19360	libexec/git-core/it/System.CommandLine.resources.dll
+file	19360	libexec/git-core/ja/System.CommandLine.resources.dll
+file	18438	libexec/git-core/mergetools/vimdiff
+file	510	libexec/git-core/mergetools/codecompare
+file	584	libexec/git-core/mergetools/bc
+file	29	libexec/git-core/mergetools/nvimdiff
+file	535	libexec/git-core/mergetools/emerge
+file	395	libexec/git-core/mergetools/diffuse
+file	818	libexec/git-core/mergetools/deltawalker
+file	761	libexec/git-core/mergetools/tortoisemerge
+file	264	libexec/git-core/mergetools/kompare
+file	784	libexec/git-core/mergetools/p4merge
+file	453	libexec/git-core/mergetools/ecmerge
+file	818	libexec/git-core/mergetools/kdiff3
+file	423	libexec/git-core/mergetools/smerge
+file	510	libexec/git-core/mergetools/winmerge
+file	29	libexec/git-core/mergetools/gvimdiff
+file	432	libexec/git-core/mergetools/guiffy
+file	403	libexec/git-core/mergetools/tkdiff
+file	2213	libexec/git-core/mergetools/meld
+file	460	libexec/git-core/mergetools/diffmerge
+file	373	libexec/git-core/mergetools/vscode
+file	515	libexec/git-core/mergetools/araxis
+file	913	libexec/git-core/mergetools/xxdiff
+file	493	libexec/git-core/mergetools/examdiff
+file	418	libexec/git-core/mergetools/opendiff
+file	19360	libexec/git-core/pl/System.CommandLine.resources.dll
+file	19344	libexec/git-core/zh-Hant/System.CommandLine.resources.dll
+file	19360	libexec/git-core/zh-Hans/System.CommandLine.resources.dll
+file	2222096	bin/scalar
+file	3871784	bin/git
