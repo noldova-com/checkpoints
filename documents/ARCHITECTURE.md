@@ -76,6 +76,9 @@ The runtime part publishes one service, and the same calls as `checkpoints.*` me
 - A checkpoint is its id, a UUID version 7 so that ids sort by time, its time, its mode, its label, and the paths it couldn't read, each with its reason, and for an unreadable one the system's error code.
   An id's millisecond and the 12 bits after it count up as one number, so the ids one runtime gives keep their order even when many are taken in one millisecond or the clock steps back.
 - A folder whose path is missing is reported as missing, never captured or compared as empty, as Noldova Desktop's `documents/RUNTIME.md` requires.
+- A `checkpoints.*` method whose request isn't its wire form fails with context's `JsonException`, and one whose request holds a value its model refuses, such as a checkpoint id that isn't a UUID version 7, fails with Noldova Desktop's `MethodFailureException` with `InvalidParams`, the refusal's message and the refusal as its cause; Noldova Desktop answers both as `InvalidParams` with that message.
+  A failure once the request is read, in the service, is answered as before.
+- Tests: "answers a request holding a value its model refuses as invalid parameters, with the refusal's message and the refusal as its cause, for each method that takes a value"; "refuses a request that isn't the method's wire form with the JSON failure itself".
 
 ## The store
 
