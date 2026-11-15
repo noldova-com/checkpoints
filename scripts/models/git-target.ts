@@ -10,6 +10,7 @@ import { FieldNotTextListException } from "../exceptions/field-not-text-list.exc
 import { TargetAddressInvalidException } from "../exceptions/target-address-invalid.exception.ts";
 import { TargetFieldNotTextException } from "../exceptions/target-field-not-text.exception.ts";
 import { TargetHashInvalidException } from "../exceptions/target-hash-invalid.exception.ts";
+import { TargetReportedVersionInvalidException } from "../exceptions/target-reported-version-invalid.exception.ts";
 import { TargetSizeInvalidException } from "../exceptions/target-size-invalid.exception.ts";
 import { TargetUnknownException } from "../exceptions/target-unknown.exception.ts";
 import { Resources } from "../resources.ts";
@@ -22,6 +23,7 @@ export class GitTarget {
   public readonly path: readonly string[];
   public readonly platform: string;
   public readonly program: string;
+  public readonly reportedVersion: string | null;
   public readonly sha256: string;
   public readonly size: number;
   public readonly source: string;
@@ -45,12 +47,15 @@ export class GitTarget {
     const gitVersion = text(Resources.gitVersionField);
     const searchPath = GitTarget.readTexts(fields[Resources.pathField], Resources.formatFieldPath(target, Resources.pathField), file);
     const program = text(Resources.programField);
+    const reportedVersion = fields[Resources.reportedVersionField] === undefined ? null : text(Resources.reportedVersionField);
     const sha256 = text(Resources.sha256Field);
     const source = text(Resources.sourceField);
     const url = text(Resources.urlField);
     const size = fields[Resources.sizeField];
     if (typeof size !== "number" || !Number.isSafeInteger(size) || size <= 0)
       throw new TargetSizeInvalidException(file, target);
+    if (reportedVersion !== null && !(reportedVersion.startsWith(`${gitVersion}.`) && Resources.reportedSuffixPattern.test(reportedVersion.slice(gitVersion.length + 1))))
+      throw new TargetReportedVersionInvalidException(file, target, gitVersion);
     if (!Resources.sha256Pattern.test(sha256))
       throw new TargetHashInvalidException(file, target);
     const kind = url.endsWith(Resources.zipExtension) ? Resources.zipKind : url.endsWith(Resources.tarGzExtension) ? Resources.tarGzKind : null;
@@ -64,6 +69,7 @@ export class GitTarget {
     this.path = searchPath;
     this.platform = platform;
     this.program = program;
+    this.reportedVersion = reportedVersion;
     this.sha256 = sha256;
     this.size = size;
     this.source = source;
