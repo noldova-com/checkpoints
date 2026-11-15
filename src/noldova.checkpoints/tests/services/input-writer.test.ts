@@ -14,7 +14,13 @@ import { describe, it } from "node:test";
 import { InputWriter } from "../../src/services/input-writer.ts";
 
 class PipeError extends Error {
-  public readonly code: string = "EPIPE";
+  public readonly code: string;
+
+  public constructor(code: string) {
+    super(`write ${code}`);
+
+    this.code = code;
+  }
 }
 
 describe("InputWriter", { concurrency: true }, () => {
@@ -58,7 +64,20 @@ describe("InputWriter", { concurrency: true }, () => {
     const writer = new InputWriter(stream);
 
     const writing = writer.writeAsync("more than four bytes");
-    stream.destroy(new PipeError("write EPIPE"));
+    stream.destroy(new PipeError("EPIPE"));
+    await writing;
+    await writer.writeAsync("after");
+    writer.end();
+
+    assert.equal(stream.destroyed, true);
+  });
+
+  it("stops waiting when the program ends early and macOS reports its input as no longer connected, and drops what is written after", async () => {
+    const stream = new PassThrough({ highWaterMark: 4 });
+    const writer = new InputWriter(stream);
+
+    const writing = writer.writeAsync("more than four bytes");
+    stream.destroy(new PipeError("ENOTCONN"));
     await writing;
     await writer.writeAsync("after");
     writer.end();

@@ -280,7 +280,7 @@ export class CheckpointsHarness {
     const git = await this.processes.startAsync(new ProcessRequest(this.build.program, args, this.root, environment));
     const refused: Error[] = [];
     git.input.on("error", (error: Error) => {
-      if (!FailureFixture.hasCode(error, "EPIPE"))
+      if (!FailureFixture.hasCode(error, "EPIPE") && !FailureFixture.hasCode(error, "ENOTCONN"))
         refused.push(error);
     });
     git.input.end(input);

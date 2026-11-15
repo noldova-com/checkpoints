@@ -152,7 +152,7 @@ modules/checkpoints/
   - A read writes its requests to `cat-file` while it takes the answers, since `cat-file` stops reading once its output is full.
   - `cat-file` runs with `--buffer`, and each read's requests end with `flush`, so it writes its answers in full buffers, as do the one-shot `cat-file --batch` runs that list checkpoints and stage a restore's files, which end at the end of their input; without it, each answer is a pipe write of its own.
   - The module names what it reads by object id; a `<reference>:<path>` name makes Git search the commit's trees again for each one, so ten thousand names in one folder of ten thousand files took 40 seconds where their ids took under half a second, and only `checkpoint.json` is read by its path.
-  - Writing to a command waits while it reads more slowly than the module writes; a command that ends early closes its input, what is written after that is dropped, and its exit says what went wrong.
+  - Writing to a command waits while it reads more slowly than the module writes; a command that ends early closes its input, which fails a write as a broken pipe or, on macOS, at times as no longer connected; what is written after that is dropped, and its exit says what went wrong.
   - `cat-file`'s output is read as it comes, in parts cut anywhere: a name with no object answers `<name> missing`, and that name may hold a space; output that ends inside a content gives no object for it; and a name `cat-file --batch` gave no answer for reads as missing.
   - `cat-file` finds what a capture wrote after it started, since Git looks for new packs when an object is missing and reads each reference as it's asked for.
   - A store's commands end once neither has been used for 10 minutes, before its housekeeping ([Keeping and deleting](#keeping-and-deleting)), before its folder is deleted, after a request cancelled while it ran, and as the runtime part deactivates: `cat-file` at the end of its input, `fast-import` at its `done`, each stopped if it still runs 10 seconds later.
@@ -486,6 +486,8 @@ The journal makes a restore finish whole or not at all.
 The app ships Git as it ships Electron and Noldova Desktop's native addons: a pinned build per target, checked before use, unpacked from the app's archive and signed with the app, as Noldova Desktop's `documents/BUILD.md` says for its own.
 The pinning, the checks and the list of files to unpack are the module's; Noldova Desktop's packaging unpacks and signs them, and the module runs Git from the unpacked copies.
 Each target's build is pinned in `src/noldova.checkpoints.git/builds.json` by its address, its SHA-256 and the Git version and source it was built from.
+A target whose build prints a version other than its Git version also holds `reportedVersion`, the version `git --version` prints, which the tests check in its place: dugite-native's Linux arm64 build prints `2.56.0.dirty`, as the README's Git builds section says.
+The scripts refuse a `reportedVersion` that is not its `gitVersion`, a full stop and lowercase letters, through `TargetReportedVersionInvalidException`.
 
 - Development and tests run the host's pinned build, from its installed package, the same files a packaged app runs.
   There is no fallback to an installed Git: when the running target's package is missing, the module refuses to start Git, naming the target, as Noldova Desktop's runtime refuses a missing addon.
@@ -509,6 +511,7 @@ Each target's build is pinned in `src/noldova.checkpoints.git/builds.json` by it
   A weekly scheduled workflow runs `scripts/check-git-builds.ts`, which compares the latest MinGit and dugite-native releases with the tags in `builds.json`'s addresses and files an issue in this repository for each newer one; the maintainers triage it, and a security fix goes ahead of feature work.
   - The check orders tags by the numbers in them, so `v2.56.0.windows.2` follows `v2.56.0.windows.1` and `v2.53.0-4` follows `v2.53.0-3`.
   - It titles each issue `Pin <source> <tag> in builds.json` and labels it `git-build`.
+  - When a target it would replace holds `reportedVersion`, the issue also asks for that field to be dropped where the new build reports its Git version.
     The maintainers look for open `git-build` issues each week, and the check fails when GitHub leaves the label off.
   - It files a release once: a hidden line at the end of its issue names the source and the tag, and a release whose issue it filed before, open or closed, is never filed again, whatever the issue's title has become.
   - When a source's latest release has its issue, filed in this run or an earlier one, the check closes, with a comment naming that issue, each of the source's issues for an older release still open, since only the newest release is worth pinning.

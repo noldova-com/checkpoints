@@ -58,6 +58,9 @@ Each target's build is pinned in [`src/noldova.checkpoints.git/builds.json`](src
 
 `builds.json` is the record: when it moves to a newer build, the package's `noldova.git.source` field names the new upstream version.
 
+The Linux arm64 build reports itself as `git version 2.56.0.dirty`, though it is built from Git v2.56.0: dugite-native's Ubuntu build names the cross-compiler's strip tool by editing Git's tracked `Makefile` before it builds, and Git marks a build from a changed tree as dirty ([desktop/dugite-native#553](https://github.com/desktop/dugite-native/pull/553) passes the strip tool to `make` instead).
+So that target's entry also holds `reportedVersion`, the version the build prints, which the tests check in its place; the weekly Git builds check's issue asks for it to be dropped once a newer build reports its Git version.
+
 Each package's `package.json` names every file of its build in `noldovaDesktop.unpacked`, by its exact path from the package with `/` between folders, so Noldova Desktop's packaging keeps them outside the app's archive, where Git can run them.
 The build writes that list from the build it unpacked, sorted, and refuses a committed manifest whose list differs.
 
@@ -197,7 +200,7 @@ Every pull request into `main` must pass "Check / Linked issue" and "Build and t
 - `.github/workflows/build-and-test.yml` calls the organization's shared `build-and-test.yml`, v2.30.0, with `publishes: true`, on GitHub-hosted runners, as the `.github` repository's README describes it.
   Each target's job builds, checks the toolchain, Node.js 24.21.0 with npm 11.19.0, and the line endings, `* text=auto eol=lf` in `.gitattributes` and LF only with exactly one final newline in every tracked text file, then runs `npm run test -- --skip-test-details --skip-coverage-details` and checks that the build and the tests changed no tracked file.
   On Linux x64 it also builds a second time and checks that the archives are the same, byte for byte, and on every target it checks the archives as the release does, with `pipelines archive`: each archive's name, version, `gitHead`, scope and licence, and a byte-for-byte copy of every file `--list-copies` lists.
-- Every pull request, draft or ready, runs Linux and Windows x64 and macOS arm64, and every push to `main` every target: Linux, Windows and macOS, each on x64 and ARM64.
+- Every pull request, draft or ready, runs Linux and Windows x64 and macOS arm64, and every push to `main` and every run started by hand every target: Linux, Windows and macOS, each on x64 and ARM64.
   On each, a test runs the installed Git build's `git --version` and expects the version `builds.json` pins for that system.
   A release downloads and checks every target's pinned build.
 - `.github/workflows/module-range.yml` calls Noldova Desktop's "Module range" workflow, pinned to Noldova Desktop 0.0.1's commit, with `src/noldova.checkpoints`, on every pull request, every night and by hand.
