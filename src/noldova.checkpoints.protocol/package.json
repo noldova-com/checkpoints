@@ -1,6 +1,6 @@
 {
   "name": "@noldova/checkpoints.protocol",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "The checkpoints module's protocol: the requests, results and events of its runtime methods, with the folders and checkpoints they name.",
   "type": "module",
   "license": "MIT",
