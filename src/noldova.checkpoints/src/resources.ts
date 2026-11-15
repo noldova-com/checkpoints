@@ -76,7 +76,7 @@ export class Resources {
   public static readonly checkpointReferencePrefix: string = "refs/checkpoints/";
   public static readonly checkpointTree: string = "files/ tree";
   public static readonly cleaningRecord: string = "Cleaning";
-  public static readonly closedInputCodes: readonly string[] = ["EPIPE", "EOF", "ERR_STREAM_DESTROYED", "ERR_STREAM_WRITE_AFTER_END"];
+  public static readonly closedInputCodes: readonly string[] = ["ENOTCONN", "EOF", "EPIPE", "ERR_STREAM_DESTROYED", "ERR_STREAM_WRITE_AFTER_END"];
   public static readonly commitAuthor: string = "Checkpoints <checkpoints@noldova.invalid>";
   public static readonly commitMark: string = ":1";
   public static readonly configFile: string = "config";
