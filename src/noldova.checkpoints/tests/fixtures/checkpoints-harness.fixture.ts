@@ -6,12 +6,12 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { once } from "node:events";
-import { existsSync, watch } from "node:fs";
+import { existsSync } from "node:fs";
 import { mkdir, mkdtemp, readdir, readFile, readlink, realpath, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { buffer } from "node:stream/consumers";
+import { setImmediate } from "node:timers/promises";
 
 import {
   CaptureRequest,
@@ -89,14 +89,8 @@ export class CheckpointsHarness {
   }
 
   public static async appearedAsync(location: string): Promise<void> {
-    const watcher = watch(path.dirname(location));
-    try {
-      while (!existsSync(location))
-        await once(watcher, "change");
-    }
-    finally {
-      watcher.close();
-    }
+    while (!existsSync(location))
+      await setImmediate();
   }
 
   public static async startAsync(t: ICleanups): Promise<CheckpointsHarness> {
