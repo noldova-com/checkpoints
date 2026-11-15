@@ -7,6 +7,7 @@
  */
 
 import { writeSync } from "node:fs";
+import path from "node:path";
 import type { TestEvent } from "node:test/reporters";
 
 import { TestRecord } from "../models/test-record.ts";
@@ -24,8 +25,12 @@ export default async function* reportTestRecords(source: AsyncIterable<TestEvent
       watch.observe(event);
       if (event.type === "test:dequeue")
         names.enter(event.data);
-      else if ((event.type === "test:pass" || event.type === "test:fail") && event.data.file !== undefined)
+      else if ((event.type === "test:pass" || event.type === "test:fail") && event.data.file !== undefined) {
+        const error: unknown = event.type === "test:fail" ? event.data.details.error : undefined;
+        if (typeof error === "object" && error !== null && "exitCode" in error && "signal" in error)
+          writeSync(process.stderr.fd, Resources.formatTestFileEnded(path.relative(process.cwd(), event.data.file).replaceAll(path.sep, Resources.pathSeparator), error.exitCode, error.signal));
         yield TestRecord.fromEvent(event.data, event.data.file, names.nameOf(event.data, event.data.file)).toLine();
+      }
     }
   }
   finally {
