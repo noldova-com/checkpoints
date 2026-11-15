@@ -233,7 +233,7 @@ export declare class GitMissingException extends CheckpointsException {
  * ```ts
  * import { GitManifestInvalidException } from "@noldova/checkpoints/runtime";
  *
- * const exception = new GitManifestInvalidException("/app/git/package.json", new Error("GitPackage has no field path."));
+ * const exception = new GitManifestInvalidException("/app/git/package.json", new Error("GitPackage.noldova.git.path: The field is required."));
  * console.log(exception.message, exception.manifestFile, exception.cause);
  * ```
  */
@@ -253,7 +253,7 @@ export declare class GitManifestInvalidException extends CheckpointsException {
    * ```ts
    * import { GitManifestInvalidException } from "@noldova/checkpoints/runtime";
    *
-   * export const failure: GitManifestInvalidException = new GitManifestInvalidException("/app/git/package.json", new Error("GitPackage has no field path."));
+   * export const failure: GitManifestInvalidException = new GitManifestInvalidException("/app/git/package.json", new Error("GitPackage.noldova.git.path: The field is required."));
    * ```
    */
   public constructor(manifestFile: string, cause: Error);
@@ -261,7 +261,7 @@ export declare class GitManifestInvalidException extends CheckpointsException {
 
 /**
  * Thrown when a folder's store holds a file the module can't read, or one of a format version it doesn't know. Its subclasses:
- * {@link CheckpointFileMissingException}, {@link IgnoreRulesMismatchException}, {@link JournalFieldMissingException}, {@link ScriptStepMissingException}, {@link StoreAnswersMismatchException}, {@link StoreFieldNotABooleanException}, {@link StoreFieldNotAStringListException}, {@link StoreFileUnreadableException}, {@link StoreObjectMissingException}, {@link StoreObjectNotABlobException}, {@link TreeLineMalformedException}, {@link UnexpectedStoreObjectException}, {@link UnknownEntryKindException}, {@link UnknownGitModeException}, {@link UnknownJournalRecordException}, {@link UnknownLinkKindException}, {@link UnsupportedStoreFormatException}.
+ * {@link CheckpointFileMissingException}, {@link IgnoreRulesMismatchException}, {@link JournalFieldMissingException}, {@link ScriptStepMissingException}, {@link StoreAnswersMismatchException}, {@link StoreFileUnreadableException}, {@link StoreObjectMissingException}, {@link StoreObjectNotABlobException}, {@link TreeLineMalformedException}, {@link UnexpectedStoreObjectException}, {@link UnknownEntryKindException}, {@link UnknownGitModeException}, {@link UnknownJournalRecordException}, {@link UnknownLinkKindException}, {@link UnsupportedStoreFormatException}.
  *
  * @example
  * ```ts
@@ -458,68 +458,6 @@ export declare class StoreAnswersMismatchException extends StoreException {
    * ```
    */
   public constructor(asked: number, answered: number);
-}
-
-/**
- * Thrown when a field of a store file holds something other than true or false.
- *
- * @example
- * ```ts
- * import { StoreFieldNotABooleanException } from "@noldova/checkpoints/runtime";
- *
- * const exception = new StoreFieldNotABooleanException("ignoresCase");
- * console.log(exception.message, exception.field);
- * ```
- */
-export declare class StoreFieldNotABooleanException extends StoreException {
-  /**
-   * The field.
-   */
-  public readonly field: string;
-
-  /**
-   * Formats the exception's message from its facts.
-   *
-   * @param field The field.
-   * @example
-   * ```ts
-   * import { StoreFieldNotABooleanException } from "@noldova/checkpoints/runtime";
-   *
-   * export const failure: StoreFieldNotABooleanException = new StoreFieldNotABooleanException("ignoresCase");
-   * ```
-   */
-  public constructor(field: string);
-}
-
-/**
- * Thrown when a field of a store file holds something other than text.
- *
- * @example
- * ```ts
- * import { StoreFieldNotAStringListException } from "@noldova/checkpoints/runtime";
- *
- * const exception = new StoreFieldNotAStringListException("emptyFolders");
- * console.log(exception.message, exception.field);
- * ```
- */
-export declare class StoreFieldNotAStringListException extends StoreException {
-  /**
-   * The field.
-   */
-  public readonly field: string;
-
-  /**
-   * Formats the exception's message from its facts.
-   *
-   * @param field The field.
-   * @example
-   * ```ts
-   * import { StoreFieldNotAStringListException } from "@noldova/checkpoints/runtime";
-   *
-   * export const failure: StoreFieldNotAStringListException = new StoreFieldNotAStringListException("emptyFolders");
-   * ```
-   */
-  public constructor(field: string);
 }
 
 /**

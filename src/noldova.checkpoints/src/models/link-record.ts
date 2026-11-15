@@ -6,9 +6,10 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { JsonObjectReader, type JsonObject } from "@noldova/checkpoints.protocol";
+import type { JsonObject } from "@noldova/context.json";
 
 import { Resources } from "../resources.ts";
+import { StoreFormat } from "../services/store-format.ts";
 import { LinkKind } from "./link-kind.ts";
 
 export class LinkRecord {
@@ -22,9 +23,8 @@ export class LinkRecord {
   }
 
   public static fromJson(value: unknown): LinkRecord {
-    const reader = new JsonObjectReader(value, Resources.linkRecordModel);
-    reader.refuseOtherFields(LinkRecord.FIELDS);
-    return new LinkRecord(reader.readString(Resources.pathField), LinkKind.fromJson(reader.read(Resources.linkKindField)));
+    const reader = StoreFormat.read(value, Resources.linkRecordModel, LinkRecord.FIELDS);
+    return new LinkRecord(reader.readString(Resources.pathField), LinkKind.fromJson(reader.readValue(Resources.linkKindField)));
   }
 
   public toJson(): JsonObject {

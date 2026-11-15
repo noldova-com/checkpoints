@@ -9,7 +9,8 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
-import { DeleteFolderRequest, FolderReference, MissingFieldException, UnknownFieldException } from "@noldova/checkpoints.protocol";
+import { DeleteFolderRequest, FolderReference } from "@noldova/checkpoints.protocol";
+import { JsonException } from "@noldova/context.json";
 
 describe("DeleteFolderRequest", { concurrency: true }, () => {
   it("is the checkpoints.deleteFolder method", () => {
@@ -24,14 +25,14 @@ describe("DeleteFolderRequest", { concurrency: true }, () => {
   });
 
   it("refuses JSON with another field or without its folder", () => {
-    assert.throws(() => DeleteFolderRequest.fromJson({ folder: { identity: "project", path: "/" }, checkpoint: "x" }), new UnknownFieldException("DeleteFolderRequest", "checkpoint"));
-    assert.throws(() => DeleteFolderRequest.fromJson({}), new MissingFieldException("DeleteFolderRequest", "folder"));
+    assert.throws(() => DeleteFolderRequest.fromJson({ folder: { identity: "project", path: "/" }, checkpoint: "x" }), new JsonException("The field is not part of this message, which accepts no unknown fields.", "DeleteFolderRequest.checkpoint"));
+    assert.throws(() => DeleteFolderRequest.fromJson({}), new JsonException("The field is required.", "DeleteFolderRequest.folder"));
   });
 
   it("refuses JSON missing any of its fields", () => {
     const json = { folder: { identity: "project", path: "/work/project" } };
 
     for (const field of Object.keys(json))
-      assert.throws(() => DeleteFolderRequest.fromJson(Object.fromEntries(Object.entries(json).filter(([key]) => key !== field))), new MissingFieldException("DeleteFolderRequest", field));
+      assert.throws(() => DeleteFolderRequest.fromJson(Object.fromEntries(Object.entries(json).filter(([key]) => key !== field))), new JsonException("The field is required.", `DeleteFolderRequest.${field}`));
   });
 });

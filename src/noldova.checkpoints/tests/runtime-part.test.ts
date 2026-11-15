@@ -65,9 +65,10 @@ describe("RuntimePart", { concurrency: true }, () => {
     assert.deepEqual(pins.map(t => t[0]), ["@noldova/desktop.protocol", "@noldova/desktop.runtime"]);
     assert.deepEqual(pins.filter(t => !isInside(t[1], range)), []);
     assert.deepEqual(peers, {
-      "@noldova/desktop.protocol": range, "@noldova/desktop.runtime": range, "@noldova/context.exceptions": ">=0.0.7 <0.1.0"
+      "@noldova/desktop.protocol": range, "@noldova/desktop.runtime": range, "@noldova/context.exceptions": ">=0.0.7 <0.1.0", "@noldova/context.json": ">=0.0.7 <0.1.0"
     });
     assert.equal(isInside(devDependencies["@noldova/context.exceptions"] ?? "", ">=0.0.7 <0.1.0"), true);
+    assert.equal(isInside(devDependencies["@noldova/context.json"] ?? "", ">=0.0.7 <0.1.0"), true);
   });
 
   it("declares in settings.json each setting the module contributes, following the ignore files off by default and shared by every device", async () => {

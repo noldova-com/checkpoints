@@ -6,10 +6,11 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import type { JsonObject } from "@noldova/context.json";
+
 import { CompareChangesMismatchException } from "../exceptions/compare-changes-mismatch.exception.ts";
 import { Resources } from "../resources.ts";
-import { JsonObjectReader } from "../services/json-object.reader.ts";
-import type { JsonObject } from "../types/json-object.ts";
+import { WireForm } from "../services/wire-form.ts";
 import { Change } from "./change.ts";
 import { CompareOutcome } from "./compare-outcome.ts";
 
@@ -27,9 +28,8 @@ export class CompareResult {
   }
 
   public static fromJson(value: unknown): CompareResult {
-    const reader = new JsonObjectReader(value, Resources.compareResultModel);
-    reader.refuseOtherFields(CompareResult.FIELDS);
-    return new CompareResult(CompareOutcome.fromJson(reader.read(Resources.outcomeField)), reader.readList(Resources.changesField).map(t => Change.fromJson(t)));
+    const reader = WireForm.read(value, Resources.compareResultModel, CompareResult.FIELDS);
+    return new CompareResult(CompareOutcome.fromJson(reader.readValue(Resources.outcomeField)), WireForm.readArray(reader, Resources.changesField).map(t => Change.fromJson(t)));
   }
 
   public toJson(): JsonObject {

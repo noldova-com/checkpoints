@@ -6,11 +6,12 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import type { JsonObject } from "@noldova/context.json";
+
 import { SideSizeMismatchException } from "../exceptions/side-size-mismatch.exception.ts";
 import { Resources } from "../resources.ts";
 import { ByteSize } from "../services/byte-size.ts";
-import { JsonObjectReader } from "../services/json-object.reader.ts";
-import type { JsonObject } from "../types/json-object.ts";
+import { WireForm } from "../services/wire-form.ts";
 import { PathKind } from "./path-kind.ts";
 
 export class ChangeSide {
@@ -31,9 +32,8 @@ export class ChangeSide {
   }
 
   public static fromJson(value: unknown): ChangeSide {
-    const reader = new JsonObjectReader(value, Resources.changeSideModel);
-    reader.refuseOtherFields(ChangeSide.FIELDS);
-    return new ChangeSide(PathKind.fromJson(reader.read(Resources.kindField)), reader.readNumberOrNull(Resources.sizeField),
+    const reader = WireForm.read(value, Resources.changeSideModel, ChangeSide.FIELDS);
+    return new ChangeSide(PathKind.fromJson(reader.readValue(Resources.kindField)), WireForm.readNullableNumber(reader, Resources.sizeField),
       reader.readBoolean(Resources.isTextField));
   }
 

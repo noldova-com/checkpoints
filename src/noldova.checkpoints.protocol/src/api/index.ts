@@ -11,13 +11,6 @@ export { CaptureSpaceMismatchException } from "../exceptions/capture-space-misma
 export { ChangeSidesMismatchException } from "../exceptions/change-sides-mismatch.exception.ts";
 export { CompareChangesMismatchException } from "../exceptions/compare-changes-mismatch.exception.ts";
 export { ContentTooLongException } from "../exceptions/content-too-long.exception.ts";
-export { FieldNotABooleanException } from "../exceptions/field-not-a-boolean.exception.ts";
-export { FieldNotAListException } from "../exceptions/field-not-a-list.exception.ts";
-export { FieldNotANumberOrNullException } from "../exceptions/field-not-a-number-or-null.exception.ts";
-export { FieldNotANumberException } from "../exceptions/field-not-a-number.exception.ts";
-export { FieldNotAStringListException } from "../exceptions/field-not-a-string-list.exception.ts";
-export { FieldNotAStringOrNullException } from "../exceptions/field-not-a-string-or-null.exception.ts";
-export { FieldNotAStringException } from "../exceptions/field-not-a-string.exception.ts";
 export { InvalidBase64Exception } from "../exceptions/invalid-base64.exception.ts";
 export { InvalidCheckpointIdException } from "../exceptions/invalid-checkpoint-id.exception.ts";
 export { InvalidDateException } from "../exceptions/invalid-date.exception.ts";
@@ -29,8 +22,6 @@ export { InvalidRelativePathException } from "../exceptions/invalid-relative-pat
 export { InvalidSizeException } from "../exceptions/invalid-size.exception.ts";
 export { InvalidTimeException } from "../exceptions/invalid-time.exception.ts";
 export { LabelTooLongException } from "../exceptions/label-too-long.exception.ts";
-export { MissingFieldException } from "../exceptions/missing-field.exception.ts";
-export { NotAnObjectException } from "../exceptions/not-an-object.exception.ts";
 export { PreviewPlanMismatchException } from "../exceptions/preview-plan-mismatch.exception.ts";
 export { ProtocolException } from "../exceptions/protocol.exception.ts";
 export { ReadCutMismatchException } from "../exceptions/read-cut-mismatch.exception.ts";
@@ -43,7 +34,6 @@ export { UnknownCaptureOutcomeException } from "../exceptions/unknown-capture-ou
 export { UnknownChangeStatusException } from "../exceptions/unknown-change-status.exception.ts";
 export { UnknownCompareOutcomeException } from "../exceptions/unknown-compare-outcome.exception.ts";
 export { UnknownDeleteFolderOutcomeException } from "../exceptions/unknown-delete-folder-outcome.exception.ts";
-export { UnknownFieldException } from "../exceptions/unknown-field.exception.ts";
 export { UnknownKeepReasonException } from "../exceptions/unknown-keep-reason.exception.ts";
 export { UnknownPathKindException } from "../exceptions/unknown-path-kind.exception.ts";
 export { UnknownPreviewOutcomeException } from "../exceptions/unknown-preview-outcome.exception.ts";
@@ -95,6 +85,3 @@ export { StorageList } from "../models/storage-list.ts";
 export { StorageRequest } from "../models/storage-request.ts";
 export { UnreadPath } from "../models/unread-path.ts";
 export { UnreadReason } from "../models/unread-reason.ts";
-export { JsonObjectReader } from "../services/json-object.reader.ts";
-export type { JsonObject } from "../types/json-object.ts";
-export type { JsonValue } from "../types/json-value.ts";

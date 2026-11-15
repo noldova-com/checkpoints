@@ -9,7 +9,8 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
-import { FolderReference, InvalidPlanStateException, MissingFieldException, RestorePlan, RestoreRequest, UnknownFieldException } from "@noldova/checkpoints.protocol";
+import { FolderReference, InvalidPlanStateException, RestorePlan, RestoreRequest } from "@noldova/checkpoints.protocol";
+import { JsonException } from "@noldova/context.json";
 
 describe("RestoreRequest", { concurrency: true }, () => {
   const folder = new FolderReference("project-1", "/work/project");
@@ -24,7 +25,7 @@ describe("RestoreRequest", { concurrency: true }, () => {
   });
 
   it("refuses JSON with another field, or a plan that isn't one", () => {
-    assert.throws(() => RestoreRequest.fromJson({ folder: folderJson, plan: planJson, checkpoint: planJson.checkpoint }), new UnknownFieldException("RestoreRequest", "checkpoint"));
+    assert.throws(() => RestoreRequest.fromJson({ folder: folderJson, plan: planJson, checkpoint: planJson.checkpoint }), new JsonException("The field is not part of this message, which accepts no unknown fields.", "RestoreRequest.checkpoint"));
     assert.throws(() => RestoreRequest.fromJson({ folder: folderJson, plan: { ...planJson, state: "x" } }), new InvalidPlanStateException("x"));
   });
 
@@ -32,6 +33,6 @@ describe("RestoreRequest", { concurrency: true }, () => {
     const json = { folder: folderJson, plan: planJson };
 
     for (const field of Object.keys(json))
-      assert.throws(() => RestoreRequest.fromJson(Object.fromEntries(Object.entries(json).filter(([key]) => key !== field))), new MissingFieldException("RestoreRequest", field));
+      assert.throws(() => RestoreRequest.fromJson(Object.fromEntries(Object.entries(json).filter(([key]) => key !== field))), new JsonException("The field is required.", `RestoreRequest.${field}`));
   });
 });

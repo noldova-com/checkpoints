@@ -10,8 +10,8 @@ import { readFile, stat } from "node:fs/promises";
 import { createRequire } from "node:module";
 import path from "node:path";
 
-import { JsonObjectReader, ProtocolException } from "@noldova/checkpoints.protocol";
 import { ExceptionOptions } from "@noldova/context.exceptions";
+import { JsonException, JsonReader } from "@noldova/context.json";
 import { ModuleActivationException, PackagedPath } from "@noldova/desktop.runtime";
 
 import { GitManifestInvalidException } from "../exceptions/git-manifest-invalid.exception.ts";
@@ -46,7 +46,7 @@ export class GitBuildLocator {
   }
 
   private static isUnreadable(error: unknown): error is Error {
-    return Failures.hasCode(error, Resources.gitUnreadableCodes) || error instanceof ProtocolException;
+    return Failures.hasCode(error, Resources.gitUnreadableCodes) || error instanceof JsonException;
   }
 
   private static async programInAsync(program: string, execPath: string): Promise<string> {
@@ -56,12 +56,11 @@ export class GitBuildLocator {
 
   private static async readAsync(manifestFile: string): Promise<GitBuild> {
     const folder = PackagedPath.unpacked(path.dirname(manifestFile));
-    const manifest = new JsonObjectReader(JSON.parse(await readFile(manifestFile, Resources.utf8Encoding)), Resources.gitPackageModel);
-    const git = new JsonObjectReader(new JsonObjectReader(manifest.read(Resources.noldovaField), Resources.gitPackageModel).read(Resources.gitField),
-      Resources.gitPackageModel);
+    const manifest = JsonReader.fromValue(JSON.parse(await readFile(manifestFile, Resources.utf8Encoding)), Resources.gitPackageModel);
+    const git = manifest.readObject(Resources.noldovaField).readObject(Resources.gitField);
     const execPath = path.join(folder, git.readString(Resources.gitExecPathField));
     const program = path.join(folder, git.readString(Resources.gitProgramField));
-    const paths = git.readStringList(Resources.gitPathField).map(t => path.join(folder, t));
+    const paths = git.readStringArray(Resources.gitPathField).map(t => path.join(folder, t));
     return new GitBuild(await GitBuildLocator.programInAsync(program, execPath), execPath, paths);
   }
 

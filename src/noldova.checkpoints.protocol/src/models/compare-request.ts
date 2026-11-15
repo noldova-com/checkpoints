@@ -6,10 +6,11 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import type { JsonObject } from "@noldova/context.json";
+
 import { Resources } from "../resources.ts";
 import { CheckpointId } from "../services/checkpoint-id.ts";
-import { JsonObjectReader } from "../services/json-object.reader.ts";
-import type { JsonObject } from "../types/json-object.ts";
+import { WireForm } from "../services/wire-form.ts";
 import { FolderReference } from "./folder-reference.ts";
 
 export class CompareRequest {
@@ -30,10 +31,9 @@ export class CompareRequest {
   }
 
   public static fromJson(value: unknown): CompareRequest {
-    const reader = new JsonObjectReader(value, Resources.compareRequestModel);
-    reader.refuseOtherFields(CompareRequest.FIELDS);
-    return new CompareRequest(FolderReference.fromJson(reader.read(Resources.folderField)), reader.readString(Resources.fromField),
-      reader.readStringOrNull(Resources.toField));
+    const reader = WireForm.read(value, Resources.compareRequestModel, CompareRequest.FIELDS);
+    return new CompareRequest(FolderReference.fromJson(reader.readValue(Resources.folderField)), reader.readString(Resources.fromField),
+      reader.readNullableString(Resources.toField));
   }
 
   public toJson(): JsonObject {

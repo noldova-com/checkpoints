@@ -6,10 +6,11 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import type { JsonObject } from "@noldova/context.json";
+
 import { LabelTooLongException } from "../exceptions/label-too-long.exception.ts";
 import { Resources } from "../resources.ts";
-import { JsonObjectReader } from "../services/json-object.reader.ts";
-import type { JsonObject } from "../types/json-object.ts";
+import { WireForm } from "../services/wire-form.ts";
 import { FolderReference } from "./folder-reference.ts";
 
 export class CaptureRequest {
@@ -27,9 +28,8 @@ export class CaptureRequest {
   }
 
   public static fromJson(value: unknown): CaptureRequest {
-    const reader = new JsonObjectReader(value, Resources.captureRequestModel);
-    reader.refuseOtherFields(CaptureRequest.FIELDS);
-    return new CaptureRequest(FolderReference.fromJson(reader.read(Resources.folderField)), reader.readStringOrNull(Resources.labelField));
+    const reader = WireForm.read(value, Resources.captureRequestModel, CaptureRequest.FIELDS);
+    return new CaptureRequest(FolderReference.fromJson(reader.readValue(Resources.folderField)), reader.readNullableString(Resources.labelField));
   }
 
   public toJson(): JsonObject {

@@ -9,7 +9,8 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
-import { MissingFieldException, PreviewOutcome, PreviewPlanMismatchException, PreviewResult, RestorePlan, UnknownFieldException } from "@noldova/checkpoints.protocol";
+import { PreviewOutcome, PreviewPlanMismatchException, PreviewResult, RestorePlan } from "@noldova/checkpoints.protocol";
+import { JsonException } from "@noldova/context.json";
 
 describe("PreviewResult", { concurrency: true }, () => {
   const planJson = { checkpoint: "019a0b6c-7d1e-7f00-8abc-0123456789ab", steps: [], stays: [], bytesToWrite: 0, spaceNeeded: 0, state: "a".repeat(64), paths: null };
@@ -37,13 +38,13 @@ describe("PreviewResult", { concurrency: true }, () => {
   });
 
   it("refuses JSON with another field", () => {
-    assert.throws(() => PreviewResult.fromJson({ outcome: "HeldUp", plan: null, paths: [] }), new UnknownFieldException("PreviewResult", "paths"));
+    assert.throws(() => PreviewResult.fromJson({ outcome: "HeldUp", plan: null, paths: [] }), new JsonException("The field is not part of this message, which accepts no unknown fields.", "PreviewResult.paths"));
   });
 
   it("refuses JSON missing any of its fields", () => {
     const json = { outcome: "HeldUp", plan: null };
 
     for (const field of Object.keys(json))
-      assert.throws(() => PreviewResult.fromJson(Object.fromEntries(Object.entries(json).filter(([key]) => key !== field))), new MissingFieldException("PreviewResult", field));
+      assert.throws(() => PreviewResult.fromJson(Object.fromEntries(Object.entries(json).filter(([key]) => key !== field))), new JsonException("The field is required.", `PreviewResult.${field}`));
   });
 });

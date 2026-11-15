@@ -9,7 +9,8 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
-import { NotAnObjectException, StorageRequest, UnknownFieldException } from "@noldova/checkpoints.protocol";
+import { StorageRequest } from "@noldova/checkpoints.protocol";
+import { JsonException } from "@noldova/context.json";
 
 describe("StorageRequest", { concurrency: true }, () => {
   it("is the checkpoints.storage method", () => {
@@ -22,7 +23,7 @@ describe("StorageRequest", { concurrency: true }, () => {
   });
 
   it("refuses JSON with a field, or that isn't an object", () => {
-    assert.throws(() => StorageRequest.fromJson({ folder: { identity: "a", path: "/" } }), new UnknownFieldException("StorageRequest", "folder"));
-    assert.throws(() => StorageRequest.fromJson(null), new NotAnObjectException("StorageRequest"));
+    assert.throws(() => StorageRequest.fromJson({ folder: { identity: "a", path: "/" } }), new JsonException("The field is not part of this message, which accepts no unknown fields.", "StorageRequest.folder"));
+    assert.throws(() => StorageRequest.fromJson(null), new JsonException("Expected a JSON object.", "StorageRequest"));
   });
 });

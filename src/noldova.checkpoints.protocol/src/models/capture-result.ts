@@ -6,12 +6,13 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import type { JsonObject } from "@noldova/context.json";
+
 import { CaptureCheckpointMismatchException } from "../exceptions/capture-checkpoint-mismatch.exception.ts";
 import { CaptureSpaceMismatchException } from "../exceptions/capture-space-mismatch.exception.ts";
 import { Resources } from "../resources.ts";
 import { ByteSize } from "../services/byte-size.ts";
-import { JsonObjectReader } from "../services/json-object.reader.ts";
-import type { JsonObject } from "../types/json-object.ts";
+import { WireForm } from "../services/wire-form.ts";
 import { CaptureOutcome } from "./capture-outcome.ts";
 import { Checkpoint } from "./checkpoint.ts";
 
@@ -39,11 +40,10 @@ export class CaptureResult {
   }
 
   public static fromJson(value: unknown): CaptureResult {
-    const reader = new JsonObjectReader(value, Resources.captureResultModel);
-    reader.refuseOtherFields(CaptureResult.FIELDS);
-    const checkpoint = reader.read(Resources.checkpointField);
-    return new CaptureResult(CaptureOutcome.fromJson(reader.read(Resources.outcomeField)), checkpoint === null ? null : Checkpoint.fromJson(checkpoint),
-      reader.readNumberOrNull(Resources.spaceFreeField), reader.readNumberOrNull(Resources.spaceNeededField));
+    const reader = WireForm.read(value, Resources.captureResultModel, CaptureResult.FIELDS);
+    const checkpoint = reader.readValue(Resources.checkpointField);
+    return new CaptureResult(CaptureOutcome.fromJson(reader.readValue(Resources.outcomeField)), checkpoint === null ? null : Checkpoint.fromJson(checkpoint),
+      WireForm.readNullableNumber(reader, Resources.spaceFreeField), WireForm.readNullableNumber(reader, Resources.spaceNeededField));
   }
 
   public toJson(): JsonObject {

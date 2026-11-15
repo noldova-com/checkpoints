@@ -9,9 +9,8 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
-import {
-  FieldNotAStringListException, InvalidIdentityException, InvalidRelativePathException, MissingFieldException, RestoreHeldUpEvent, UnknownFieldException
-} from "@noldova/checkpoints.protocol";
+import { InvalidIdentityException, InvalidRelativePathException, RestoreHeldUpEvent } from "@noldova/checkpoints.protocol";
+import { JsonException } from "@noldova/context.json";
 
 describe("RestoreHeldUpEvent", { concurrency: true }, () => {
   it("writes and reads the folder's identity and the paths it couldn't change", () => {
@@ -36,14 +35,14 @@ describe("RestoreHeldUpEvent", { concurrency: true }, () => {
 
   it("refuses JSON whose paths aren't strings, or with another field", () => {
     assert.throws(() => RestoreHeldUpEvent.fromJson({ identity: "project-1", paths: [1] }),
-      new FieldNotAStringListException("RestoreHeldUpEvent", "paths"));
-    assert.throws(() => RestoreHeldUpEvent.fromJson({ identity: "project-1", paths: [], reason: "" }), new UnknownFieldException("RestoreHeldUpEvent", "reason"));
+      new JsonException("Expected a string.", "RestoreHeldUpEvent.paths.0"));
+    assert.throws(() => RestoreHeldUpEvent.fromJson({ identity: "project-1", paths: [], reason: "" }), new JsonException("The field is not part of this message, which accepts no unknown fields.", "RestoreHeldUpEvent.reason"));
   });
 
   it("refuses JSON missing any of its fields", () => {
     const json = { identity: "project-1", paths: ["a.txt"] };
 
     for (const field of Object.keys(json))
-      assert.throws(() => RestoreHeldUpEvent.fromJson(Object.fromEntries(Object.entries(json).filter(([key]) => key !== field))), new MissingFieldException("RestoreHeldUpEvent", field));
+      assert.throws(() => RestoreHeldUpEvent.fromJson(Object.fromEntries(Object.entries(json).filter(([key]) => key !== field))), new JsonException("The field is required.", `RestoreHeldUpEvent.${field}`));
   });
 });

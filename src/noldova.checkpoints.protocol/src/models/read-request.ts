@@ -6,13 +6,14 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import type { JsonObject } from "@noldova/context.json";
+
 import { InvalidReadLimitException } from "../exceptions/invalid-read-limit.exception.ts";
 import { InvalidRelativePathException } from "../exceptions/invalid-relative-path.exception.ts";
 import { Resources } from "../resources.ts";
 import { CheckpointId } from "../services/checkpoint-id.ts";
-import { JsonObjectReader } from "../services/json-object.reader.ts";
 import { RelativePath } from "../services/relative-path.ts";
-import type { JsonObject } from "../types/json-object.ts";
+import { WireForm } from "../services/wire-form.ts";
 import { DiffTarget } from "./diff-target.ts";
 import { FolderReference } from "./folder-reference.ts";
 
@@ -42,11 +43,10 @@ export class ReadRequest {
   }
 
   public static fromJson(value: unknown): ReadRequest {
-    const reader = new JsonObjectReader(value, Resources.readRequestModel);
-    reader.refuseOtherFields(ReadRequest.FIELDS);
-    const against = reader.read(Resources.againstField);
+    const reader = WireForm.read(value, Resources.readRequestModel, ReadRequest.FIELDS);
+    const against = reader.readValue(Resources.againstField);
     return new ReadRequest(
-      FolderReference.fromJson(reader.read(Resources.folderField)),
+      FolderReference.fromJson(reader.readValue(Resources.folderField)),
       reader.readString(Resources.checkpointField),
       reader.readString(Resources.pathField),
       against === null ? null : DiffTarget.fromJson(against),

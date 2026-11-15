@@ -6,10 +6,10 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { JsonObjectReader, RestoreAction, type JsonObject } from "@noldova/checkpoints.protocol";
+import { RestoreAction } from "@noldova/checkpoints.protocol";
+import type { JsonObject } from "@noldova/context.json";
 
 import { ScriptStepMissingException } from "../exceptions/script-step-missing.exception.ts";
-import { StoreFieldNotAStringListException } from "../exceptions/store-field-not-a-string-list.exception.ts";
 import { Resources } from "../resources.ts";
 import { StoreFormat } from "../services/store-format.ts";
 import { ScriptStep } from "./script-step.ts";
@@ -54,20 +54,17 @@ export class RestoreScript {
   }
 
   public static fromJson(value: unknown): RestoreScript {
-    const reader = new JsonObjectReader(value, Resources.restoreScriptModel);
-    reader.refuseOtherFields(RestoreScript.FIELDS);
+    const reader = StoreFormat.read(value, Resources.restoreScriptModel, RestoreScript.FIELDS);
     StoreFormat.check(reader);
-    const folders = RestoreScript.textsOf(reader.read(Resources.foldersField));
-    if (folders === null)
-      throw new StoreFieldNotAStringListException(Resources.foldersField);
+    const folders = reader.readObject(Resources.foldersField);
     return new RestoreScript(
       reader.readString(Resources.restoreIdField),
       reader.readString(Resources.checkpointField),
       reader.readString(Resources.beforeField),
-      reader.readList(Resources.stepsField).map(t => ScriptStep.fromJson(t)),
-      StoreFormat.readStringList(reader, Resources.createField),
-      StoreFormat.readStringList(reader, Resources.removeField),
-      folders);
+      StoreFormat.readArray(reader, Resources.stepsField).map(t => ScriptStep.fromJson(t)),
+      reader.readStringArray(Resources.createField),
+      reader.readStringArray(Resources.removeField),
+      new Map(Object.keys(folders.toJson()).map(t => [t, folders.readString(t)])));
   }
 
   public stepAt(index: number): ScriptStep {
@@ -88,18 +85,5 @@ export class RestoreScript {
       [Resources.removeField]: [...this.remove],
       [Resources.foldersField]: Object.fromEntries(this.folders)
     };
-  }
-
-  private static textsOf(value: unknown): ReadonlyMap<string, string> | null {
-    if (typeof value !== "object" || value === null || Array.isArray(value))
-      return null;
-    const entries: readonly (readonly [string, unknown])[] = Object.entries(value);
-    const texts = new Map<string, string>();
-    for (const [key, text] of entries) {
-      if (typeof text !== "string")
-        return null;
-      texts.set(key, text);
-    }
-    return texts;
   }
 }

@@ -102,6 +102,8 @@ modules/checkpoints/
 - Each JSON file the module writes names its format version, and one of a version the module doesn't read fails as unreadable, so a later version of the module can tell an earlier store apart.
   `checkpoint.json` is at version 2, whose unread paths each keep the system's error code, `null` for none; the module also reads version 1, whose unread paths hold only a path and a reason, as paths with no code, refusing one that holds any other field, and writes only version 2.
   `folder.json`, `housekeeping.json`, `index` and the script in a restore's journal are at version 1.
+- The protocol's models and the module's stored records read their JSON through `@noldova/context.json`'s `JsonReader`, as Noldova Desktop's protocol does, and each refuses a field it doesn't have.
+  A value that isn't one's JSON form throws context's `JsonException`, whose path starts at the model's or record's name, such as `FolderRecord.path`; a stored file that throws it fails as unreadable.
 - Tests: "reads a record of format version 1, whose unread paths kept no code, as paths with none"; "refuses a record of format version 1 whose unread path holds a code, a field that version never wrote"; "refuses a record of format version 2 whose unread path has no code"; "refuses a record of a format version newer than the one it writes, naming it"; "lists a checkpoint whose checkpoint.json an earlier version wrote, in format version 1, its unread paths with no code"; "gives the format version of a file that names one of the versions it reads, and refuses any other".
 
 ### A checkpoint as a commit

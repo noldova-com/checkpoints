@@ -9,18 +9,10 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
-import {
-  CaptureMode,
-  Checkpoint,
-  FieldNotAListException,
-  MissingFieldException,
-  NotAnObjectException,
-  UnknownFieldException,
-  UnreadPath,
-  UnreadReason
-} from "@noldova/checkpoints.protocol";
+import { CaptureMode, Checkpoint, UnreadPath, UnreadReason } from "@noldova/checkpoints.protocol";
+import { JsonException } from "@noldova/context.json";
 
-import { IgnoreRulesMismatchException, StoreFieldNotAStringListException, UnsupportedStoreFormatException } from "../../src/api/index.ts";
+import { IgnoreRulesMismatchException, UnsupportedStoreFormatException } from "../../src/api/index.ts";
 import { CheckpointRecord } from "../../src/models/checkpoint-record.ts";
 import { IgnoreRecord } from "../../src/models/ignore-record.ts";
 import { LinkKind } from "../../src/models/link-kind.ts";
@@ -75,7 +67,7 @@ describe("CheckpointRecord", { concurrency: true }, () => {
   });
 
   it("refuses a record whose empty folders aren't all text", () => {
-    assert.throws(() => CheckpointRecord.fromJson({ ...json, emptyFolders: ["logs", 7] }), new StoreFieldNotAStringListException("emptyFolders"));
+    assert.throws(() => CheckpointRecord.fromJson({ ...json, emptyFolders: ["logs", 7] }), new JsonException("Expected a string.", "CheckpointRecord.emptyFolders.1"));
   });
 
   it("refuses a record of a format version it doesn't read", () => {
@@ -97,21 +89,21 @@ describe("CheckpointRecord", { concurrency: true }, () => {
   it("refuses a record of format version 1 whose checkpoint, unread paths or an unread path isn't the shape it reads, as the checkpoint's own reading refuses it", () => {
     const readAsVersion1 = (written: unknown): CheckpointRecord => CheckpointRecord.fromJson({ ...json, formatVersion: 1, checkpoint: written });
 
-    assert.throws(() => readAsVersion1([]), new NotAnObjectException("Checkpoint"));
-    assert.throws(() => readAsVersion1({ ...checkpoint.toJson(), unreadPaths: "locked.db" }), new FieldNotAListException("Checkpoint", "unreadPaths"));
-    assert.throws(() => readAsVersion1({ ...checkpoint.toJson(), unreadPaths: ["locked.db"] }), new NotAnObjectException("UnreadPath"));
+    assert.throws(() => readAsVersion1([]), new JsonException("Expected a JSON object.", "Checkpoint"));
+    assert.throws(() => readAsVersion1({ ...checkpoint.toJson(), unreadPaths: "locked.db" }), new JsonException("Expected an array.", "Checkpoint.unreadPaths"));
+    assert.throws(() => readAsVersion1({ ...checkpoint.toJson(), unreadPaths: ["locked.db"] }), new JsonException("Expected a JSON object.", "UnreadPath"));
   });
 
   it("refuses a record of format version 1 whose unread path holds a code, a field that version never wrote", () => {
     const written = { ...checkpoint.toJson(), unreadPaths: [{ path: "locked.db", reason: "Unreadable", code: "EIO" }] };
 
-    assert.throws(() => CheckpointRecord.fromJson({ ...json, formatVersion: 1, checkpoint: written }), new UnknownFieldException("UnreadPath", "code"));
+    assert.throws(() => CheckpointRecord.fromJson({ ...json, formatVersion: 1, checkpoint: written }), new JsonException("The field is not part of this record, which accepts no unknown fields.", "UnreadPath.code"));
   });
 
   it("refuses a record of format version 2 whose unread path has no code", () => {
     const written = { ...checkpoint.toJson(), unreadPaths: [{ path: "locked.db", reason: "Denied" }] };
 
-    assert.throws(() => CheckpointRecord.fromJson({ ...json, checkpoint: written }), new MissingFieldException("UnreadPath", "code"));
+    assert.throws(() => CheckpointRecord.fromJson({ ...json, checkpoint: written }), new JsonException("The field is required.", "UnreadPath.code"));
   });
 
   it("refuses a record of a format version newer than the one it writes, naming it", () => {

@@ -9,7 +9,8 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
-import { FolderReference, ListRequest, MissingFieldException, UnknownFieldException } from "@noldova/checkpoints.protocol";
+import { FolderReference, ListRequest } from "@noldova/checkpoints.protocol";
+import { JsonException } from "@noldova/context.json";
 
 describe("ListRequest", { concurrency: true }, () => {
   it("is the checkpoints.list method", () => {
@@ -24,13 +25,13 @@ describe("ListRequest", { concurrency: true }, () => {
   });
 
   it("refuses JSON with another field", () => {
-    assert.throws(() => ListRequest.fromJson({ folder: { identity: "project", path: "/" }, limit: 5 }), new UnknownFieldException("ListRequest", "limit"));
+    assert.throws(() => ListRequest.fromJson({ folder: { identity: "project", path: "/" }, limit: 5 }), new JsonException("The field is not part of this message, which accepts no unknown fields.", "ListRequest.limit"));
   });
 
   it("refuses JSON missing any of its fields", () => {
     const json = { folder: { identity: "project", path: "/work/project" } };
 
     for (const field of Object.keys(json))
-      assert.throws(() => ListRequest.fromJson(Object.fromEntries(Object.entries(json).filter(([key]) => key !== field))), new MissingFieldException("ListRequest", field));
+      assert.throws(() => ListRequest.fromJson(Object.fromEntries(Object.entries(json).filter(([key]) => key !== field))), new JsonException("The field is required.", `ListRequest.${field}`));
   });
 });

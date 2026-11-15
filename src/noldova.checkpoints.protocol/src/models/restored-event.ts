@@ -6,11 +6,12 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import type { JsonObject } from "@noldova/context.json";
+
 import { Resources } from "../resources.ts";
 import { CheckpointId } from "../services/checkpoint-id.ts";
 import { FolderIdentity } from "../services/folder-identity.ts";
-import { JsonObjectReader } from "../services/json-object.reader.ts";
-import type { JsonObject } from "../types/json-object.ts";
+import { WireForm } from "../services/wire-form.ts";
 
 export class RestoredEvent {
   public static readonly event: string = Resources.restoredEvent;
@@ -30,8 +31,7 @@ export class RestoredEvent {
   }
 
   public static fromJson(value: unknown): RestoredEvent {
-    const reader = new JsonObjectReader(value, Resources.restoredEventModel);
-    reader.refuseOtherFields(RestoredEvent.FIELDS);
+    const reader = WireForm.read(value, Resources.restoredEventModel, RestoredEvent.FIELDS);
     return new RestoredEvent(reader.readString(Resources.identityField), reader.readString(Resources.checkpointField), reader.readString(Resources.beforeField));
   }
 

@@ -9,7 +9,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
-import { UnknownFieldException } from "@noldova/checkpoints.protocol";
+import { JsonException } from "@noldova/context.json";
 
 import { UnsupportedStoreFormatException } from "../../src/api/index.ts";
 import { EntryKind } from "../../src/models/entry-kind.ts";
@@ -51,6 +51,6 @@ describe("FolderIndex", { concurrency: true }, () => {
   it("refuses an index of a format version it doesn't read", () => {
     assert.throws(() => FolderIndex.fromJson({ formatVersion: 2, start: "0", entries: [] }),
       new UnsupportedStoreFormatException("2"));
-    assert.throws(() => FolderIndex.fromJson({ formatVersion: 1, start: "0", entries: [], more: [] }), new UnknownFieldException("FolderIndex", "more"));
+    assert.throws(() => FolderIndex.fromJson({ formatVersion: 1, start: "0", entries: [], more: [] }), new JsonException("The field is not part of this record, which accepts no unknown fields.", "FolderIndex.more"));
   });
 });

@@ -6,7 +6,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { JsonObjectReader, type JsonObject } from "@noldova/checkpoints.protocol";
+import type { JsonObject } from "@noldova/context.json";
 
 import { Resources } from "../resources.ts";
 import { StoreFormat } from "../services/store-format.ts";
@@ -20,8 +20,7 @@ export class HousekeepingRecord {
   }
 
   public static fromJson(value: unknown): HousekeepingRecord {
-    const reader = new JsonObjectReader(value, Resources.housekeepingRecordModel);
-    reader.refuseOtherFields(HousekeepingRecord.FIELDS);
+    const reader = StoreFormat.read(value, Resources.housekeepingRecordModel, HousekeepingRecord.FIELDS);
     StoreFormat.check(reader);
     return new HousekeepingRecord(reader.readNumber(Resources.fullPassField));
   }

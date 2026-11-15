@@ -9,7 +9,8 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
-import { CaptureRequest, FolderReference, LabelTooLongException, MissingFieldException, UnknownFieldException } from "@noldova/checkpoints.protocol";
+import { CaptureRequest, FolderReference, LabelTooLongException } from "@noldova/checkpoints.protocol";
+import { JsonException } from "@noldova/context.json";
 
 describe("CaptureRequest", { concurrency: true }, () => {
   const folder = new FolderReference("project", "/work/project");
@@ -31,13 +32,13 @@ describe("CaptureRequest", { concurrency: true }, () => {
   });
 
   it("refuses JSON with another field", () => {
-    assert.throws(() => CaptureRequest.fromJson({ folder: { identity: "project", path: "/" }, label: null, mode: "EveryFile" }), new UnknownFieldException("CaptureRequest", "mode"));
+    assert.throws(() => CaptureRequest.fromJson({ folder: { identity: "project", path: "/" }, label: null, mode: "EveryFile" }), new JsonException("The field is not part of this message, which accepts no unknown fields.", "CaptureRequest.mode"));
   });
 
   it("refuses JSON missing any of its fields", () => {
     const json = { folder: { identity: "project", path: "/work/project" }, label: null };
 
     for (const field of Object.keys(json))
-      assert.throws(() => CaptureRequest.fromJson(Object.fromEntries(Object.entries(json).filter(([key]) => key !== field))), new MissingFieldException("CaptureRequest", field));
+      assert.throws(() => CaptureRequest.fromJson(Object.fromEntries(Object.entries(json).filter(([key]) => key !== field))), new JsonException("The field is required.", `CaptureRequest.${field}`));
   });
 });

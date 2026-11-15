@@ -9,7 +9,8 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
-import { DiffTarget, InvalidCheckpointIdException, MissingFieldException, UnknownFieldException } from "@noldova/checkpoints.protocol";
+import { DiffTarget, InvalidCheckpointIdException } from "@noldova/checkpoints.protocol";
+import { JsonException } from "@noldova/context.json";
 
 describe("DiffTarget", { concurrency: true }, () => {
   it("writes and reads another checkpoint, and the folder now as no checkpoint", () => {
@@ -21,13 +22,13 @@ describe("DiffTarget", { concurrency: true }, () => {
 
   it("refuses an id that isn't a UUID of version 7, and JSON with another field", () => {
     assert.throws(() => new DiffTarget("latest"), new InvalidCheckpointIdException("latest"));
-    assert.throws(() => DiffTarget.fromJson({ checkpoint: null, folder: true }), new UnknownFieldException("DiffTarget", "folder"));
+    assert.throws(() => DiffTarget.fromJson({ checkpoint: null, folder: true }), new JsonException("The field is not part of this message, which accepts no unknown fields.", "DiffTarget.folder"));
   });
 
   it("refuses JSON missing any of its fields", () => {
     const json = { checkpoint: null };
 
     for (const field of Object.keys(json))
-      assert.throws(() => DiffTarget.fromJson(Object.fromEntries(Object.entries(json).filter(([key]) => key !== field))), new MissingFieldException("DiffTarget", field));
+      assert.throws(() => DiffTarget.fromJson(Object.fromEntries(Object.entries(json).filter(([key]) => key !== field))), new JsonException("The field is required.", `DiffTarget.${field}`));
   });
 });

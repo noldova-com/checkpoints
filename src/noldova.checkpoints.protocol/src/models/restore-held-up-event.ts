@@ -6,12 +6,13 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import type { JsonObject } from "@noldova/context.json";
+
 import { InvalidRelativePathException } from "../exceptions/invalid-relative-path.exception.ts";
 import { Resources } from "../resources.ts";
 import { FolderIdentity } from "../services/folder-identity.ts";
-import { JsonObjectReader } from "../services/json-object.reader.ts";
 import { RelativePath } from "../services/relative-path.ts";
-import type { JsonObject } from "../types/json-object.ts";
+import { WireForm } from "../services/wire-form.ts";
 
 export class RestoreHeldUpEvent {
   public static readonly event: string = Resources.restoreHeldUpEvent;
@@ -30,9 +31,8 @@ export class RestoreHeldUpEvent {
   }
 
   public static fromJson(value: unknown): RestoreHeldUpEvent {
-    const reader = new JsonObjectReader(value, Resources.restoreHeldUpEventModel);
-    reader.refuseOtherFields(RestoreHeldUpEvent.FIELDS);
-    return new RestoreHeldUpEvent(reader.readString(Resources.identityField), reader.readStringList(Resources.pathsField));
+    const reader = WireForm.read(value, Resources.restoreHeldUpEventModel, RestoreHeldUpEvent.FIELDS);
+    return new RestoreHeldUpEvent(reader.readString(Resources.identityField), reader.readStringArray(Resources.pathsField));
   }
 
   public toJson(): JsonObject {

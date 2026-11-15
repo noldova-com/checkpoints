@@ -6,9 +6,10 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { JsonObjectReader, type JsonObject } from "@noldova/checkpoints.protocol";
+import type { JsonObject } from "@noldova/context.json";
 
 import { Resources } from "../resources.ts";
+import { StoreFormat } from "../services/store-format.ts";
 import { EntryKind } from "./entry-kind.ts";
 import type { WalkedEntry } from "./walked-entry.ts";
 
@@ -37,11 +38,10 @@ export class IndexEntry {
   }
 
   public static fromJson(value: unknown): IndexEntry {
-    const reader = new JsonObjectReader(value, Resources.indexEntryModel);
-    reader.refuseOtherFields(IndexEntry.FIELDS);
+    const reader = StoreFormat.read(value, Resources.indexEntryModel, IndexEntry.FIELDS);
     return new IndexEntry(
       reader.readString(Resources.pathField),
-      EntryKind.fromJson(reader.read(Resources.kindField)),
+      EntryKind.fromJson(reader.readValue(Resources.kindField)),
       Number(BigInt(reader.readString(Resources.sizeField))),
       BigInt(reader.readString(Resources.modifiedField)),
       BigInt(reader.readString(Resources.changedField)),

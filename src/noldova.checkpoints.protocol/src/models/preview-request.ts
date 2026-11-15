@@ -6,11 +6,12 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import type { JsonObject } from "@noldova/context.json";
+
 import { Resources } from "../resources.ts";
 import { CheckpointId } from "../services/checkpoint-id.ts";
-import { JsonObjectReader } from "../services/json-object.reader.ts";
 import { ScopePaths } from "../services/scope-paths.ts";
-import type { JsonObject } from "../types/json-object.ts";
+import { WireForm } from "../services/wire-form.ts";
 import { FolderReference } from "./folder-reference.ts";
 
 export class PreviewRequest {
@@ -29,10 +30,9 @@ export class PreviewRequest {
   }
 
   public static fromJson(value: unknown): PreviewRequest {
-    const reader = new JsonObjectReader(value, Resources.previewRequestModel);
-    reader.refuseOtherFields(PreviewRequest.FIELDS);
-    return new PreviewRequest(FolderReference.fromJson(reader.read(Resources.folderField)), reader.readString(Resources.checkpointField),
-      reader.readStringListOrNull(Resources.pathsField));
+    const reader = WireForm.read(value, Resources.previewRequestModel, PreviewRequest.FIELDS);
+    return new PreviewRequest(FolderReference.fromJson(reader.readValue(Resources.folderField)), reader.readString(Resources.checkpointField),
+      WireForm.readNullableStringArray(reader, Resources.pathsField));
   }
 
   public toJson(): JsonObject {

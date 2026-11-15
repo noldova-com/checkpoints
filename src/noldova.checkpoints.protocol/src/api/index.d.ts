@@ -7,34 +7,22 @@
  */
 
 import { Exception, type ExceptionOptions } from "@noldova/context.exceptions";
+import type { JsonObject } from "@noldova/context.json";
 
 /**
- * A JSON object whose values are JSON values.
- */
-export type JsonObject = { readonly [key: string]: JsonValue };
-
-/**
- * A value that JSON can represent.
- */
-export type JsonValue = string | number | boolean | null | JsonObject | readonly JsonValue[];
-
-/**
- * The base of the checkpoints protocol's exceptions, thrown when a model is built from values it refuses, or read from JSON that isn't
- * its wire form. Its subclasses: {@link CaptureCheckpointMismatchException}, {@link CaptureSpaceMismatchException},
- * {@link ChangeSidesMismatchException}, {@link CompareChangesMismatchException}, {@link ContentTooLongException},
- * {@link FieldNotABooleanException}, {@link FieldNotAListException}, {@link FieldNotANumberException},
- * {@link FieldNotANumberOrNullException}, {@link FieldNotAStringException}, {@link FieldNotAStringListException},
- * {@link FieldNotAStringOrNullException}, {@link InvalidBase64Exception}, {@link InvalidCheckpointIdException},
- * {@link InvalidDateException}, {@link InvalidFolderPathException}, {@link InvalidIdentityException}, {@link InvalidPlanStateException},
- * {@link InvalidReadLimitException}, {@link InvalidRelativePathException}, {@link InvalidSizeException}, {@link InvalidTimeException},
- * {@link LabelTooLongException}, {@link MissingFieldException}, {@link NotAnObjectException}, {@link PreviewPlanMismatchException},
- * {@link ReadCutMismatchException}, {@link ReadOutcomeMismatchException}, {@link RestoreCheckpointsMismatchException},
- * {@link SideSizeMismatchException}, {@link StepSidesMismatchException}, {@link UnknownCaptureModeException},
- * {@link UnknownCaptureOutcomeException}, {@link UnknownChangeStatusException}, {@link UnknownCompareOutcomeException},
- * {@link UnknownDeleteFolderOutcomeException}, {@link UnknownFieldException}, {@link UnknownKeepReasonException},
- * {@link UnknownPathKindException}, {@link UnknownPreviewOutcomeException}, {@link UnknownReadOutcomeException},
- * {@link UnknownRestoreActionException}, {@link UnknownRestoreOutcomeException}, {@link UnknownUnreadReasonException},
- * {@link UnreadCodeMismatchException}, {@link UnreadReasonMismatchException}.
+ * The base of the checkpoints protocol's exceptions, thrown when a model is built from values it refuses; JSON that isn't a model's wire
+ * form fails with `JsonException` from `@noldova/context.json` instead. Its subclasses: {@link CaptureCheckpointMismatchException}, {@link
+ * CaptureSpaceMismatchException}, {@link ChangeSidesMismatchException}, {@link CompareChangesMismatchException}, {@link
+ * ContentTooLongException}, {@link InvalidBase64Exception}, {@link InvalidCheckpointIdException}, {@link InvalidDateException}, {@link
+ * InvalidFolderPathException}, {@link InvalidIdentityException}, {@link InvalidPlanStateException}, {@link InvalidReadLimitException},
+ * {@link InvalidRelativePathException}, {@link InvalidSizeException}, {@link InvalidTimeException}, {@link LabelTooLongException}, {@link
+ * PreviewPlanMismatchException}, {@link ReadCutMismatchException}, {@link ReadOutcomeMismatchException}, {@link
+ * RestoreCheckpointsMismatchException}, {@link SideSizeMismatchException}, {@link StepSidesMismatchException}, {@link
+ * UnknownCaptureModeException}, {@link UnknownCaptureOutcomeException}, {@link UnknownChangeStatusException}, {@link
+ * UnknownCompareOutcomeException}, {@link UnknownDeleteFolderOutcomeException}, {@link UnknownKeepReasonException}, {@link
+ * UnknownPathKindException}, {@link UnknownPreviewOutcomeException}, {@link UnknownReadOutcomeException}, {@link
+ * UnknownRestoreActionException}, {@link UnknownRestoreOutcomeException}, {@link UnknownUnreadReasonException}, {@link
+ * UnreadCodeMismatchException}, {@link UnreadReasonMismatchException}.
  *
  * @example
  * ```ts
@@ -182,216 +170,6 @@ export declare class ContentTooLongException extends ProtocolException {
    * ```
    */
   public constructor(length: number, size: number);
-}
-
-/**
- * Thrown when a model's field is neither `true` nor `false`.
- */
-export declare class FieldNotABooleanException extends ProtocolException {
-  /**
-   * The field's name.
-   */
-  public readonly field: string;
-
-  /**
-   * The model's name.
-   */
-  public readonly model: string;
-
-  /**
-   * Formats the exception's message from its facts.
-   *
-   * @param model The model's name.
-   * @param field The field's name.
-   * @example
-   * ```ts
-   * import { FieldNotABooleanException } from "@noldova/checkpoints.protocol";
-   *
-   * const exception = new FieldNotABooleanException("Model", "number");
-   * console.log(exception.message, exception.model, exception.field);
-   * ```
-   */
-  public constructor(model: string, field: string);
-}
-
-/**
- * Thrown when a model's field isn't a list.
- */
-export declare class FieldNotAListException extends ProtocolException {
-  /**
-   * The field's name.
-   */
-  public readonly field: string;
-
-  /**
-   * The model's name.
-   */
-  public readonly model: string;
-
-  /**
-   * Formats the exception's message from its facts.
-   *
-   * @param model The model's name.
-   * @param field The field's name.
-   * @example
-   * ```ts
-   * import { FieldNotAListException } from "@noldova/checkpoints.protocol";
-   *
-   * const exception = new FieldNotAListException("Model", "number");
-   * console.log(exception.message, exception.model, exception.field);
-   * ```
-   */
-  public constructor(model: string, field: string);
-}
-
-/**
- * Thrown when a model's field isn't a number.
- */
-export declare class FieldNotANumberException extends ProtocolException {
-  /**
-   * The field's name.
-   */
-  public readonly field: string;
-
-  /**
-   * The model's name.
-   */
-  public readonly model: string;
-
-  /**
-   * Formats the exception's message from its facts.
-   *
-   * @param model The model's name.
-   * @param field The field's name.
-   * @example
-   * ```ts
-   * import { FieldNotANumberException } from "@noldova/checkpoints.protocol";
-   *
-   * const exception = new FieldNotANumberException("Model", "text");
-   * console.log(exception.message, exception.model, exception.field);
-   * ```
-   */
-  public constructor(model: string, field: string);
-}
-
-/**
- * Thrown when a model's field is neither a number nor `null`.
- */
-export declare class FieldNotANumberOrNullException extends ProtocolException {
-  /**
-   * The field's name.
-   */
-  public readonly field: string;
-
-  /**
-   * The model's name.
-   */
-  public readonly model: string;
-
-  /**
-   * Formats the exception's message from its facts.
-   *
-   * @param model The model's name.
-   * @param field The field's name.
-   * @example
-   * ```ts
-   * import { FieldNotANumberOrNullException } from "@noldova/checkpoints.protocol";
-   *
-   * const exception = new FieldNotANumberOrNullException("Model", "text");
-   * console.log(exception.message, exception.model, exception.field);
-   * ```
-   */
-  public constructor(model: string, field: string);
-}
-
-/**
- * Thrown when a model's field isn't text.
- */
-export declare class FieldNotAStringException extends ProtocolException {
-  /**
-   * The field's name.
-   */
-  public readonly field: string;
-
-  /**
-   * The model's name.
-   */
-  public readonly model: string;
-
-  /**
-   * Formats the exception's message from its facts.
-   *
-   * @param model The model's name.
-   * @param field The field's name.
-   * @example
-   * ```ts
-   * import { FieldNotAStringException } from "@noldova/checkpoints.protocol";
-   *
-   * const exception = new FieldNotAStringException("Model", "number");
-   * console.log(exception.message, exception.model, exception.field);
-   * ```
-   */
-  public constructor(model: string, field: string);
-}
-
-/**
- * Thrown when a model's field isn't a list of text.
- */
-export declare class FieldNotAStringListException extends ProtocolException {
-  /**
-   * The field's name.
-   */
-  public readonly field: string;
-
-  /**
-   * The model's name.
-   */
-  public readonly model: string;
-
-  /**
-   * Formats the exception's message from its facts.
-   *
-   * @param model The model's name.
-   * @param field The field's name.
-   * @example
-   * ```ts
-   * import { FieldNotAStringListException } from "@noldova/checkpoints.protocol";
-   *
-   * const exception = new FieldNotAStringListException("Model", "mixed");
-   * console.log(exception.message, exception.model, exception.field);
-   * ```
-   */
-  public constructor(model: string, field: string);
-}
-
-/**
- * Thrown when a model's field is neither text nor `null`.
- */
-export declare class FieldNotAStringOrNullException extends ProtocolException {
-  /**
-   * The field's name.
-   */
-  public readonly field: string;
-
-  /**
-   * The model's name.
-   */
-  public readonly model: string;
-
-  /**
-   * Formats the exception's message from its facts.
-   *
-   * @param model The model's name.
-   * @param field The field's name.
-   * @example
-   * ```ts
-   * import { FieldNotAStringOrNullException } from "@noldova/checkpoints.protocol";
-   *
-   * const exception = new FieldNotAStringOrNullException("Model", "number");
-   * console.log(exception.message, exception.model, exception.field);
-   * ```
-   */
-  public constructor(model: string, field: string);
 }
 
 /**
@@ -643,60 +421,6 @@ export declare class LabelTooLongException extends ProtocolException {
    * ```
    */
   public constructor(length: number);
-}
-
-/**
- * Thrown when a model's wire form lacks a field it needs.
- */
-export declare class MissingFieldException extends ProtocolException {
-  /**
-   * The field's name.
-   */
-  public readonly field: string;
-
-  /**
-   * The model's name.
-   */
-  public readonly model: string;
-
-  /**
-   * Formats the exception's message from its facts.
-   *
-   * @param model The model's name.
-   * @param field The field's name.
-   * @example
-   * ```ts
-   * import { MissingFieldException } from "@noldova/checkpoints.protocol";
-   *
-   * const exception = new MissingFieldException("Model", "missing");
-   * console.log(exception.message, exception.model, exception.field);
-   * ```
-   */
-  public constructor(model: string, field: string);
-}
-
-/**
- * Thrown when a model's wire form isn't a JSON object.
- */
-export declare class NotAnObjectException extends ProtocolException {
-  /**
-   * The model's name.
-   */
-  public readonly model: string;
-
-  /**
-   * Formats the exception's message from its facts.
-   *
-   * @param model The model's name.
-   * @example
-   * ```ts
-   * import { NotAnObjectException } from "@noldova/checkpoints.protocol";
-   *
-   * const exception = new NotAnObjectException("Model");
-   * console.log(exception.message, exception.model);
-   * ```
-   */
-  public constructor(model: string);
 }
 
 /**
@@ -961,36 +685,6 @@ export declare class UnknownDeleteFolderOutcomeException extends ProtocolExcepti
    * ```
    */
   public constructor(value: string);
-}
-
-/**
- * Thrown when a model's wire form has a field the model doesn't.
- */
-export declare class UnknownFieldException extends ProtocolException {
-  /**
-   * The field's name.
-   */
-  public readonly field: string;
-
-  /**
-   * The model's name.
-   */
-  public readonly model: string;
-
-  /**
-   * Formats the exception's message from its facts.
-   *
-   * @param model The model's name.
-   * @param field The field's name.
-   * @example
-   * ```ts
-   * import { UnknownFieldException } from "@noldova/checkpoints.protocol";
-   *
-   * const exception = new UnknownFieldException("Model", "other");
-   * console.log(exception.message, exception.model, exception.field);
-   * ```
-   */
-  public constructor(model: string, field: string);
 }
 
 /**
@@ -1421,7 +1115,8 @@ export declare class UnreadPath {
    *
    * @param value The wire form.
    * @returns The path.
-   * @throws {ProtocolException} Thrown synchronously when the value isn't the wire form of a path.
+   * @throws {JsonException} Thrown synchronously when the value isn't the wire form of a path: it isn't an object, or a field is missing, of the wrong type or not one the model has.
+   * @throws {ProtocolException} Thrown synchronously when the wire form holds a value the model refuses.
    * @example
    * ```ts
    * import { UnreadPath } from "@noldova/checkpoints.protocol";
@@ -1497,7 +1192,8 @@ export declare class Checkpoint {
    *
    * @param value The wire form.
    * @returns The checkpoint.
-   * @throws {ProtocolException} Thrown synchronously when the value isn't the wire form of a checkpoint.
+   * @throws {JsonException} Thrown synchronously when the value isn't the wire form of a checkpoint: it isn't an object, or a field is missing, of the wrong type or not one the model has.
+   * @throws {ProtocolException} Thrown synchronously when the wire form holds a value the model refuses.
    * @example
    * ```ts
    * import { Checkpoint } from "@noldova/checkpoints.protocol";
@@ -1556,7 +1252,8 @@ export declare class FolderReference {
    *
    * @param value The wire form.
    * @returns The folder.
-   * @throws {ProtocolException} Thrown synchronously when the value isn't the wire form of a folder.
+   * @throws {JsonException} Thrown synchronously when the value isn't the wire form of a folder: it isn't an object, or a field is missing, of the wrong type or not one the model has.
+   * @throws {ProtocolException} Thrown synchronously when the wire form holds a value the model refuses.
    * @example
    * ```ts
    * import { FolderReference } from "@noldova/checkpoints.protocol";
@@ -1618,7 +1315,8 @@ export declare class CaptureRequest {
    *
    * @param value The wire form.
    * @returns The request.
-   * @throws {ProtocolException} Thrown synchronously when the value isn't the wire form of a request.
+   * @throws {JsonException} Thrown synchronously when the value isn't the wire form of a request: it isn't an object, or a field is missing, of the wrong type or not one the model has.
+   * @throws {ProtocolException} Thrown synchronously when the wire form holds a value the model refuses.
    * @example
    * ```ts
    * import { CaptureRequest } from "@noldova/checkpoints.protocol";
@@ -1691,7 +1389,8 @@ export declare class CaptureResult {
    *
    * @param value The wire form.
    * @returns The result.
-   * @throws {ProtocolException} Thrown synchronously when the value isn't the wire form of a result.
+   * @throws {JsonException} Thrown synchronously when the value isn't the wire form of a result: it isn't an object, or a field is missing, of the wrong type or not one the model has.
+   * @throws {ProtocolException} Thrown synchronously when the wire form holds a value the model refuses.
    * @example
    * ```ts
    * import { CaptureResult } from "@noldova/checkpoints.protocol";
@@ -1747,7 +1446,8 @@ export declare class ListRequest {
    *
    * @param value The wire form.
    * @returns The request.
-   * @throws {ProtocolException} Thrown synchronously when the value isn't the wire form of a request.
+   * @throws {JsonException} Thrown synchronously when the value isn't the wire form of a request: it isn't an object, or a field is missing, of the wrong type or not one the model has.
+   * @throws {ProtocolException} Thrown synchronously when the wire form holds a value the model refuses.
    * @example
    * ```ts
    * import { ListRequest } from "@noldova/checkpoints.protocol";
@@ -1799,7 +1499,8 @@ export declare class CheckpointList {
    *
    * @param value The wire form.
    * @returns The list.
-   * @throws {ProtocolException} Thrown synchronously when the value isn't the wire form of a list.
+   * @throws {JsonException} Thrown synchronously when the value isn't the wire form of a list: it isn't an object, or a field is missing, of the wrong type or not one the model has.
+   * @throws {ProtocolException} Thrown synchronously when the wire form holds a value the model refuses.
    * @example
    * ```ts
    * import { CheckpointList } from "@noldova/checkpoints.protocol";
@@ -1984,7 +1685,8 @@ export declare class ChangeSide {
    *
    * @param value The wire form.
    * @returns The side.
-   * @throws {ProtocolException} Thrown synchronously when the value isn't the wire form of a side.
+   * @throws {JsonException} Thrown synchronously when the value isn't the wire form of a side: it isn't an object, or a field is missing, of the wrong type or not one the model has.
+   * @throws {ProtocolException} Thrown synchronously when the wire form holds a value the model refuses.
    * @example
    * ```ts
    * import { ChangeSide } from "@noldova/checkpoints.protocol";
@@ -2060,7 +1762,8 @@ export declare class Change {
    *
    * @param value The wire form.
    * @returns The change.
-   * @throws {ProtocolException} Thrown synchronously when the value isn't the wire form of a change.
+   * @throws {JsonException} Thrown synchronously when the value isn't the wire form of a change: it isn't an object, or a field is missing, of the wrong type or not one the model has.
+   * @throws {ProtocolException} Thrown synchronously when the wire form holds a value the model refuses.
    * @example
    * ```ts
    * import { Change } from "@noldova/checkpoints.protocol";
@@ -2186,7 +1889,8 @@ export declare class CompareRequest {
    *
    * @param value The wire form.
    * @returns The request.
-   * @throws {ProtocolException} Thrown synchronously when the value isn't the wire form of a request.
+   * @throws {JsonException} Thrown synchronously when the value isn't the wire form of a request: it isn't an object, or a field is missing, of the wrong type or not one the model has.
+   * @throws {ProtocolException} Thrown synchronously when the wire form holds a value the model refuses.
    * @example
    * ```ts
    * import { CompareRequest } from "@noldova/checkpoints.protocol";
@@ -2248,7 +1952,8 @@ export declare class CompareResult {
    *
    * @param value The wire form.
    * @returns The result.
-   * @throws {ProtocolException} Thrown synchronously when the value isn't the wire form of a result.
+   * @throws {JsonException} Thrown synchronously when the value isn't the wire form of a result: it isn't an object, or a field is missing, of the wrong type or not one the model has.
+   * @throws {ProtocolException} Thrown synchronously when the wire form holds a value the model refuses.
    * @example
    * ```ts
    * import { CompareResult } from "@noldova/checkpoints.protocol";
@@ -2299,7 +2004,8 @@ export declare class DiffTarget {
    *
    * @param value The wire form.
    * @returns The target.
-   * @throws {ProtocolException} Thrown synchronously when the value isn't the wire form of a target.
+   * @throws {JsonException} Thrown synchronously when the value isn't the wire form of a target: it isn't an object, or a field is missing, of the wrong type or not one the model has.
+   * @throws {ProtocolException} Thrown synchronously when the wire form holds a value the model refuses.
    * @example
    * ```ts
    * import { DiffTarget } from "@noldova/checkpoints.protocol";
@@ -2455,7 +2161,8 @@ export declare class ReadRequest {
    *
    * @param value The wire form.
    * @returns The request.
-   * @throws {ProtocolException} Thrown synchronously when the value isn't the wire form of a request.
+   * @throws {JsonException} Thrown synchronously when the value isn't the wire form of a request: it isn't an object, or a field is missing, of the wrong type or not one the model has.
+   * @throws {ProtocolException} Thrown synchronously when the wire form holds a value the model refuses.
    * @example
    * ```ts
    * import { ReadRequest } from "@noldova/checkpoints.protocol";
@@ -2535,7 +2242,8 @@ export declare class ReadResult {
    *
    * @param value The wire form.
    * @returns The result.
-   * @throws {ProtocolException} Thrown synchronously when the value isn't the wire form of a result, such as content that isn't base64 text.
+   * @throws {JsonException} Thrown synchronously when the value isn't the wire form of a result: it isn't an object, or a field is missing, of the wrong type or not one the model has.
+   * @throws {ProtocolException} Thrown synchronously when the wire form holds a value the model refuses, such as content that isn't base64 text.
    * @example
    * ```ts
    * import { ReadResult } from "@noldova/checkpoints.protocol";
@@ -2721,7 +2429,8 @@ export declare class RestoreStep {
    *
    * @param value The wire form.
    * @returns The step.
-   * @throws {ProtocolException} Thrown synchronously when the value isn't the wire form of a step.
+   * @throws {JsonException} Thrown synchronously when the value isn't the wire form of a step: it isn't an object, or a field is missing, of the wrong type or not one the model has.
+   * @throws {ProtocolException} Thrown synchronously when the wire form holds a value the model refuses.
    * @example
    * ```ts
    * import { RestoreStep } from "@noldova/checkpoints.protocol";
@@ -2778,7 +2487,8 @@ export declare class KeptPath {
    *
    * @param value The wire form.
    * @returns The kept path.
-   * @throws {ProtocolException} Thrown synchronously when the value isn't the wire form of a kept path.
+   * @throws {JsonException} Thrown synchronously when the value isn't the wire form of a kept path: it isn't an object, or a field is missing, of the wrong type or not one the model has.
+   * @throws {ProtocolException} Thrown synchronously when the wire form holds a value the model refuses.
    * @example
    * ```ts
    * import { KeptPath } from "@noldova/checkpoints.protocol";
@@ -2873,7 +2583,8 @@ export declare class RestorePlan {
    *
    * @param value The wire form.
    * @returns The plan.
-   * @throws {ProtocolException} Thrown synchronously when the value isn't the wire form of a plan.
+   * @throws {JsonException} Thrown synchronously when the value isn't the wire form of a plan: it isn't an object, or a field is missing, of the wrong type or not one the model has.
+   * @throws {ProtocolException} Thrown synchronously when the wire form holds a value the model refuses.
    * @example
    * ```ts
    * import { RestorePlan } from "@noldova/checkpoints.protocol";
@@ -3016,7 +2727,8 @@ export declare class PreviewRequest {
    *
    * @param value The wire form.
    * @returns The request.
-   * @throws {ProtocolException} Thrown synchronously when the value isn't the wire form of a request.
+   * @throws {JsonException} Thrown synchronously when the value isn't the wire form of a request: it isn't an object, or a field is missing, of the wrong type or not one the model has.
+   * @throws {ProtocolException} Thrown synchronously when the wire form holds a value the model refuses.
    * @example
    * ```ts
    * import { PreviewRequest } from "@noldova/checkpoints.protocol";
@@ -3078,7 +2790,8 @@ export declare class PreviewResult {
    *
    * @param value The wire form.
    * @returns The result.
-   * @throws {ProtocolException} Thrown synchronously when the value isn't the wire form of a result.
+   * @throws {JsonException} Thrown synchronously when the value isn't the wire form of a result: it isn't an object, or a field is missing, of the wrong type or not one the model has.
+   * @throws {ProtocolException} Thrown synchronously when the wire form holds a value the model refuses.
    * @example
    * ```ts
    * import { PreviewResult } from "@noldova/checkpoints.protocol";
@@ -3221,7 +2934,8 @@ export declare class RestoreRequest {
    *
    * @param value The wire form.
    * @returns The request.
-   * @throws {ProtocolException} Thrown synchronously when the value isn't the wire form of a request.
+   * @throws {JsonException} Thrown synchronously when the value isn't the wire form of a request: it isn't an object, or a field is missing, of the wrong type or not one the model has.
+   * @throws {ProtocolException} Thrown synchronously when the wire form holds a value the model refuses.
    * @example
    * ```ts
    * import { RestoreRequest } from "@noldova/checkpoints.protocol";
@@ -3294,7 +3008,8 @@ export declare class RestoreResult {
    *
    * @param value The wire form.
    * @returns The result.
-   * @throws {ProtocolException} Thrown synchronously when the value isn't the wire form of a result.
+   * @throws {JsonException} Thrown synchronously when the value isn't the wire form of a result: it isn't an object, or a field is missing, of the wrong type or not one the model has.
+   * @throws {ProtocolException} Thrown synchronously when the wire form holds a value the model refuses.
    * @example
    * ```ts
    * import { RestoreResult } from "@noldova/checkpoints.protocol";
@@ -3344,7 +3059,8 @@ export declare class StorageRequest {
    *
    * @param value The wire form.
    * @returns The request.
-   * @throws {ProtocolException} Thrown synchronously when the value isn't the wire form of a request.
+   * @throws {JsonException} Thrown synchronously when the value isn't the wire form of a request: it isn't an object, or a field is missing, of the wrong type or not one the model has.
+   * @throws {ProtocolException} Thrown synchronously when the wire form holds a value the model refuses.
    * @example
    * ```ts
    * import { StorageRequest } from "@noldova/checkpoints.protocol";
@@ -3408,7 +3124,8 @@ export declare class FolderUsage {
    *
    * @param value The wire form.
    * @returns The folder's space used.
-   * @throws {ProtocolException} Thrown synchronously when the value isn't the wire form of a folder's space used.
+   * @throws {JsonException} Thrown synchronously when the value isn't the wire form of a folder's space used: it isn't an object, or a field is missing, of the wrong type or not one the model has.
+   * @throws {ProtocolException} Thrown synchronously when the wire form holds a value the model refuses.
    * @example
    * ```ts
    * import { FolderUsage } from "@noldova/checkpoints.protocol";
@@ -3458,7 +3175,8 @@ export declare class StorageList {
    *
    * @param value The wire form.
    * @returns The list.
-   * @throws {ProtocolException} Thrown synchronously when the value isn't the wire form of a list.
+   * @throws {JsonException} Thrown synchronously when the value isn't the wire form of a list: it isn't an object, or a field is missing, of the wrong type or not one the model has.
+   * @throws {ProtocolException} Thrown synchronously when the wire form holds a value the model refuses.
    * @example
    * ```ts
    * import { StorageList } from "@noldova/checkpoints.protocol";
@@ -3563,7 +3281,8 @@ export declare class DeleteFolderRequest {
    *
    * @param value The wire form.
    * @returns The request.
-   * @throws {ProtocolException} Thrown synchronously when the value isn't the wire form of a request.
+   * @throws {JsonException} Thrown synchronously when the value isn't the wire form of a request: it isn't an object, or a field is missing, of the wrong type or not one the model has.
+   * @throws {ProtocolException} Thrown synchronously when the wire form holds a value the model refuses.
    * @example
    * ```ts
    * import { DeleteFolderRequest } from "@noldova/checkpoints.protocol";
@@ -3615,7 +3334,8 @@ export declare class DeleteFolderResult {
    *
    * @param value The wire form.
    * @returns The result.
-   * @throws {ProtocolException} Thrown synchronously when the value isn't the wire form of a result.
+   * @throws {JsonException} Thrown synchronously when the value isn't the wire form of a result: it isn't an object, or a field is missing, of the wrong type or not one the model has.
+   * @throws {ProtocolException} Thrown synchronously when the wire form holds a value the model refuses.
    * @example
    * ```ts
    * import { DeleteFolderResult } from "@noldova/checkpoints.protocol";
@@ -3685,7 +3405,8 @@ export declare class RestoredEvent {
    *
    * @param value The wire form.
    * @returns The event.
-   * @throws {ProtocolException} Thrown synchronously when the value isn't the wire form of the event.
+   * @throws {JsonException} Thrown synchronously when the value isn't the wire form of the event: it isn't an object, or a field is missing, of the wrong type or not one the model has.
+   * @throws {ProtocolException} Thrown synchronously when the wire form holds a value the model refuses.
    * @example
    * ```ts
    * import { RestoredEvent } from "@noldova/checkpoints.protocol";
@@ -3758,7 +3479,8 @@ export declare class CapturePausedEvent {
    *
    * @param value The wire form.
    * @returns The event.
-   * @throws {ProtocolException} Thrown synchronously when the value isn't the wire form of the event.
+   * @throws {JsonException} Thrown synchronously when the value isn't the wire form of the event: it isn't an object, or a field is missing, of the wrong type or not one the model has.
+   * @throws {ProtocolException} Thrown synchronously when the wire form holds a value the model refuses.
    * @example
    * ```ts
    * import { CapturePausedEvent } from "@noldova/checkpoints.protocol";
@@ -3815,7 +3537,8 @@ export declare class CaptureResumedEvent {
    *
    * @param value The wire form.
    * @returns The event.
-   * @throws {ProtocolException} Thrown synchronously when the value isn't the wire form of the event.
+   * @throws {JsonException} Thrown synchronously when the value isn't the wire form of the event: it isn't an object, or a field is missing, of the wrong type or not one the model has.
+   * @throws {ProtocolException} Thrown synchronously when the wire form holds a value the model refuses.
    * @example
    * ```ts
    * import { CaptureResumedEvent } from "@noldova/checkpoints.protocol";
@@ -3878,7 +3601,8 @@ export declare class RestoreHeldUpEvent {
    *
    * @param value The wire form.
    * @returns The event.
-   * @throws {ProtocolException} Thrown synchronously when the value isn't the wire form of the event.
+   * @throws {JsonException} Thrown synchronously when the value isn't the wire form of the event: it isn't an object, or a field is missing, of the wrong type or not one the model has.
+   * @throws {ProtocolException} Thrown synchronously when the wire form holds a value the model refuses.
    * @example
    * ```ts
    * import { RestoreHeldUpEvent } from "@noldova/checkpoints.protocol";
@@ -3900,163 +3624,4 @@ export declare class RestoreHeldUpEvent {
    * ```
    */
   public toJson(): JsonObject;
-}
-
-/**
- * Reads the fields of a JSON object that a model's wire form must be, failing with a {@link ProtocolException} that names the model.
- */
-export declare class JsonObjectReader {
-  /**
-   * @param value The value to read, which must be a JSON object.
-   * @param model The model's name, for the failures' messages.
-   * @throws {ProtocolException} Thrown synchronously when the value isn't an object.
-   * @example
-   * ```ts
-   * import { JsonObjectReader } from "@noldova/checkpoints.protocol";
-   *
-   * const reader = new JsonObjectReader({ label: "Turn 3" }, "Model");
-   * reader.refuseOtherFields(["label"]);
-   * console.log(reader.readString("label"));
-   * ```
-   */
-  public constructor(value: unknown, model: string);
-
-  /**
-   * @param field The field's name.
-   * @returns The field's value.
-   * @throws {ProtocolException} Thrown synchronously when the object has no such field.
-   * @example
-   * ```ts
-   * import { JsonObjectReader } from "@noldova/checkpoints.protocol";
-   *
-   * const reader = new JsonObjectReader({ label: "Turn 3" }, "Model");
-   * console.log(reader.read("label"));
-   * ```
-   */
-  public read(field: string): unknown;
-
-  /**
-   * @param field The field's name.
-   * @returns The field's `true` or `false`.
-   * @throws {ProtocolException} Thrown synchronously when the field is missing or is neither `true` nor `false`.
-   * @example
-   * ```ts
-   * import { JsonObjectReader } from "@noldova/checkpoints.protocol";
-   *
-   * const reader = new JsonObjectReader({ isText: true }, "Model");
-   * console.log(reader.readBoolean("isText"));
-   * ```
-   */
-  public readBoolean(field: string): boolean;
-
-  /**
-   * @param field The field's name.
-   * @returns The field's list.
-   * @throws {ProtocolException} Thrown synchronously when the field is missing or isn't a list.
-   * @example
-   * ```ts
-   * import { JsonObjectReader } from "@noldova/checkpoints.protocol";
-   *
-   * const reader = new JsonObjectReader({ steps: [] }, "Model");
-   * console.log(reader.readList("steps").length);
-   * ```
-   */
-  public readList(field: string): readonly unknown[];
-
-  /**
-   * @param field The field's name.
-   * @returns The field's number.
-   * @throws {ProtocolException} Thrown synchronously when the field is missing or isn't a number.
-   * @example
-   * ```ts
-   * import { JsonObjectReader } from "@noldova/checkpoints.protocol";
-   *
-   * const reader = new JsonObjectReader({ size: 1_024 }, "Model");
-   * console.log(reader.readNumber("size"));
-   * ```
-   */
-  public readNumber(field: string): number;
-
-  /**
-   * @param field The field's name.
-   * @returns The field's number, or `null`.
-   * @throws {ProtocolException} Thrown synchronously when the field is missing or is neither a number nor `null`.
-   * @example
-   * ```ts
-   * import { JsonObjectReader } from "@noldova/checkpoints.protocol";
-   *
-   * const reader = new JsonObjectReader({ size: null }, "Model");
-   * console.log(reader.readNumberOrNull("size"));
-   * ```
-   */
-  public readNumberOrNull(field: string): number | null;
-
-  /**
-   * @param field The field's name.
-   * @returns The field's text.
-   * @throws {ProtocolException} Thrown synchronously when the field is missing or isn't text.
-   * @example
-   * ```ts
-   * import { JsonObjectReader } from "@noldova/checkpoints.protocol";
-   *
-   * const reader = new JsonObjectReader({ label: "Turn 3" }, "Model");
-   * console.log(reader.readString("label"));
-   * ```
-   */
-  public readString(field: string): string;
-
-  /**
-   * @param field The field's name.
-   * @returns The field's text, or `null`.
-   * @throws {ProtocolException} Thrown synchronously when the field is missing or is neither text nor `null`.
-   * @example
-   * ```ts
-   * import { JsonObjectReader } from "@noldova/checkpoints.protocol";
-   *
-   * const reader = new JsonObjectReader({ label: null }, "Model");
-   * console.log(reader.readStringOrNull("label"));
-   * ```
-   */
-  public readStringOrNull(field: string): string | null;
-
-  /**
-   * @param field The field's name.
-   * @returns The field's list of text.
-   * @throws {ProtocolException} Thrown synchronously when the field is missing or isn't a list of text.
-   * @example
-   * ```ts
-   * import { JsonObjectReader } from "@noldova/checkpoints.protocol";
-   *
-   * const reader = new JsonObjectReader({ paths: ["src", "docs"] }, "Model");
-   * console.log(reader.readStringList("paths"));
-   * ```
-   */
-  public readStringList(field: string): readonly string[];
-
-  /**
-   * @param field The field's name.
-   * @returns The field's list of text, or `null`.
-   * @throws {ProtocolException} Thrown synchronously when the field is missing or is neither a list of text nor `null`.
-   * @example
-   * ```ts
-   * import { JsonObjectReader } from "@noldova/checkpoints.protocol";
-   *
-   * const reader = new JsonObjectReader({ paths: null }, "Model");
-   * console.log(reader.readStringListOrNull("paths"));
-   * ```
-   */
-  public readStringListOrNull(field: string): readonly string[] | null;
-
-  /**
-   * @param known The fields the model has.
-   * @throws {ProtocolException} Thrown synchronously when the object has a field the model doesn't.
-   * @example
-   * ```ts
-   * import { JsonObjectReader } from "@noldova/checkpoints.protocol";
-   *
-   * const reader = new JsonObjectReader({ label: "Turn 3" }, "Model");
-   * reader.refuseOtherFields(["label"]);
-   * ```
-   */
-  public refuseOtherFields(known: readonly string[]): void;
 }
