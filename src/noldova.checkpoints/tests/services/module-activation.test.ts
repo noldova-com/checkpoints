@@ -21,15 +21,12 @@ import {
   InvalidIdentityException,
   InvalidRelativePathException,
   ListRequest,
-  MissingFieldException,
-  NotAnObjectException,
   PreviewResult,
   ReadResult,
   RestoreResult,
-  StorageList,
-  UnknownFieldException,
-  type JsonValue
+  StorageList
 } from "@noldova/checkpoints.protocol";
+import { JsonException, type JsonValue } from "@noldova/context.json";
 import type { OwnedProcess, ProcessRequest } from "@noldova/desktop.runtime";
 
 import { CheckpointsService } from "../../src/api/index.ts";
@@ -267,15 +264,15 @@ describe("ModuleActivation", { concurrency: true }, () => {
     const folder = { identity: CheckpointsHarness.identity, path: harness.folder };
 
     await assert.rejects(harness.context.callAsync("checkpoints.capture", { folder: { identity: "a b", path: harness.folder }, label: null }), InvalidIdentityException);
-    await assert.rejects(harness.context.callAsync("checkpoints.list", {}), MissingFieldException);
+    await assert.rejects(harness.context.callAsync("checkpoints.list", {}), new JsonException("The field is required.", "ListRequest.folder"));
     await assert.rejects(harness.context.callAsync("checkpoints.compare", { folder, from: "1", to: null }), InvalidCheckpointIdException);
     await assert.rejects(harness.context.callAsync("checkpoints.previewRestore", { folder, checkpoint: "1", paths: null }), InvalidCheckpointIdException);
-    await assert.rejects(harness.context.callAsync("checkpoints.restore", { folder, plan: null }), NotAnObjectException);
+    await assert.rejects(harness.context.callAsync("checkpoints.restore", { folder, plan: null }), new JsonException("Expected a JSON object.", "RestorePlan"));
     await assert.rejects(harness.context.callAsync("checkpoints.read", {
       folder, checkpoint: CheckpointsHarness.unknownId, path: "../a.txt", against: null, limit: 1
     }), InvalidRelativePathException);
-    await assert.rejects(harness.context.callAsync("checkpoints.storage", { folder }), UnknownFieldException);
-    await assert.rejects(harness.context.callAsync("checkpoints.deleteFolder", {}), MissingFieldException);
+    await assert.rejects(harness.context.callAsync("checkpoints.storage", { folder }), new JsonException("The field is not part of this message, which accepts no unknown fields.", "StorageRequest.folder"));
+    await assert.rejects(harness.context.callAsync("checkpoints.deleteFolder", {}), new JsonException("The field is required.", "DeleteFolderRequest.folder"));
   });
 
   it("runs none of its service's requests once turned off, so none runs beside those of the service it publishes once on again", async t => {

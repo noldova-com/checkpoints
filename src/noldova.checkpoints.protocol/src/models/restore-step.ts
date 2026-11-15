@@ -6,12 +6,13 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import type { JsonObject } from "@noldova/context.json";
+
 import { InvalidRelativePathException } from "../exceptions/invalid-relative-path.exception.ts";
 import { StepSidesMismatchException } from "../exceptions/step-sides-mismatch.exception.ts";
 import { Resources } from "../resources.ts";
-import { JsonObjectReader } from "../services/json-object.reader.ts";
 import { RelativePath } from "../services/relative-path.ts";
-import type { JsonObject } from "../types/json-object.ts";
+import { WireForm } from "../services/wire-form.ts";
 import { ChangeSide } from "./change-side.ts";
 import { RestoreAction } from "./restore-action.ts";
 
@@ -35,13 +36,12 @@ export class RestoreStep {
   }
 
   public static fromJson(value: unknown): RestoreStep {
-    const reader = new JsonObjectReader(value, Resources.restoreStepModel);
-    reader.refuseOtherFields(RestoreStep.FIELDS);
-    const before = reader.read(Resources.beforeField);
-    const after = reader.read(Resources.afterField);
+    const reader = WireForm.read(value, Resources.restoreStepModel, RestoreStep.FIELDS);
+    const before = reader.readValue(Resources.beforeField);
+    const after = reader.readValue(Resources.afterField);
     return new RestoreStep(
       reader.readString(Resources.pathField),
-      RestoreAction.fromJson(reader.read(Resources.actionField)),
+      RestoreAction.fromJson(reader.readValue(Resources.actionField)),
       before === null ? null : ChangeSide.fromJson(before),
       after === null ? null : ChangeSide.fromJson(after));
   }

@@ -10,7 +10,8 @@ import { createHash } from "node:crypto";
 import { open, readFile, rename, rm } from "node:fs/promises";
 import path from "node:path";
 
-import { JsonObjectReader, ProtocolException } from "@noldova/checkpoints.protocol";
+import { ProtocolException } from "@noldova/checkpoints.protocol";
+import { JsonException, JsonReader } from "@noldova/context.json";
 
 import { StoreException } from "../exceptions/store.exception.ts";
 import { JournalReading } from "../models/journal-reading.ts";
@@ -108,14 +109,14 @@ export class RestoreJournal {
 
   private static isWhole(line: string): boolean {
     return Failures.recover(() => {
-      const value = new JsonObjectReader(JSON.parse(line), Resources.journalLineModel);
-      return RestoreJournal.sumOf(JSON.stringify(value.read(Resources.recordField))) === value.read(Resources.sumField);
-    }, t => t instanceof ProtocolException || t instanceof SyntaxError, false);
+      const value = JsonReader.fromValue(JSON.parse(line), Resources.journalLineModel);
+      return RestoreJournal.sumOf(JSON.stringify(value.readValue(Resources.recordField))) === value.readValue(Resources.sumField);
+    }, t => t instanceof JsonException || t instanceof SyntaxError, false);
   }
 
   private static parse(line: string): JournalRecord | null {
-    return Failures.recover(() => JournalRecord.fromJson(new JsonObjectReader(JSON.parse(line), Resources.journalLineModel).read(Resources.recordField)),
-      t => t instanceof StoreException || t instanceof ProtocolException, null);
+    return Failures.recover(() => JournalRecord.fromJson(JsonReader.fromValue(JSON.parse(line), Resources.journalLineModel).readValue(Resources.recordField)),
+      t => t instanceof StoreException || t instanceof ProtocolException || t instanceof JsonException, null);
   }
 
   private static sumOf(json: string): string {

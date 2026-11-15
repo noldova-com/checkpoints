@@ -6,10 +6,11 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import type { JsonObject } from "@noldova/context.json";
+
 import { Resources } from "../resources.ts";
 import { CheckpointId } from "../services/checkpoint-id.ts";
-import { JsonObjectReader } from "../services/json-object.reader.ts";
-import type { JsonObject } from "../types/json-object.ts";
+import { WireForm } from "../services/wire-form.ts";
 
 export class DiffTarget {
   private static readonly FIELDS: readonly string[] = [Resources.checkpointField];
@@ -23,9 +24,8 @@ export class DiffTarget {
   }
 
   public static fromJson(value: unknown): DiffTarget {
-    const reader = new JsonObjectReader(value, Resources.diffTargetModel);
-    reader.refuseOtherFields(DiffTarget.FIELDS);
-    return new DiffTarget(reader.readStringOrNull(Resources.checkpointField));
+    const reader = WireForm.read(value, Resources.diffTargetModel, DiffTarget.FIELDS);
+    return new DiffTarget(reader.readNullableString(Resources.checkpointField));
   }
 
   public toJson(): JsonObject {

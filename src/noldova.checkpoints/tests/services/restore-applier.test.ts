@@ -13,7 +13,8 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { describe, it, type TestContext } from "node:test";
 
-import { PathKind, RestoreAction, type JsonObject } from "@noldova/checkpoints.protocol";
+import { PathKind, RestoreAction } from "@noldova/checkpoints.protocol";
+import type { JsonObject } from "@noldova/context.json";
 
 import { RestorePathChangedException } from "../../src/exceptions/restore-path-changed.exception.ts";
 import { StagedFileMissingException } from "../../src/exceptions/staged-file-missing.exception.ts";

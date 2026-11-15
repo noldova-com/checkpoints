@@ -6,7 +6,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import type { JsonObject, JsonValue } from "@noldova/checkpoints.protocol";
+import type { JsonObject, JsonValue } from "@noldova/context.json";
 
 export type JsonFields = Readonly<Record<string, unknown>>;
 

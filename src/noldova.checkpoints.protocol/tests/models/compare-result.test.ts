@@ -9,9 +9,8 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
-import {
-  Change, ChangeSide, ChangeStatus, CompareChangesMismatchException, CompareOutcome, CompareResult, MissingFieldException, PathKind, UnknownFieldException
-} from "@noldova/checkpoints.protocol";
+import { Change, ChangeSide, ChangeStatus, CompareChangesMismatchException, CompareOutcome, CompareResult, PathKind } from "@noldova/checkpoints.protocol";
+import { JsonException } from "@noldova/context.json";
 
 describe("CompareResult", { concurrency: true }, () => {
   const change = new Change("a.txt", ChangeStatus.Added, null, new ChangeSide(PathKind.File, 1, true), null);
@@ -33,13 +32,13 @@ describe("CompareResult", { concurrency: true }, () => {
   });
 
   it("refuses JSON with another field", () => {
-    assert.throws(() => CompareResult.fromJson({ outcome: "Compared", changes: [], unread: [] }), new UnknownFieldException("CompareResult", "unread"));
+    assert.throws(() => CompareResult.fromJson({ outcome: "Compared", changes: [], unread: [] }), new JsonException("The field is not part of this message, which accepts no unknown fields.", "CompareResult.unread"));
   });
 
   it("refuses JSON missing any of its fields", () => {
     const json = { outcome: "CheckpointMissing", changes: [] };
 
     for (const field of Object.keys(json))
-      assert.throws(() => CompareResult.fromJson(Object.fromEntries(Object.entries(json).filter(([key]) => key !== field))), new MissingFieldException("CompareResult", field));
+      assert.throws(() => CompareResult.fromJson(Object.fromEntries(Object.entries(json).filter(([key]) => key !== field))), new JsonException("The field is required.", `CompareResult.${field}`));
   });
 });

@@ -9,7 +9,8 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
-import { FolderReference, InvalidFolderPathException, InvalidIdentityException, MissingFieldException, UnknownFieldException } from "@noldova/checkpoints.protocol";
+import { FolderReference, InvalidFolderPathException, InvalidIdentityException } from "@noldova/checkpoints.protocol";
+import { JsonException } from "@noldova/context.json";
 
 describe("FolderReference", { concurrency: true }, () => {
   it("writes and reads its identity and path", () => {
@@ -36,14 +37,14 @@ describe("FolderReference", { concurrency: true }, () => {
   });
 
   it("refuses JSON with another field or a missing one", () => {
-    assert.throws(() => FolderReference.fromJson({ identity: "a", path: "/", name: "x" }), new UnknownFieldException("FolderReference", "name"));
-    assert.throws(() => FolderReference.fromJson({ identity: "a" }), new MissingFieldException("FolderReference", "path"));
+    assert.throws(() => FolderReference.fromJson({ identity: "a", path: "/", name: "x" }), new JsonException("The field is not part of this message, which accepts no unknown fields.", "FolderReference.name"));
+    assert.throws(() => FolderReference.fromJson({ identity: "a" }), new JsonException("The field is required.", "FolderReference.path"));
   });
 
   it("refuses JSON missing any of its fields", () => {
     const json = { identity: "project-7", path: "/work/project" };
 
     for (const field of Object.keys(json))
-      assert.throws(() => FolderReference.fromJson(Object.fromEntries(Object.entries(json).filter(([key]) => key !== field))), new MissingFieldException("FolderReference", field));
+      assert.throws(() => FolderReference.fromJson(Object.fromEntries(Object.entries(json).filter(([key]) => key !== field))), new JsonException("The field is required.", `FolderReference.${field}`));
   });
 });

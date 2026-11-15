@@ -9,9 +9,8 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
-import { UnknownFieldException } from "@noldova/checkpoints.protocol";
+import { JsonException } from "@noldova/context.json";
 
-import { StoreFieldNotABooleanException, StoreFieldNotAStringListException } from "../../src/api/index.ts";
 import { IgnoreRecord } from "../../src/models/ignore-record.ts";
 
 describe("IgnoreRecord", { concurrency: true }, () => {
@@ -25,11 +24,11 @@ describe("IgnoreRecord", { concurrency: true }, () => {
 
   it("refuses a record whose ignoresCase isn't true or false", () => {
     assert.throws(() => IgnoreRecord.fromJson({ ignoresCase: "yes", repositoryFolders: [] }),
-      new StoreFieldNotABooleanException("ignoresCase"));
+      new JsonException("Expected a boolean.", "IgnoreRecord.ignoresCase"));
   });
 
   it("refuses a record whose repositories' folders aren't all text, or that holds another field", () => {
-    assert.throws(() => IgnoreRecord.fromJson({ ignoresCase: false, repositoryFolders: [1] }), new StoreFieldNotAStringListException("repositoryFolders"));
-    assert.throws(() => IgnoreRecord.fromJson({ ignoresCase: false, repositoryFolders: [], other: 1 }), new UnknownFieldException("IgnoreRecord", "other"));
+    assert.throws(() => IgnoreRecord.fromJson({ ignoresCase: false, repositoryFolders: [1] }), new JsonException("Expected a string.", "IgnoreRecord.repositoryFolders.0"));
+    assert.throws(() => IgnoreRecord.fromJson({ ignoresCase: false, repositoryFolders: [], other: 1 }), new JsonException("The field is not part of this record, which accepts no unknown fields.", "IgnoreRecord.other"));
   });
 });

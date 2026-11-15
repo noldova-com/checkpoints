@@ -6,14 +6,15 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import type { JsonObject } from "@noldova/context.json";
+
 import { ContentTooLongException } from "../exceptions/content-too-long.exception.ts";
 import { ReadCutMismatchException } from "../exceptions/read-cut-mismatch.exception.ts";
 import { ReadOutcomeMismatchException } from "../exceptions/read-outcome-mismatch.exception.ts";
 import { Resources } from "../resources.ts";
 import { Base64 } from "../services/base64.ts";
 import { ByteSize } from "../services/byte-size.ts";
-import { JsonObjectReader } from "../services/json-object.reader.ts";
-import type { JsonObject } from "../types/json-object.ts";
+import { WireForm } from "../services/wire-form.ts";
 import { ReadOutcome } from "./read-outcome.ts";
 
 export class ReadResult {
@@ -39,9 +40,8 @@ export class ReadResult {
   }
 
   public static fromJson(value: unknown): ReadResult {
-    const reader = new JsonObjectReader(value, Resources.readResultModel);
-    reader.refuseOtherFields(ReadResult.FIELDS);
-    const result = new ReadResult(ReadOutcome.fromJson(reader.read(Resources.outcomeField)), Base64.decode(reader.readString(Resources.contentField)),
+    const reader = WireForm.read(value, Resources.readResultModel, ReadResult.FIELDS);
+    const result = new ReadResult(ReadOutcome.fromJson(reader.readValue(Resources.outcomeField)), Base64.decode(reader.readString(Resources.contentField)),
       reader.readNumber(Resources.sizeField));
     const isCut = reader.readBoolean(Resources.isCutField);
     if (isCut !== result.isCut)

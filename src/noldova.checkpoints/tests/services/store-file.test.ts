@@ -12,7 +12,7 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { describe, it, type TestContext } from "node:test";
 
-import { NotAnObjectException } from "@noldova/checkpoints.protocol";
+import { JsonException } from "@noldova/context.json";
 
 import { StoreFileUnreadableException, UnsupportedStoreFormatException } from "../../src/api/index.ts";
 import { FolderRecord } from "../../src/models/folder-record.ts";
@@ -47,7 +47,7 @@ describe("StoreFile", { concurrency: true }, () => {
       && error.message.startsWith("The checkpoints store's folder.json can't be read: ") && error.cause instanceof SyntaxError);
     await writeFile(file, "[]");
     await assert.rejects(readAsync(), (error: Error) => error instanceof StoreFileUnreadableException
-      && error.message === "The checkpoints store's folder.json can't be read: FolderRecord must be a JSON object." && error.cause instanceof NotAnObjectException);
+      && error.message === "The checkpoints store's folder.json can't be read: FolderRecord: Expected a JSON object." && error.cause instanceof JsonException);
     await writeFile(file, "{\"formatVersion\":3,\"path\":\"/p\"}");
     await assert.rejects(readAsync(), (error: Error) => error instanceof StoreFileUnreadableException
       && error.message === "The checkpoints store's folder.json can't be read: its format version is 3, which this version of the module doesn't read."

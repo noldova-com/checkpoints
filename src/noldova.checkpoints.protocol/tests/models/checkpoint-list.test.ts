@@ -9,7 +9,8 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
-import { CaptureMode, Checkpoint, CheckpointList, FieldNotAListException, MissingFieldException, UnknownFieldException } from "@noldova/checkpoints.protocol";
+import { CaptureMode, Checkpoint, CheckpointList } from "@noldova/checkpoints.protocol";
+import { JsonException } from "@noldova/context.json";
 
 describe("CheckpointList", { concurrency: true }, () => {
   const newer = new Checkpoint("019a0b6c-7d1e-7f00-8abc-0123456789ab", new Date("2026-10-18T12:00:01.000Z"), CaptureMode.EveryFile, null, []);
@@ -31,17 +32,17 @@ describe("CheckpointList", { concurrency: true }, () => {
   });
 
   it("refuses JSON whose checkpoints aren't a list", () => {
-    assert.throws(() => CheckpointList.fromJson({ checkpoints: {} }), new FieldNotAListException("CheckpointList", "checkpoints"));
+    assert.throws(() => CheckpointList.fromJson({ checkpoints: {} }), new JsonException("Expected an array.", "CheckpointList.checkpoints"));
   });
 
   it("refuses JSON with another field", () => {
-    assert.throws(() => CheckpointList.fromJson({ checkpoints: [], folder: null }), new UnknownFieldException("CheckpointList", "folder"));
+    assert.throws(() => CheckpointList.fromJson({ checkpoints: [], folder: null }), new JsonException("The field is not part of this message, which accepts no unknown fields.", "CheckpointList.folder"));
   });
 
   it("refuses JSON missing any of its fields", () => {
     const json = { checkpoints: [] };
 
     for (const field of Object.keys(json))
-      assert.throws(() => CheckpointList.fromJson(Object.fromEntries(Object.entries(json).filter(([key]) => key !== field))), new MissingFieldException("CheckpointList", field));
+      assert.throws(() => CheckpointList.fromJson(Object.fromEntries(Object.entries(json).filter(([key]) => key !== field))), new JsonException("The field is required.", `CheckpointList.${field}`));
   });
 });

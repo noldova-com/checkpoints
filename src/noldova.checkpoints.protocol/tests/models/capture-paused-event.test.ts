@@ -9,7 +9,8 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
-import { CapturePausedEvent, InvalidIdentityException, InvalidSizeException, MissingFieldException, UnknownFieldException } from "@noldova/checkpoints.protocol";
+import { CapturePausedEvent, InvalidIdentityException, InvalidSizeException } from "@noldova/checkpoints.protocol";
+import { JsonException } from "@noldova/context.json";
 
 describe("CapturePausedEvent", { concurrency: true }, () => {
   it("writes and reads the folder's identity, the space free and the space needed", () => {
@@ -27,13 +28,13 @@ describe("CapturePausedEvent", { concurrency: true }, () => {
   });
 
   it("refuses JSON with another field", () => {
-    assert.throws(() => CapturePausedEvent.fromJson({ identity: "project-1", spaceFree: 1, spaceNeeded: 1, reason: "" }), new UnknownFieldException("CapturePausedEvent", "reason"));
+    assert.throws(() => CapturePausedEvent.fromJson({ identity: "project-1", spaceFree: 1, spaceNeeded: 1, reason: "" }), new JsonException("The field is not part of this message, which accepts no unknown fields.", "CapturePausedEvent.reason"));
   });
 
   it("refuses JSON missing any of its fields", () => {
     const json = { identity: "project-1", spaceFree: 1_000, spaceNeeded: 2_000 };
 
     for (const field of Object.keys(json))
-      assert.throws(() => CapturePausedEvent.fromJson(Object.fromEntries(Object.entries(json).filter(([key]) => key !== field))), new MissingFieldException("CapturePausedEvent", field));
+      assert.throws(() => CapturePausedEvent.fromJson(Object.fromEntries(Object.entries(json).filter(([key]) => key !== field))), new JsonException("The field is required.", `CapturePausedEvent.${field}`));
   });
 });

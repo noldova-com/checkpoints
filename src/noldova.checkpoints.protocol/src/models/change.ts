@@ -6,13 +6,14 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import type { JsonObject } from "@noldova/context.json";
+
 import { ChangeSidesMismatchException } from "../exceptions/change-sides-mismatch.exception.ts";
 import { InvalidRelativePathException } from "../exceptions/invalid-relative-path.exception.ts";
 import { UnreadReasonMismatchException } from "../exceptions/unread-reason-mismatch.exception.ts";
 import { Resources } from "../resources.ts";
-import { JsonObjectReader } from "../services/json-object.reader.ts";
 import { RelativePath } from "../services/relative-path.ts";
-import type { JsonObject } from "../types/json-object.ts";
+import { WireForm } from "../services/wire-form.ts";
 import { ChangeSide } from "./change-side.ts";
 import { ChangeStatus } from "./change-status.ts";
 import { UnreadReason } from "./unread-reason.ts";
@@ -43,14 +44,13 @@ export class Change {
   }
 
   public static fromJson(value: unknown): Change {
-    const reader = new JsonObjectReader(value, Resources.changeModel);
-    reader.refuseOtherFields(Change.FIELDS);
-    const before = reader.read(Resources.beforeField);
-    const after = reader.read(Resources.afterField);
-    const unreadReason = reader.read(Resources.unreadReasonField);
+    const reader = WireForm.read(value, Resources.changeModel, Change.FIELDS);
+    const before = reader.readValue(Resources.beforeField);
+    const after = reader.readValue(Resources.afterField);
+    const unreadReason = reader.readValue(Resources.unreadReasonField);
     return new Change(
       reader.readString(Resources.pathField),
-      ChangeStatus.fromJson(reader.read(Resources.statusField)),
+      ChangeStatus.fromJson(reader.readValue(Resources.statusField)),
       before === null ? null : ChangeSide.fromJson(before),
       after === null ? null : ChangeSide.fromJson(after),
       unreadReason === null ? null : UnreadReason.fromJson(unreadReason));

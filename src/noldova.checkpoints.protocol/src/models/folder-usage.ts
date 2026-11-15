@@ -6,12 +6,13 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import type { JsonObject } from "@noldova/context.json";
+
 import { InvalidFolderPathException } from "../exceptions/invalid-folder-path.exception.ts";
 import { Resources } from "../resources.ts";
 import { ByteSize } from "../services/byte-size.ts";
 import { FolderIdentity } from "../services/folder-identity.ts";
-import { JsonObjectReader } from "../services/json-object.reader.ts";
-import type { JsonObject } from "../types/json-object.ts";
+import { WireForm } from "../services/wire-form.ts";
 
 export class FolderUsage {
   private static readonly FIELDS: readonly string[] = [Resources.identityField, Resources.pathField, Resources.bytesField];
@@ -31,9 +32,8 @@ export class FolderUsage {
   }
 
   public static fromJson(value: unknown): FolderUsage {
-    const reader = new JsonObjectReader(value, Resources.folderUsageModel);
-    reader.refuseOtherFields(FolderUsage.FIELDS);
-    return new FolderUsage(reader.readString(Resources.identityField), reader.readStringOrNull(Resources.pathField), reader.readNumber(Resources.bytesField));
+    const reader = WireForm.read(value, Resources.folderUsageModel, FolderUsage.FIELDS);
+    return new FolderUsage(reader.readString(Resources.identityField), reader.readNullableString(Resources.pathField), reader.readNumber(Resources.bytesField));
   }
 
   public toJson(): JsonObject {

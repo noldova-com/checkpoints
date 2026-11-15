@@ -10,9 +10,9 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
 import {
-  ChangeSide, InvalidRelativePathException, MissingFieldException, PathKind, RestoreAction, RestoreStep, StepSidesMismatchException, UnknownFieldException,
-  UnknownRestoreActionException
+  ChangeSide, InvalidRelativePathException, PathKind, RestoreAction, RestoreStep, StepSidesMismatchException, UnknownRestoreActionException
 } from "@noldova/checkpoints.protocol";
+import { JsonException } from "@noldova/context.json";
 
 describe("RestoreStep", { concurrency: true }, () => {
   const now = new ChangeSide(PathKind.File, 4, true);
@@ -48,13 +48,13 @@ describe("RestoreStep", { concurrency: true }, () => {
 
   it("refuses JSON with an unknown action or another field", () => {
     assert.throws(() => RestoreStep.fromJson({ path: "a", action: "Move", before: nowJson, after: null }), new UnknownRestoreActionException("Move"));
-    assert.throws(() => RestoreStep.fromJson({ path: "a", action: "Delete", before: nowJson, after: null, size: 1 }), new UnknownFieldException("RestoreStep", "size"));
+    assert.throws(() => RestoreStep.fromJson({ path: "a", action: "Delete", before: nowJson, after: null, size: 1 }), new JsonException("The field is not part of this message, which accepts no unknown fields.", "RestoreStep.size"));
   });
 
   it("refuses JSON missing any of its fields", () => {
     const json = { path: "a", action: "Delete", before: { kind: "File", size: 4, isText: true }, after: null };
 
     for (const field of Object.keys(json))
-      assert.throws(() => RestoreStep.fromJson(Object.fromEntries(Object.entries(json).filter(([key]) => key !== field))), new MissingFieldException("RestoreStep", field));
+      assert.throws(() => RestoreStep.fromJson(Object.fromEntries(Object.entries(json).filter(([key]) => key !== field))), new JsonException("The field is required.", `RestoreStep.${field}`));
   });
 });

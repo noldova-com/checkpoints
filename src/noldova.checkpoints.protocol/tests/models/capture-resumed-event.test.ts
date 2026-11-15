@@ -9,7 +9,8 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
-import { CaptureResumedEvent, InvalidIdentityException, MissingFieldException, UnknownFieldException } from "@noldova/checkpoints.protocol";
+import { CaptureResumedEvent, InvalidIdentityException } from "@noldova/checkpoints.protocol";
+import { JsonException } from "@noldova/context.json";
 
 describe("CaptureResumedEvent", { concurrency: true }, () => {
   it("writes and reads the folder's identity", () => {
@@ -22,13 +23,13 @@ describe("CaptureResumedEvent", { concurrency: true }, () => {
 
   it("refuses an identity it can't take, and JSON with another field", () => {
     assert.throws(() => new CaptureResumedEvent("project 1"), new InvalidIdentityException("project 1"));
-    assert.throws(() => CaptureResumedEvent.fromJson({ identity: "project-1", reason: "" }), new UnknownFieldException("CaptureResumedEvent", "reason"));
+    assert.throws(() => CaptureResumedEvent.fromJson({ identity: "project-1", reason: "" }), new JsonException("The field is not part of this message, which accepts no unknown fields.", "CaptureResumedEvent.reason"));
   });
 
   it("refuses JSON missing any of its fields", () => {
     const json = { identity: "project-1" };
 
     for (const field of Object.keys(json))
-      assert.throws(() => CaptureResumedEvent.fromJson(Object.fromEntries(Object.entries(json).filter(([key]) => key !== field))), new MissingFieldException("CaptureResumedEvent", field));
+      assert.throws(() => CaptureResumedEvent.fromJson(Object.fromEntries(Object.entries(json).filter(([key]) => key !== field))), new JsonException("The field is required.", `CaptureResumedEvent.${field}`));
   });
 });

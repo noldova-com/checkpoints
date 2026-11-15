@@ -9,7 +9,8 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
-import { CompareRequest, FolderReference, InvalidCheckpointIdException, MissingFieldException, UnknownFieldException } from "@noldova/checkpoints.protocol";
+import { CompareRequest, FolderReference, InvalidCheckpointIdException } from "@noldova/checkpoints.protocol";
+import { JsonException } from "@noldova/context.json";
 
 describe("CompareRequest", { concurrency: true }, () => {
   const folder = new FolderReference("project-1", "/work/project");
@@ -29,13 +30,13 @@ describe("CompareRequest", { concurrency: true }, () => {
   });
 
   it("refuses JSON with another field", () => {
-    assert.throws(() => CompareRequest.fromJson({ folder: folderJson, from: first, to: null, renames: true }), new UnknownFieldException("CompareRequest", "renames"));
+    assert.throws(() => CompareRequest.fromJson({ folder: folderJson, from: first, to: null, renames: true }), new JsonException("The field is not part of this message, which accepts no unknown fields.", "CompareRequest.renames"));
   });
 
   it("refuses JSON missing any of its fields", () => {
     const json = { folder: { identity: "project-1", path: "/work/project" }, from: "019a0b6c-7d1e-7f00-8abc-0123456789ab", to: null };
 
     for (const field of Object.keys(json))
-      assert.throws(() => CompareRequest.fromJson(Object.fromEntries(Object.entries(json).filter(([key]) => key !== field))), new MissingFieldException("CompareRequest", field));
+      assert.throws(() => CompareRequest.fromJson(Object.fromEntries(Object.entries(json).filter(([key]) => key !== field))), new JsonException("The field is required.", `CompareRequest.${field}`));
   });
 });

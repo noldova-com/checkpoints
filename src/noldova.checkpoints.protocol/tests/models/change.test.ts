@@ -10,9 +10,9 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
 import {
-  Change, ChangeSide, ChangeSidesMismatchException, ChangeStatus, InvalidRelativePathException, MissingFieldException, PathKind, UnknownFieldException, UnreadReason,
-  UnreadReasonMismatchException
+  Change, ChangeSide, ChangeSidesMismatchException, ChangeStatus, InvalidRelativePathException, PathKind, UnreadReason, UnreadReasonMismatchException
 } from "@noldova/checkpoints.protocol";
+import { JsonException } from "@noldova/context.json";
 
 describe("Change", { concurrency: true }, () => {
   const file = new ChangeSide(PathKind.File, 3, true);
@@ -59,13 +59,13 @@ describe("Change", { concurrency: true }, () => {
   it("refuses a path with an empty name, or one that leaves the folder, and JSON with another field", () => {
     for (const path of ["", "a/", "a//b", "../a", "a/./b"])
       assert.throws(() => new Change(path, ChangeStatus.Added, null, file, null), new InvalidRelativePathException(path));
-    assert.throws(() => Change.fromJson({ path: "a", status: "Added", before: null, after: fileJson, unreadReason: null, renamed: null }), new UnknownFieldException("Change", "renamed"));
+    assert.throws(() => Change.fromJson({ path: "a", status: "Added", before: null, after: fileJson, unreadReason: null, renamed: null }), new JsonException("The field is not part of this message, which accepts no unknown fields.", "Change.renamed"));
   });
 
   it("refuses JSON missing any of its fields", () => {
     const json = { path: "a", status: "Added", before: null, after: { kind: "File", size: 3, isText: true }, unreadReason: null };
 
     for (const field of Object.keys(json))
-      assert.throws(() => Change.fromJson(Object.fromEntries(Object.entries(json).filter(([key]) => key !== field))), new MissingFieldException("Change", field));
+      assert.throws(() => Change.fromJson(Object.fromEntries(Object.entries(json).filter(([key]) => key !== field))), new JsonException("The field is required.", `Change.${field}`));
   });
 });

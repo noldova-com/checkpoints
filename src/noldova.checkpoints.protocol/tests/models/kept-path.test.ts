@@ -9,9 +9,8 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
-import {
-  InvalidRelativePathException, KeepReason, KeptPath, MissingFieldException, UnknownFieldException, UnknownKeepReasonException
-} from "@noldova/checkpoints.protocol";
+import { InvalidRelativePathException, KeepReason, KeptPath, UnknownKeepReasonException } from "@noldova/checkpoints.protocol";
+import { JsonException } from "@noldova/context.json";
 
 describe("KeptPath", { concurrency: true }, () => {
   it("writes and reads its path and reason", () => {
@@ -28,13 +27,13 @@ describe("KeptPath", { concurrency: true }, () => {
 
   it("refuses JSON with an unknown reason or another field", () => {
     assert.throws(() => KeptPath.fromJson({ path: "a", reason: "Locked" }), new UnknownKeepReasonException("Locked"));
-    assert.throws(() => KeptPath.fromJson({ path: "a", reason: "Unread", size: 1 }), new UnknownFieldException("KeptPath", "size"));
+    assert.throws(() => KeptPath.fromJson({ path: "a", reason: "Unread", size: 1 }), new JsonException("The field is not part of this message, which accepts no unknown fields.", "KeptPath.size"));
   });
 
   it("refuses JSON missing any of its fields", () => {
     const json = { path: "vendor/lib/.git", reason: "Repository" };
 
     for (const field of Object.keys(json))
-      assert.throws(() => KeptPath.fromJson(Object.fromEntries(Object.entries(json).filter(([key]) => key !== field))), new MissingFieldException("KeptPath", field));
+      assert.throws(() => KeptPath.fromJson(Object.fromEntries(Object.entries(json).filter(([key]) => key !== field))), new JsonException("The field is required.", `KeptPath.${field}`));
   });
 });

@@ -6,10 +6,11 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import type { JsonObject } from "@noldova/context.json";
+
 import { RestoreCheckpointsMismatchException } from "../exceptions/restore-checkpoints-mismatch.exception.ts";
 import { Resources } from "../resources.ts";
-import { JsonObjectReader } from "../services/json-object.reader.ts";
-import type { JsonObject } from "../types/json-object.ts";
+import { WireForm } from "../services/wire-form.ts";
 import { Checkpoint } from "./checkpoint.ts";
 import { RestoreOutcome } from "./restore-outcome.ts";
 
@@ -29,12 +30,11 @@ export class RestoreResult {
   }
 
   public static fromJson(value: unknown): RestoreResult {
-    const reader = new JsonObjectReader(value, Resources.restoreResultModel);
-    reader.refuseOtherFields(RestoreResult.FIELDS);
-    const before = reader.read(Resources.beforeField);
-    const recovered = reader.read(Resources.recoveredField);
+    const reader = WireForm.read(value, Resources.restoreResultModel, RestoreResult.FIELDS);
+    const before = reader.readValue(Resources.beforeField);
+    const recovered = reader.readValue(Resources.recoveredField);
     return new RestoreResult(
-      RestoreOutcome.fromJson(reader.read(Resources.outcomeField)),
+      RestoreOutcome.fromJson(reader.readValue(Resources.outcomeField)),
       before === null ? null : Checkpoint.fromJson(before),
       recovered === null ? null : Checkpoint.fromJson(recovered));
   }

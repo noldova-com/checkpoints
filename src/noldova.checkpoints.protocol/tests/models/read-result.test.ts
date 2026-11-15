@@ -10,9 +10,9 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
 import {
-  ContentTooLongException, InvalidBase64Exception, InvalidSizeException, MissingFieldException, ReadCutMismatchException, ReadOutcome, ReadOutcomeMismatchException,
-  ReadResult, UnknownFieldException
+  ContentTooLongException, InvalidBase64Exception, InvalidSizeException, ReadCutMismatchException, ReadOutcome, ReadOutcomeMismatchException, ReadResult
 } from "@noldova/checkpoints.protocol";
+import { JsonException } from "@noldova/context.json";
 
 describe("ReadResult", { concurrency: true }, () => {
   const bytes = new Uint8Array([0x61, 0x00, 0xff]);
@@ -60,13 +60,13 @@ describe("ReadResult", { concurrency: true }, () => {
     assert.throws(() => ReadResult.fromJson({ outcome: "Read", content: "YQD/", isCut: true, size: 3 }),
       new ReadCutMismatchException(true));
     assert.throws(() => ReadResult.fromJson({ outcome: "Read", content: "YQ", isCut: false, size: 1 }), new InvalidBase64Exception());
-    assert.throws(() => ReadResult.fromJson({ outcome: "Read", content: "", isCut: false, size: 0, text: "" }), new UnknownFieldException("ReadResult", "text"));
+    assert.throws(() => ReadResult.fromJson({ outcome: "Read", content: "", isCut: false, size: 0, text: "" }), new JsonException("The field is not part of this message, which accepts no unknown fields.", "ReadResult.text"));
   });
 
   it("refuses JSON missing any of its fields", () => {
     const json = { outcome: "Binary", content: "", isCut: false, size: 0 };
 
     for (const field of Object.keys(json))
-      assert.throws(() => ReadResult.fromJson(Object.fromEntries(Object.entries(json).filter(([key]) => key !== field))), new MissingFieldException("ReadResult", field));
+      assert.throws(() => ReadResult.fromJson(Object.fromEntries(Object.entries(json).filter(([key]) => key !== field))), new JsonException("The field is required.", `ReadResult.${field}`));
   });
 });

@@ -6,11 +6,12 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import type { JsonObject } from "@noldova/context.json";
+
 import { InvalidRelativePathException } from "../exceptions/invalid-relative-path.exception.ts";
 import { Resources } from "../resources.ts";
-import { JsonObjectReader } from "../services/json-object.reader.ts";
 import { RelativePath } from "../services/relative-path.ts";
-import type { JsonObject } from "../types/json-object.ts";
+import { WireForm } from "../services/wire-form.ts";
 import { KeepReason } from "./keep-reason.ts";
 
 export class KeptPath {
@@ -27,9 +28,8 @@ export class KeptPath {
   }
 
   public static fromJson(value: unknown): KeptPath {
-    const reader = new JsonObjectReader(value, Resources.keptPathModel);
-    reader.refuseOtherFields(KeptPath.FIELDS);
-    return new KeptPath(reader.readString(Resources.pathField), KeepReason.fromJson(reader.read(Resources.reasonField)));
+    const reader = WireForm.read(value, Resources.keptPathModel, KeptPath.FIELDS);
+    return new KeptPath(reader.readString(Resources.pathField), KeepReason.fromJson(reader.readValue(Resources.reasonField)));
   }
 
   public toJson(): JsonObject {

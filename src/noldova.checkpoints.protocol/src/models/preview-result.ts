@@ -6,10 +6,11 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import type { JsonObject } from "@noldova/context.json";
+
 import { PreviewPlanMismatchException } from "../exceptions/preview-plan-mismatch.exception.ts";
 import { Resources } from "../resources.ts";
-import { JsonObjectReader } from "../services/json-object.reader.ts";
-import type { JsonObject } from "../types/json-object.ts";
+import { WireForm } from "../services/wire-form.ts";
 import { PreviewOutcome } from "./preview-outcome.ts";
 import { RestorePlan } from "./restore-plan.ts";
 
@@ -27,10 +28,9 @@ export class PreviewResult {
   }
 
   public static fromJson(value: unknown): PreviewResult {
-    const reader = new JsonObjectReader(value, Resources.previewResultModel);
-    reader.refuseOtherFields(PreviewResult.FIELDS);
-    const plan = reader.read(Resources.planField);
-    return new PreviewResult(PreviewOutcome.fromJson(reader.read(Resources.outcomeField)), plan === null ? null : RestorePlan.fromJson(plan));
+    const reader = WireForm.read(value, Resources.previewResultModel, PreviewResult.FIELDS);
+    const plan = reader.readValue(Resources.planField);
+    return new PreviewResult(PreviewOutcome.fromJson(reader.readValue(Resources.outcomeField)), plan === null ? null : RestorePlan.fromJson(plan));
   }
 
   public toJson(): JsonObject {

@@ -15,7 +15,7 @@ import path from "node:path";
 import { describe, it, type TestContext } from "node:test";
 import { promisify } from "node:util";
 
-import { JsonObjectReader, ProtocolException } from "@noldova/checkpoints.protocol";
+import { JsonException, JsonReader } from "@noldova/context.json";
 import { ModuleActivationException } from "@noldova/desktop.runtime";
 
 import { GitManifestInvalidException, GitMissingException } from "../../src/api/index.ts";
@@ -52,10 +52,8 @@ describe("GitBuildLocator", { concurrency: true }, () => {
 
   it("runs the installed build for this system, which reports the Git version builds.json pins for it", async () => {
     const build = await new GitBuildLocator(import.meta.dirname).locateAsync(process.platform, process.arch);
-    const builds = new JsonObjectReader(JSON.parse(await readFile(BUILDS_FILE, "utf8")), "Git builds");
-    const fields = new JsonObjectReader(builds.read("targets"), "Git builds").read(`${process.platform}-${process.arch}`);
-    const pin = new JsonObjectReader(fields, "Git build");
-    const reported = typeof fields === "object" && fields !== null && "reportedVersion" in fields ? pin.readString("reportedVersion") : pin.readString("gitVersion");
+    const pin = JsonReader.parse(await readFile(BUILDS_FILE, "utf8"), "Git builds").readObject("targets").readObject(`${process.platform}-${process.arch}`);
+    const reported = pin.hasField("reportedVersion") ? pin.readString("reportedVersion") : pin.readString("gitVersion");
 
     const { stdout } = await promisify(execFile)(build.program, ["--version"]);
 
@@ -73,10 +71,10 @@ describe("GitBuildLocator", { concurrency: true }, () => {
     const build = await new GitBuildLocator(import.meta.dirname).locateAsync(process.platform, process.arch);
     const manifestFile = createRequire(import.meta.filename).resolve(`@noldova/checkpoints.git.${process.platform}-${process.arch}/package.json`);
     const folder = path.dirname(manifestFile);
-    const manifest = new JsonObjectReader(JSON.parse(await readFile(manifestFile, "utf8")), "Git package");
+    const manifest = JsonReader.parse(await readFile(manifestFile, "utf8"), "Git package");
     const packaged = (file: string): string => path.relative(folder, file).split(path.sep).join("/");
 
-    const unpacked = new JsonObjectReader(manifest.read("noldovaDesktop"), "Git package").readStringList("unpacked");
+    const unpacked = manifest.readObject("noldovaDesktop").readStringArray("unpacked");
 
     const files = (await readdir(path.join(folder, "git"), { recursive: true, withFileTypes: true })).filter(t => t.isFile()).map(t => packaged(path.join(t.parentPath, t.name)));
     assert.deepEqual(unpacked, files.sort());
@@ -122,14 +120,16 @@ describe("GitBuildLocator", { concurrency: true }, () => {
 
     await assert.rejects(new GitBuildLocator(start).locateAsync("test", "x64"), (error: unknown) => error instanceof ModuleActivationException
       && error.message === "The Git build it runs on this system can't be read, so it can't keep checkpoints."
-      && error.cause instanceof GitManifestInvalidException && error.cause.manifestFile === manifestFile && error.cause.cause instanceof ProtocolException);
+      && error.cause instanceof GitManifestInvalidException && error.cause.manifestFile === manifestFile
+      && error.cause.cause instanceof JsonException && error.cause.cause.message === "GitPackage.noldova.git.path: The field is required.");
   });
 
   it("refuses a manifest whose build paths aren't all text", async t => {
     const start = await installAsync(t, { execPath: "libexec", program: "bin/git", path: ["bin", 3] });
 
     await assert.rejects(new GitBuildLocator(start).locateAsync("test", "x64"), (error: unknown) => error instanceof ModuleActivationException
-      && error.cause instanceof GitManifestInvalidException && error.cause.cause instanceof ProtocolException);
+      && error.cause instanceof GitManifestInvalidException && error.cause.cause instanceof JsonException
+      && error.cause.cause.message === "GitPackage.noldova.git.path.1: Expected a string.");
   });
 
   it("refuses to start the module, naming the manifest it asked for in the cause, when an installed build's manifest isn't JSON", async t => {

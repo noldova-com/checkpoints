@@ -18,8 +18,6 @@ export { JournalFieldMissingException } from "../exceptions/journal-field-missin
 export { ScriptStepMissingException } from "../exceptions/script-step-missing.exception.ts";
 export { StoreException } from "../exceptions/store.exception.ts";
 export { StoreAnswersMismatchException } from "../exceptions/store-answers-mismatch.exception.ts";
-export { StoreFieldNotABooleanException } from "../exceptions/store-field-not-a-boolean.exception.ts";
-export { StoreFieldNotAStringListException } from "../exceptions/store-field-not-a-string-list.exception.ts";
 export { StoreFileUnreadableException } from "../exceptions/store-file-unreadable.exception.ts";
 export { StoreObjectMissingException } from "../exceptions/store-object-missing.exception.ts";
 export { StoreObjectNotABlobException } from "../exceptions/store-object-not-a-blob.exception.ts";

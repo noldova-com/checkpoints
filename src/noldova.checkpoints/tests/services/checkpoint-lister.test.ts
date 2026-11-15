@@ -9,7 +9,8 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
-import { CaptureRequest, DeleteFolderRequest, MissingFieldException, type Checkpoint } from "@noldova/checkpoints.protocol";
+import { CaptureRequest, DeleteFolderRequest, type Checkpoint } from "@noldova/checkpoints.protocol";
+import { JsonException } from "@noldova/context.json";
 
 import { CheckpointFileMissingException, StoreFileUnreadableException } from "../../src/api/index.ts";
 import { CheckpointsHarness } from "../fixtures/checkpoints-harness.fixture.ts";
@@ -134,7 +135,7 @@ describe("CheckpointLister", { concurrency: true }, () => {
     await plantAsync(harness, "ffffffff-ffff-7fff-bfff-ffffffffffff", "{\"formatVersion\":1}");
 
     await assert.rejects(harness.listAsync(), (error: unknown) => error instanceof StoreFileUnreadableException && error.file === "checkpoint.json"
-      && error.message === "The checkpoints store's checkpoint.json can't be read: CheckpointRecord.checkpoint is missing."
-      && error.cause instanceof MissingFieldException);
+      && error.message === "The checkpoints store's checkpoint.json can't be read: CheckpointRecord.checkpoint: The field is required."
+      && error.cause instanceof JsonException);
   });
 });

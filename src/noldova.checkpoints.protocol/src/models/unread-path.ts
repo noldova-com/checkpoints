@@ -6,12 +6,13 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import type { JsonObject } from "@noldova/context.json";
+
 import { InvalidRelativePathException } from "../exceptions/invalid-relative-path.exception.ts";
 import { UnreadCodeMismatchException } from "../exceptions/unread-code-mismatch.exception.ts";
 import { Resources } from "../resources.ts";
-import { JsonObjectReader } from "../services/json-object.reader.ts";
 import { RelativePath } from "../services/relative-path.ts";
-import type { JsonObject } from "../types/json-object.ts";
+import { WireForm } from "../services/wire-form.ts";
 import { UnreadReason } from "./unread-reason.ts";
 
 export class UnreadPath {
@@ -32,10 +33,9 @@ export class UnreadPath {
   }
 
   public static fromJson(value: unknown): UnreadPath {
-    const reader = new JsonObjectReader(value, Resources.unreadPathModel);
-    reader.refuseOtherFields(UnreadPath.FIELDS);
-    return new UnreadPath(reader.readString(Resources.pathField), UnreadReason.fromJson(reader.read(Resources.reasonField)),
-      reader.readStringOrNull(Resources.codeField));
+    const reader = WireForm.read(value, Resources.unreadPathModel, UnreadPath.FIELDS);
+    return new UnreadPath(reader.readString(Resources.pathField), UnreadReason.fromJson(reader.readValue(Resources.reasonField)),
+      reader.readNullableString(Resources.codeField));
   }
 
   public toJson(): JsonObject {

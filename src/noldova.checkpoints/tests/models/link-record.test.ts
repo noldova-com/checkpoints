@@ -9,7 +9,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
-import { UnknownFieldException } from "@noldova/checkpoints.protocol";
+import { JsonException } from "@noldova/context.json";
 
 import { LinkKind } from "../../src/models/link-kind.ts";
 import { LinkRecord } from "../../src/models/link-record.ts";
@@ -25,6 +25,6 @@ describe("LinkRecord", { concurrency: true }, () => {
   });
 
   it("refuses a field it doesn't know", () => {
-    assert.throws(() => LinkRecord.fromJson({ path: "a", linkKind: "File", target: "b" }), new UnknownFieldException("LinkRecord", "target"));
+    assert.throws(() => LinkRecord.fromJson({ path: "a", linkKind: "File", target: "b" }), new JsonException("The field is not part of this record, which accepts no unknown fields.", "LinkRecord.target"));
   });
 });

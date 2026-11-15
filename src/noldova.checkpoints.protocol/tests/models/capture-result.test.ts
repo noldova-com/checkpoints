@@ -10,9 +10,9 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
 import {
-  CaptureCheckpointMismatchException, CaptureMode, CaptureOutcome, CaptureResult, CaptureSpaceMismatchException, Checkpoint, InvalidSizeException, MissingFieldException,
-  UnknownFieldException
+  CaptureCheckpointMismatchException, CaptureMode, CaptureOutcome, CaptureResult, CaptureSpaceMismatchException, Checkpoint, InvalidSizeException
 } from "@noldova/checkpoints.protocol";
+import { JsonException } from "@noldova/context.json";
 
 describe("CaptureResult", { concurrency: true }, () => {
   const checkpoint = new Checkpoint("019a0b6c-7d1e-7f00-8abc-0123456789ab", new Date("2026-10-18T12:00:00.000Z"), CaptureMode.EveryFile, null, []);
@@ -56,13 +56,13 @@ describe("CaptureResult", { concurrency: true }, () => {
   });
 
   it("refuses JSON with another field", () => {
-    assert.throws(() => CaptureResult.fromJson({ outcome: "FolderMissing", checkpoint: null, spaceFree: null, spaceNeeded: null, reason: "" }), new UnknownFieldException("CaptureResult", "reason"));
+    assert.throws(() => CaptureResult.fromJson({ outcome: "FolderMissing", checkpoint: null, spaceFree: null, spaceNeeded: null, reason: "" }), new JsonException("The field is not part of this message, which accepts no unknown fields.", "CaptureResult.reason"));
   });
 
   it("refuses JSON missing any of its fields", () => {
     const json = { outcome: "FolderMissing", checkpoint: null, spaceFree: null, spaceNeeded: null };
 
     for (const field of Object.keys(json))
-      assert.throws(() => CaptureResult.fromJson(Object.fromEntries(Object.entries(json).filter(([key]) => key !== field))), new MissingFieldException("CaptureResult", field));
+      assert.throws(() => CaptureResult.fromJson(Object.fromEntries(Object.entries(json).filter(([key]) => key !== field))), new JsonException("The field is required.", `CaptureResult.${field}`));
   });
 });

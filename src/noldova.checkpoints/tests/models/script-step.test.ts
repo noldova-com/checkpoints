@@ -9,7 +9,8 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
-import { PathKind, RestoreAction, UnknownFieldException } from "@noldova/checkpoints.protocol";
+import { PathKind, RestoreAction } from "@noldova/checkpoints.protocol";
+import { JsonException } from "@noldova/context.json";
 
 import { JournalFieldMissingException } from "../../src/api/index.ts";
 import { LinkKind } from "../../src/models/link-kind.ts";
@@ -46,6 +47,6 @@ describe("ScriptStep", { concurrency: true }, () => {
   it("refuses a field it doesn't know", () => {
     const json = new ScriptStep(0, "a", RestoreAction.Write, ".~r/0", null, PathKind.File, "d".repeat(40), null).toJson();
 
-    assert.throws(() => ScriptStep.fromJson({ ...json, extra: 1 }), new UnknownFieldException("ScriptStep", "extra"));
+    assert.throws(() => ScriptStep.fromJson({ ...json, extra: 1 }), new JsonException("The field is not part of this record, which accepts no unknown fields.", "ScriptStep.extra"));
   });
 });
