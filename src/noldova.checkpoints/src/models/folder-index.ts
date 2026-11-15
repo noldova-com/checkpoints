@@ -6,7 +6,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { JsonObjectReader, type JsonObject } from "@noldova/checkpoints.protocol";
+import type { JsonObject } from "@noldova/context.json";
 
 import { Resources } from "../resources.ts";
 import { StoreFormat } from "../services/store-format.ts";
@@ -29,10 +29,9 @@ export class FolderIndex {
   }
 
   public static fromJson(value: unknown): FolderIndex {
-    const reader = new JsonObjectReader(value, Resources.folderIndexModel);
-    reader.refuseOtherFields(FolderIndex.FIELDS);
+    const reader = StoreFormat.read(value, Resources.folderIndexModel, FolderIndex.FIELDS);
     StoreFormat.check(reader);
-    return new FolderIndex(BigInt(reader.readString(Resources.startField)), reader.readList(Resources.entriesField).map(t => IndexEntry.fromJson(t)));
+    return new FolderIndex(BigInt(reader.readString(Resources.startField)), StoreFormat.readArray(reader, Resources.entriesField).map(t => IndexEntry.fromJson(t)));
   }
 
   public findUnchanged(entry: WalkedEntry): IndexEntry | null {

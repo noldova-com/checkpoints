@@ -9,7 +9,8 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 
-import { RestoreRequest, type JsonObject, type RestorePlan } from "@noldova/checkpoints.protocol";
+import { RestoreRequest, type RestorePlan } from "@noldova/checkpoints.protocol";
+import type { JsonObject } from "@noldova/context.json";
 import { UpdateProcess } from "@noldova/desktop.protocol";
 import { type OwnedProcess, ProcessRequest } from "@noldova/desktop.runtime";
 

@@ -9,7 +9,8 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
-import { FieldNotAListException, FolderUsage, MissingFieldException, StorageList, UnknownFieldException } from "@noldova/checkpoints.protocol";
+import { FolderUsage, StorageList } from "@noldova/checkpoints.protocol";
+import { JsonException } from "@noldova/context.json";
 
 describe("StorageList", { concurrency: true }, () => {
   const larger = new FolderUsage("b", "/work/b", 2048);
@@ -31,14 +32,14 @@ describe("StorageList", { concurrency: true }, () => {
   });
 
   it("refuses JSON whose folders aren't a list, or with another field", () => {
-    assert.throws(() => StorageList.fromJson({ folders: {} }), new FieldNotAListException("StorageList", "folders"));
-    assert.throws(() => StorageList.fromJson({ folders: [], bytes: 0 }), new UnknownFieldException("StorageList", "bytes"));
+    assert.throws(() => StorageList.fromJson({ folders: {} }), new JsonException("Expected an array.", "StorageList.folders"));
+    assert.throws(() => StorageList.fromJson({ folders: [], bytes: 0 }), new JsonException("The field is not part of this message, which accepts no unknown fields.", "StorageList.bytes"));
   });
 
   it("refuses JSON missing any of its fields", () => {
     const json = { folders: [] };
 
     for (const field of Object.keys(json))
-      assert.throws(() => StorageList.fromJson(Object.fromEntries(Object.entries(json).filter(([key]) => key !== field))), new MissingFieldException("StorageList", field));
+      assert.throws(() => StorageList.fromJson(Object.fromEntries(Object.entries(json).filter(([key]) => key !== field))), new JsonException("The field is required.", `StorageList.${field}`));
   });
 });

@@ -6,13 +6,14 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import type { JsonObject } from "@noldova/context.json";
+
 import { InvalidPlanStateException } from "../exceptions/invalid-plan-state.exception.ts";
 import { Resources } from "../resources.ts";
 import { ByteSize } from "../services/byte-size.ts";
 import { CheckpointId } from "../services/checkpoint-id.ts";
-import { JsonObjectReader } from "../services/json-object.reader.ts";
 import { ScopePaths } from "../services/scope-paths.ts";
-import type { JsonObject } from "../types/json-object.ts";
+import { WireForm } from "../services/wire-form.ts";
 import { KeptPath } from "./kept-path.ts";
 import { RestoreStep } from "./restore-step.ts";
 
@@ -48,16 +49,15 @@ export class RestorePlan {
   }
 
   public static fromJson(value: unknown): RestorePlan {
-    const reader = new JsonObjectReader(value, Resources.restorePlanModel);
-    reader.refuseOtherFields(RestorePlan.FIELDS);
+    const reader = WireForm.read(value, Resources.restorePlanModel, RestorePlan.FIELDS);
     return new RestorePlan(
       reader.readString(Resources.checkpointField),
-      reader.readList(Resources.stepsField).map(t => RestoreStep.fromJson(t)),
-      reader.readList(Resources.staysField).map(t => KeptPath.fromJson(t)),
+      WireForm.readArray(reader, Resources.stepsField).map(t => RestoreStep.fromJson(t)),
+      WireForm.readArray(reader, Resources.staysField).map(t => KeptPath.fromJson(t)),
       reader.readNumber(Resources.bytesToWriteField),
       reader.readNumber(Resources.spaceNeededField),
       reader.readString(Resources.stateField),
-      reader.readStringListOrNull(Resources.pathsField));
+      WireForm.readNullableStringArray(reader, Resources.pathsField));
   }
 
   public toJson(): JsonObject {

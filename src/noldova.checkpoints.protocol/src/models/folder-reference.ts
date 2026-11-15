@@ -6,11 +6,12 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import type { JsonObject } from "@noldova/context.json";
+
 import { InvalidFolderPathException } from "../exceptions/invalid-folder-path.exception.ts";
 import { Resources } from "../resources.ts";
 import { FolderIdentity } from "../services/folder-identity.ts";
-import { JsonObjectReader } from "../services/json-object.reader.ts";
-import type { JsonObject } from "../types/json-object.ts";
+import { WireForm } from "../services/wire-form.ts";
 
 export class FolderReference {
   private static readonly FIELDS: readonly string[] = [Resources.identityField, Resources.pathField];
@@ -27,8 +28,7 @@ export class FolderReference {
   }
 
   public static fromJson(value: unknown): FolderReference {
-    const reader = new JsonObjectReader(value, Resources.folderReferenceModel);
-    reader.refuseOtherFields(FolderReference.FIELDS);
+    const reader = WireForm.read(value, Resources.folderReferenceModel, FolderReference.FIELDS);
     return new FolderReference(reader.readString(Resources.identityField), reader.readString(Resources.pathField));
   }
 

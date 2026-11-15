@@ -10,9 +10,9 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
 import {
-  DiffTarget, FolderReference, InvalidCheckpointIdException, InvalidReadLimitException, InvalidRelativePathException, MissingFieldException, ReadRequest,
-  UnknownFieldException
+  DiffTarget, FolderReference, InvalidCheckpointIdException, InvalidReadLimitException, InvalidRelativePathException, ReadRequest
 } from "@noldova/checkpoints.protocol";
+import { JsonException } from "@noldova/context.json";
 
 describe("ReadRequest", { concurrency: true }, () => {
   const folder = new FolderReference("project-1", "/work/project");
@@ -48,13 +48,13 @@ describe("ReadRequest", { concurrency: true }, () => {
   });
 
   it("refuses JSON with another field", () => {
-    assert.throws(() => ReadRequest.fromJson({ folder: folderJson, checkpoint: id, path: "a", against: null, limit: 1, offset: 0 }), new UnknownFieldException("ReadRequest", "offset"));
+    assert.throws(() => ReadRequest.fromJson({ folder: folderJson, checkpoint: id, path: "a", against: null, limit: 1, offset: 0 }), new JsonException("The field is not part of this message, which accepts no unknown fields.", "ReadRequest.offset"));
   });
 
   it("refuses JSON missing any of its fields", () => {
     const json = { folder: { identity: "project-1", path: "/work/project" }, checkpoint: "019a0b6c-7d1e-7f00-8abc-0123456789ab", path: "a", against: null, limit: 1 };
 
     for (const field of Object.keys(json))
-      assert.throws(() => ReadRequest.fromJson(Object.fromEntries(Object.entries(json).filter(([key]) => key !== field))), new MissingFieldException("ReadRequest", field));
+      assert.throws(() => ReadRequest.fromJson(Object.fromEntries(Object.entries(json).filter(([key]) => key !== field))), new JsonException("The field is required.", `ReadRequest.${field}`));
   });
 });

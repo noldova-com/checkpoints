@@ -9,7 +9,7 @@
 import type { Writable } from "node:stream";
 import { mock } from "node:test";
 
-import type { JsonValue } from "@noldova/checkpoints.protocol";
+import type { JsonValue } from "@noldova/context.json";
 import type { NotificationPost, UpdateProcess } from "@noldova/desktop.protocol";
 import { EventChannel, NotificationHandle, type OwnedProcess, RequestContext, type IMethodHandler, type ProcessRequest } from "@noldova/desktop.runtime";
 import { FakeRuntimePartContext, type FakeModuleLog } from "@noldova/desktop.runtime/testing";

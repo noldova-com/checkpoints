@@ -6,13 +6,14 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import type { JsonObject } from "@noldova/context.json";
+
 import { InvalidDateException } from "../exceptions/invalid-date.exception.ts";
 import { InvalidTimeException } from "../exceptions/invalid-time.exception.ts";
 import { LabelTooLongException } from "../exceptions/label-too-long.exception.ts";
 import { Resources } from "../resources.ts";
 import { CheckpointId } from "../services/checkpoint-id.ts";
-import { JsonObjectReader } from "../services/json-object.reader.ts";
-import type { JsonObject } from "../types/json-object.ts";
+import { WireForm } from "../services/wire-form.ts";
 import { CaptureMode } from "./capture-mode.ts";
 import { UnreadPath } from "./unread-path.ts";
 
@@ -41,17 +42,16 @@ export class Checkpoint {
   }
 
   public static fromJson(value: unknown): Checkpoint {
-    const reader = new JsonObjectReader(value, Resources.checkpointModel);
-    reader.refuseOtherFields(Checkpoint.FIELDS);
+    const reader = WireForm.read(value, Resources.checkpointModel, Checkpoint.FIELDS);
     const time = reader.readString(Resources.timeField);
     if (!Resources.timePattern.test(time) || Number.isNaN(Date.parse(time)) || new Date(time).toISOString() !== time)
       throw new InvalidTimeException(time);
     return new Checkpoint(
       reader.readString(Resources.idField),
       new Date(time),
-      CaptureMode.fromJson(reader.read(Resources.modeField)),
-      reader.readStringOrNull(Resources.labelField),
-      reader.readList(Resources.unreadPathsField).map(t => UnreadPath.fromJson(t)));
+      CaptureMode.fromJson(reader.readValue(Resources.modeField)),
+      reader.readNullableString(Resources.labelField),
+      WireForm.readArray(reader, Resources.unreadPathsField).map(t => UnreadPath.fromJson(t)));
   }
 
   public toJson(): JsonObject {

@@ -6,11 +6,12 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import type { JsonObject } from "@noldova/context.json";
+
 import { Resources } from "../resources.ts";
 import { ByteSize } from "../services/byte-size.ts";
 import { FolderIdentity } from "../services/folder-identity.ts";
-import { JsonObjectReader } from "../services/json-object.reader.ts";
-import type { JsonObject } from "../types/json-object.ts";
+import { WireForm } from "../services/wire-form.ts";
 
 export class CapturePausedEvent {
   public static readonly event: string = Resources.capturePausedEvent;
@@ -30,8 +31,7 @@ export class CapturePausedEvent {
   }
 
   public static fromJson(value: unknown): CapturePausedEvent {
-    const reader = new JsonObjectReader(value, Resources.capturePausedEventModel);
-    reader.refuseOtherFields(CapturePausedEvent.FIELDS);
+    const reader = WireForm.read(value, Resources.capturePausedEventModel, CapturePausedEvent.FIELDS);
     return new CapturePausedEvent(reader.readString(Resources.identityField), reader.readNumber(Resources.spaceFreeField), reader.readNumber(Resources.spaceNeededField));
   }
 

@@ -6,9 +6,10 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import type { JsonObject } from "@noldova/context.json";
+
 import { Resources } from "../resources.ts";
-import { JsonObjectReader } from "../services/json-object.reader.ts";
-import type { JsonObject } from "../types/json-object.ts";
+import { WireForm } from "../services/wire-form.ts";
 import { FolderUsage } from "./folder-usage.ts";
 
 export class StorageList {
@@ -20,9 +21,8 @@ export class StorageList {
   }
 
   public static fromJson(value: unknown): StorageList {
-    const reader = new JsonObjectReader(value, Resources.storageListModel);
-    reader.refuseOtherFields(StorageList.FIELDS);
-    return new StorageList(reader.readList(Resources.foldersField).map(t => FolderUsage.fromJson(t)));
+    const reader = WireForm.read(value, Resources.storageListModel, StorageList.FIELDS);
+    return new StorageList(WireForm.readArray(reader, Resources.foldersField).map(t => FolderUsage.fromJson(t)));
   }
 
   public toJson(): JsonObject {

@@ -9,7 +9,8 @@
 import { open, readFile, rename } from "node:fs/promises";
 import path from "node:path";
 
-import { ProtocolException, type JsonValue } from "@noldova/checkpoints.protocol";
+import { ProtocolException } from "@noldova/checkpoints.protocol";
+import { JsonException, type JsonValue } from "@noldova/context.json";
 
 import { StoreException } from "../exceptions/store.exception.ts";
 import { StoreFileUnreadableException } from "../exceptions/store-file-unreadable.exception.ts";
@@ -39,7 +40,7 @@ export class StoreFile {
       return read(JSON.parse(text));
     }
     catch (error) {
-      if (!(error instanceof SyntaxError || error instanceof ProtocolException || error instanceof StoreException))
+      if (!(error instanceof SyntaxError || error instanceof ProtocolException || error instanceof JsonException || error instanceof StoreException))
         throw error;
       throw new StoreFileUnreadableException(name, error);
     }

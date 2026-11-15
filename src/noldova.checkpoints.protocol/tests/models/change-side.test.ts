@@ -9,7 +9,8 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
-import { ChangeSide, InvalidSizeException, MissingFieldException, PathKind, SideSizeMismatchException, UnknownFieldException } from "@noldova/checkpoints.protocol";
+import { ChangeSide, InvalidSizeException, PathKind, SideSizeMismatchException } from "@noldova/checkpoints.protocol";
+import { JsonException } from "@noldova/context.json";
 
 describe("ChangeSide", { concurrency: true }, () => {
   it("writes and reads a file's kind, size and whether it's text", () => {
@@ -33,13 +34,13 @@ describe("ChangeSide", { concurrency: true }, () => {
   });
 
   it("refuses JSON with another field", () => {
-    assert.throws(() => ChangeSide.fromJson({ kind: "File", size: 1, isText: true, mode: "100644" }), new UnknownFieldException("ChangeSide", "mode"));
+    assert.throws(() => ChangeSide.fromJson({ kind: "File", size: 1, isText: true, mode: "100644" }), new JsonException("The field is not part of this message, which accepts no unknown fields.", "ChangeSide.mode"));
   });
 
   it("refuses JSON missing any of its fields", () => {
     const json = { kind: "File", size: 1, isText: true };
 
     for (const field of Object.keys(json))
-      assert.throws(() => ChangeSide.fromJson(Object.fromEntries(Object.entries(json).filter(([key]) => key !== field))), new MissingFieldException("ChangeSide", field));
+      assert.throws(() => ChangeSide.fromJson(Object.fromEntries(Object.entries(json).filter(([key]) => key !== field))), new JsonException("The field is required.", `ChangeSide.${field}`));
   });
 });

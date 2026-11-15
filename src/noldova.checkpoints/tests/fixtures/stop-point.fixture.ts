@@ -6,7 +6,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import type { JsonObject } from "@noldova/checkpoints.protocol";
+import type { JsonObject } from "@noldova/context.json";
 
 import { JournalRecordType } from "../../src/models/journal-record-type.ts";
 import type { JournalRecord } from "../../src/models/journal-record.ts";

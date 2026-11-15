@@ -10,9 +10,9 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
 import {
-  CaptureMode, Checkpoint, InvalidCheckpointIdException, InvalidDateException, InvalidTimeException, LabelTooLongException, MissingFieldException, UnknownFieldException,
-  UnreadPath, UnreadReason
+  CaptureMode, Checkpoint, InvalidCheckpointIdException, InvalidDateException, InvalidTimeException, LabelTooLongException, UnreadPath, UnreadReason
 } from "@noldova/checkpoints.protocol";
+import { JsonException } from "@noldova/context.json";
 
 describe("Checkpoint", { concurrency: true }, () => {
   const id = "019a0b6c-7d1e-7f00-8abc-0123456789ab";
@@ -62,11 +62,11 @@ describe("Checkpoint", { concurrency: true }, () => {
   });
 
   it("refuses JSON with another field", () => {
-    assert.throws(() => Checkpoint.fromJson({ ...json, size: 1 }), new UnknownFieldException("Checkpoint", "size"));
+    assert.throws(() => Checkpoint.fromJson({ ...json, size: 1 }), new JsonException("The field is not part of this message, which accepts no unknown fields.", "Checkpoint.size"));
   });
 
   it("refuses JSON missing any of its fields", () => {
     for (const field of Object.keys(json))
-      assert.throws(() => Checkpoint.fromJson(Object.fromEntries(Object.entries(json).filter(([key]) => key !== field))), new MissingFieldException("Checkpoint", field));
+      assert.throws(() => Checkpoint.fromJson(Object.fromEntries(Object.entries(json).filter(([key]) => key !== field))), new JsonException("The field is required.", `Checkpoint.${field}`));
   });
 });

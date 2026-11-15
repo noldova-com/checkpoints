@@ -17,6 +17,7 @@ export class Resources {
   public static readonly anyFoldersPattern: string = "(?:[\\s\\S]*/)?";
   public static readonly anyPattern: string = "[\\s\\S]*";
   public static readonly appendFlag: string = "a";
+  public static readonly arrayExpected: string = "Expected an array.";
   public static readonly applyingRecord: string = "Applying";
   public static readonly asciiCarriageReturn: number = 0x0d;
   public static readonly asciiCaseOffset: number = 0x20;
@@ -310,6 +311,7 @@ export class Resources {
   public static readonly timeField: string = "time";
   public static readonly treeFieldSeparator: string = " ";
   public static readonly typeField: string = "type";
+  public static readonly unknownField: string = "The field is not part of this message, which accepts no unknown fields.";
   public static readonly unreachableAge: number = 14 * 24 * 60 * 60 * 1000;
   public static readonly unreachableExpiry: string = "2.weeks.ago";
   public static readonly unreadPathModel: string = "UnreadPath";
@@ -431,6 +433,10 @@ export class Resources {
     return `M ${mode} ${objectId} ${path}`;
   }
 
+  public static formatFieldPath(path: string, field: string): string {
+    return `${path}.${field}`;
+  }
+
   public static formatFileId(device: bigint, inode: bigint): string {
     return `${device}:${inode}`;
   }
@@ -533,14 +539,6 @@ export class Resources {
 
   public static formatNoContentReason(path: string): string {
     return `the checkpoint taken before the restore holds no file content for ${path}`;
-  }
-
-  public static formatNotABoolean(field: string): string {
-    return `${field} holds something other than true or false.`;
-  }
-
-  public static formatNotAStringList(field: string): string {
-    return `${field} holds something other than text.`;
   }
 
   public static formatOctalEscape(code: number): string {

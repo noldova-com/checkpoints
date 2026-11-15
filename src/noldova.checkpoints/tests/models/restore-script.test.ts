@@ -9,9 +9,10 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
-import { PathKind, RestoreAction, UnknownFieldException } from "@noldova/checkpoints.protocol";
+import { PathKind, RestoreAction } from "@noldova/checkpoints.protocol";
+import { JsonException } from "@noldova/context.json";
 
-import { ScriptStepMissingException, StoreFieldNotAStringListException, UnsupportedStoreFormatException } from "../../src/api/index.ts";
+import { ScriptStepMissingException, UnsupportedStoreFormatException } from "../../src/api/index.ts";
 import { LinkKind } from "../../src/models/link-kind.ts";
 import { RestoreScript } from "../../src/models/restore-script.ts";
 import { ScriptStep } from "../../src/models/script-step.ts";
@@ -49,11 +50,11 @@ describe("RestoreScript", { concurrency: true }, () => {
   it("refuses a field it doesn't know, a folder's file id that isn't text, and a format it doesn't read", () => {
     const json = script.toJson();
 
-    assert.throws(() => RestoreScript.fromJson({ ...json, extra: 1 }), new UnknownFieldException("RestoreScript", "extra"));
-    assert.throws(() => RestoreScript.fromJson({ ...json, folders: { "": 1 } }), new StoreFieldNotAStringListException("folders"));
-    assert.throws(() => RestoreScript.fromJson({ ...json, folders: [] }), new StoreFieldNotAStringListException("folders"));
-    assert.throws(() => RestoreScript.fromJson({ ...json, folders: "a" }), new StoreFieldNotAStringListException("folders"));
-    assert.throws(() => RestoreScript.fromJson({ ...json, folders: null }), new StoreFieldNotAStringListException("folders"));
+    assert.throws(() => RestoreScript.fromJson({ ...json, extra: 1 }), new JsonException("The field is not part of this message, which accepts no unknown fields.", "RestoreScript.extra"));
+    assert.throws(() => RestoreScript.fromJson({ ...json, folders: { "": 1 } }), new JsonException("Expected a string.", "RestoreScript.folders."));
+    assert.throws(() => RestoreScript.fromJson({ ...json, folders: [] }), new JsonException("Expected an object.", "RestoreScript.folders"));
+    assert.throws(() => RestoreScript.fromJson({ ...json, folders: "a" }), new JsonException("Expected an object.", "RestoreScript.folders"));
+    assert.throws(() => RestoreScript.fromJson({ ...json, folders: null }), new JsonException("Null is not an accepted value here.", "RestoreScript.folders"));
     assert.throws(() => RestoreScript.fromJson({ ...json, formatVersion: 2 }), new UnsupportedStoreFormatException("2"));
   });
 });

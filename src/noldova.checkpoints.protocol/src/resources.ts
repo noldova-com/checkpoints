@@ -11,6 +11,7 @@ export class Resources {
   public static readonly actionField: string = "action";
   public static readonly afterField: string = "after";
   public static readonly againstField: string = "against";
+  public static readonly arrayExpected: string = "Expected an array.";
   public static readonly base64Alphabet: string = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
   public static readonly base64DigitMask: number = 0x3f;
   public static readonly base64GroupLength: number = 4;
@@ -107,6 +108,7 @@ export class Resources {
   public static readonly timeField: string = "time";
   public static readonly timePattern: RegExp = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/;
   public static readonly toField: string = "to";
+  public static readonly unknownField: string = "The field is not part of this message, which accepts no unknown fields.";
   public static readonly unreadPathModel: string = "UnreadPath";
   public static readonly unreadPathsField: string = "unreadPaths";
   public static readonly unreadReasonField: string = "unreadReason";
@@ -165,44 +167,12 @@ export class Resources {
     return `"${value}" is not a time in UTC with milliseconds, such as 2026-10-18T12:00:00.000Z.`;
   }
 
+  public static formatFieldPath(path: string, field: string): string {
+    return `${path}.${field}`;
+  }
+
   public static formatLabelTooLong(length: number): string {
     return `A label has at most ${Resources.maximumLabelLength} characters; this one has ${length}.`;
-  }
-
-  public static formatMissingField(model: string, field: string): string {
-    return `${model}.${field} is missing.`;
-  }
-
-  public static formatNotABoolean(model: string, field: string): string {
-    return `${model}.${field} must be true or false.`;
-  }
-
-  public static formatNotAList(model: string, field: string): string {
-    return `${model}.${field} must be a list.`;
-  }
-
-  public static formatNotANumber(model: string, field: string): string {
-    return `${model}.${field} must be a number.`;
-  }
-
-  public static formatNotANumberOrNull(model: string, field: string): string {
-    return `${model}.${field} must be a number or null.`;
-  }
-
-  public static formatNotAnObject(model: string): string {
-    return `${model} must be a JSON object.`;
-  }
-
-  public static formatNotAString(model: string, field: string): string {
-    return `${model}.${field} must be a string.`;
-  }
-
-  public static formatNotAStringList(model: string, field: string): string {
-    return `${model}.${field} must be a list of strings.`;
-  }
-
-  public static formatNotAStringOrNull(model: string, field: string): string {
-    return `${model}.${field} must be a string or null.`;
   }
 
   public static formatPlanMismatch(outcome: string): string {
@@ -247,10 +217,6 @@ export class Resources {
 
   public static formatUnknownDeleteFolderOutcome(value: string): string {
     return `"${value}" is not a known delete outcome.`;
-  }
-
-  public static formatUnknownField(model: string, field: string): string {
-    return `${model}.${field} is not a known field.`;
   }
 
   public static formatUnknownKeepReason(value: string): string {

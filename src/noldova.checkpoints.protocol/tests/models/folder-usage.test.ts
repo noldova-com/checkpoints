@@ -9,9 +9,8 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
-import {
-  FieldNotANumberException, FolderUsage, InvalidFolderPathException, InvalidIdentityException, InvalidSizeException, MissingFieldException, UnknownFieldException
-} from "@noldova/checkpoints.protocol";
+import { FolderUsage, InvalidFolderPathException, InvalidIdentityException, InvalidSizeException } from "@noldova/checkpoints.protocol";
+import { JsonException } from "@noldova/context.json";
 
 describe("FolderUsage", { concurrency: true }, () => {
   it("writes and reads its identity, path and bytes", () => {
@@ -36,15 +35,15 @@ describe("FolderUsage", { concurrency: true }, () => {
   });
 
   it("refuses JSON with another field, a missing one, or bytes that aren't a number", () => {
-    assert.throws(() => FolderUsage.fromJson({ identity: "a", path: "/", bytes: 0, time: "x" }), new UnknownFieldException("FolderUsage", "time"));
-    assert.throws(() => FolderUsage.fromJson({ identity: "a", bytes: 0 }), new MissingFieldException("FolderUsage", "path"));
-    assert.throws(() => FolderUsage.fromJson({ identity: "a", path: "/", bytes: "0" }), new FieldNotANumberException("FolderUsage", "bytes"));
+    assert.throws(() => FolderUsage.fromJson({ identity: "a", path: "/", bytes: 0, time: "x" }), new JsonException("The field is not part of this message, which accepts no unknown fields.", "FolderUsage.time"));
+    assert.throws(() => FolderUsage.fromJson({ identity: "a", bytes: 0 }), new JsonException("The field is required.", "FolderUsage.path"));
+    assert.throws(() => FolderUsage.fromJson({ identity: "a", path: "/", bytes: "0" }), new JsonException("Expected a number.", "FolderUsage.bytes"));
   });
 
   it("refuses JSON missing any of its fields", () => {
     const json = { identity: "project-7", path: "/work/project", bytes: 4096 };
 
     for (const field of Object.keys(json))
-      assert.throws(() => FolderUsage.fromJson(Object.fromEntries(Object.entries(json).filter(([key]) => key !== field))), new MissingFieldException("FolderUsage", field));
+      assert.throws(() => FolderUsage.fromJson(Object.fromEntries(Object.entries(json).filter(([key]) => key !== field))), new JsonException("The field is required.", `FolderUsage.${field}`));
   });
 });

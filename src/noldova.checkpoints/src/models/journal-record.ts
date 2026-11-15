@@ -6,10 +6,11 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { JsonObjectReader, type JsonObject } from "@noldova/checkpoints.protocol";
+import type { JsonObject } from "@noldova/context.json";
 
 import { JournalFieldMissingException } from "../exceptions/journal-field-missing.exception.ts";
 import { Resources } from "../resources.ts";
+import { StoreFormat } from "../services/store-format.ts";
 import { JournalRecordType } from "./journal-record-type.ts";
 import { RestoreScript } from "./restore-script.ts";
 
@@ -73,13 +74,12 @@ export class JournalRecord {
   }
 
   public static fromJson(value: unknown): JournalRecord {
-    const reader = new JsonObjectReader(value, Resources.journalRecordModel);
-    reader.refuseOtherFields(JournalRecord.FIELDS);
+    const reader = StoreFormat.read(value, Resources.journalRecordModel, JournalRecord.FIELDS);
     const type = JournalRecordType.fromJson(reader.readString(Resources.typeField));
-    const script = reader.read(Resources.scriptField);
-    return new JournalRecord(type, script === null ? null : RestoreScript.fromJson(script), reader.readNumberOrNull(Resources.stepField),
-      reader.readStringOrNull(Resources.pathField), reader.readStringOrNull(Resources.fromField), reader.readStringOrNull(Resources.fileIdField),
-      reader.readStringOrNull(Resources.checkpointField));
+    const script = reader.readValue(Resources.scriptField);
+    return new JournalRecord(type, script === null ? null : RestoreScript.fromJson(script), StoreFormat.readNullableNumber(reader, Resources.stepField),
+      reader.readNullableString(Resources.pathField), reader.readNullableString(Resources.fromField), reader.readNullableString(Resources.fileIdField),
+      reader.readNullableString(Resources.checkpointField));
   }
 
   public isSameAs(other: JournalRecord): boolean {

@@ -11,15 +11,15 @@ import { describe, it } from "node:test";
 
 import { Exception } from "@noldova/context.exceptions";
 
-import { ProtocolException, UnknownFieldException } from "@noldova/checkpoints.protocol";
+import { InvalidIdentityException, ProtocolException } from "@noldova/checkpoints.protocol";
 
 describe("ProtocolException", { concurrency: true }, () => {
   it("is the base of the protocol's exceptions, each named for its own class", () => {
-    const exception = new UnknownFieldException("Model", "other");
+    const exception = new InvalidIdentityException("");
 
     assert.ok(exception instanceof ProtocolException);
     assert.ok(exception instanceof Exception);
     assert.ok(exception instanceof Error);
-    assert.equal(exception.name, "UnknownFieldException");
+    assert.equal(exception.name, "InvalidIdentityException");
   });
 });

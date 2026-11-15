@@ -6,9 +6,10 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import type { JsonValue } from "@noldova/context.json";
+
 import { InvalidRelativePathException } from "../exceptions/invalid-relative-path.exception.ts";
 import { Resources } from "../resources.ts";
-import type { JsonValue } from "../types/json-value.ts";
 import { RelativePath } from "./relative-path.ts";
 
 export class ScopePaths {

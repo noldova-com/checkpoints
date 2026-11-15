@@ -9,9 +9,8 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
-import {
-  FieldNotAStringListException, FolderReference, InvalidCheckpointIdException, InvalidRelativePathException, MissingFieldException, PreviewRequest, UnknownFieldException
-} from "@noldova/checkpoints.protocol";
+import { FolderReference, InvalidCheckpointIdException, InvalidRelativePathException, PreviewRequest } from "@noldova/checkpoints.protocol";
+import { JsonException } from "@noldova/context.json";
 
 describe("PreviewRequest", { concurrency: true }, () => {
   const folder = new FolderReference("project-1", "/work/project");
@@ -39,7 +38,7 @@ describe("PreviewRequest", { concurrency: true }, () => {
     const json = { folder: folderJson, checkpoint: id, paths: null };
 
     for (const field of Object.keys(json))
-      assert.throws(() => PreviewRequest.fromJson(Object.fromEntries(Object.entries(json).filter(([key]) => key !== field))), new MissingFieldException("PreviewRequest", field));
+      assert.throws(() => PreviewRequest.fromJson(Object.fromEntries(Object.entries(json).filter(([key]) => key !== field))), new JsonException("The field is required.", `PreviewRequest.${field}`));
   });
 
   it("keeps its own copy of the paths, and refuses one that isn't a path inside the folder", () => {
@@ -50,8 +49,8 @@ describe("PreviewRequest", { concurrency: true }, () => {
     assert.deepEqual(request.paths, ["a.txt"]);
     for (const path of ["", "/a", "a//b", "a/./b", "../a", "a/..", "a\\b"])
       assert.throws(() => new PreviewRequest(folder, id, [path]), new InvalidRelativePathException(path));
-    for (const paths of ["a.txt", ["a.txt", 1]])
-      assert.throws(() => PreviewRequest.fromJson({ folder: folderJson, checkpoint: id, paths }), new FieldNotAStringListException("PreviewRequest", "paths"));
+    assert.throws(() => PreviewRequest.fromJson({ folder: folderJson, checkpoint: id, paths: "a.txt" }), new JsonException("Expected an array.", "PreviewRequest.paths"));
+    assert.throws(() => PreviewRequest.fromJson({ folder: folderJson, checkpoint: id, paths: ["a.txt", 1] }), new JsonException("Expected a string.", "PreviewRequest.paths.1"));
   });
 
   it("refuses a checkpoint id that isn't a UUID version 7", () => {
@@ -60,6 +59,6 @@ describe("PreviewRequest", { concurrency: true }, () => {
   });
 
   it("refuses JSON with another field", () => {
-    assert.throws(() => PreviewRequest.fromJson({ folder: folderJson, checkpoint: id, paths: null, to: null }), new UnknownFieldException("PreviewRequest", "to"));
+    assert.throws(() => PreviewRequest.fromJson({ folder: folderJson, checkpoint: id, paths: null, to: null }), new JsonException("The field is not part of this message, which accepts no unknown fields.", "PreviewRequest.to"));
   });
 });

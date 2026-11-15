@@ -9,7 +9,8 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
-import { CaptureMode, CaptureOutcome, CaptureResult, Checkpoint, type JsonValue } from "@noldova/checkpoints.protocol";
+import { CaptureMode, CaptureOutcome, CaptureResult, Checkpoint } from "@noldova/checkpoints.protocol";
+import type { JsonValue } from "@noldova/context.json";
 import { EventChannel } from "@noldova/desktop.runtime";
 
 import { CapturePause } from "../../src/services/capture-pause.ts";

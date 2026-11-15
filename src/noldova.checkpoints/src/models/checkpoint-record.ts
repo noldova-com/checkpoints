@@ -6,7 +6,8 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { CaptureMode, Checkpoint, JsonObjectReader, UnreadPath, UnreadReason, type JsonObject } from "@noldova/checkpoints.protocol";
+import { CaptureMode, Checkpoint, UnreadPath, UnreadReason } from "@noldova/checkpoints.protocol";
+import type { JsonObject } from "@noldova/context.json";
 
 import { IgnoreRulesMismatchException } from "../exceptions/ignore-rules-mismatch.exception.ts";
 import { Resources } from "../resources.ts";
@@ -40,14 +41,13 @@ export class CheckpointRecord {
   }
 
   public static fromJson(value: unknown): CheckpointRecord {
-    const reader = new JsonObjectReader(value, Resources.checkpointRecordModel);
-    reader.refuseOtherFields(CheckpointRecord.FIELDS);
+    const reader = StoreFormat.read(value, Resources.checkpointRecordModel, CheckpointRecord.FIELDS);
     const version = StoreFormat.readVersion(reader, [Resources.formatVersion, Resources.checkpointFormatVersion]);
-    const written = reader.read(Resources.checkpointField);
+    const written = reader.readValue(Resources.checkpointField);
     const checkpoint = version === Resources.formatVersion ? CheckpointRecord.checkpointOfVersion1(written) : Checkpoint.fromJson(written);
-    const emptyFolders = StoreFormat.readStringList(reader, Resources.emptyFoldersField);
-    const links = reader.readList(Resources.linksField).map(t => LinkRecord.fromJson(t));
-    const ignoreRules = reader.read(Resources.ignoreRulesField);
+    const emptyFolders = reader.readStringArray(Resources.emptyFoldersField);
+    const links = StoreFormat.readArray(reader, Resources.linksField).map(t => LinkRecord.fromJson(t));
+    const ignoreRules = reader.readValue(Resources.ignoreRulesField);
     return new CheckpointRecord(checkpoint, emptyFolders, links, ignoreRules === null ? null : IgnoreRecord.fromJson(ignoreRules));
   }
 
@@ -66,22 +66,20 @@ export class CheckpointRecord {
   }
 
   private static checkpointOfVersion1(value: unknown): Checkpoint {
-    const reader = new JsonObjectReader(value, Resources.checkpointModel);
-    reader.refuseOtherFields(CheckpointRecord.VERSION_1_CHECKPOINT_FIELDS);
+    const reader = StoreFormat.read(value, Resources.checkpointModel, CheckpointRecord.VERSION_1_CHECKPOINT_FIELDS);
     const read = Checkpoint.fromJson({
-      [Resources.idField]: reader.read(Resources.idField),
-      [Resources.timeField]: reader.read(Resources.timeField),
-      [Resources.modeField]: reader.read(Resources.modeField),
-      [Resources.labelField]: reader.read(Resources.labelField),
+      [Resources.idField]: reader.readValue(Resources.idField),
+      [Resources.timeField]: reader.readValue(Resources.timeField),
+      [Resources.modeField]: reader.readValue(Resources.modeField),
+      [Resources.labelField]: reader.readValue(Resources.labelField),
       [Resources.unreadPathsField]: []
     });
-    const unreadPaths = reader.readList(Resources.unreadPathsField).map(t => CheckpointRecord.unreadPathOfVersion1(t));
+    const unreadPaths = StoreFormat.readArray(reader, Resources.unreadPathsField).map(t => CheckpointRecord.unreadPathOfVersion1(t));
     return new Checkpoint(read.id, read.time, read.mode, read.label, unreadPaths);
   }
 
   private static unreadPathOfVersion1(value: unknown): UnreadPath {
-    const reader = new JsonObjectReader(value, Resources.unreadPathModel);
-    reader.refuseOtherFields(CheckpointRecord.VERSION_1_UNREAD_PATH_FIELDS);
-    return new UnreadPath(reader.readString(Resources.pathField), UnreadReason.fromJson(reader.read(Resources.reasonField)), null);
+    const reader = StoreFormat.read(value, Resources.unreadPathModel, CheckpointRecord.VERSION_1_UNREAD_PATH_FIELDS);
+    return new UnreadPath(reader.readString(Resources.pathField), UnreadReason.fromJson(reader.readValue(Resources.reasonField)), null);
   }
 }

@@ -6,9 +6,10 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import type { JsonObject } from "@noldova/context.json";
+
 import { Resources } from "../resources.ts";
-import { JsonObjectReader } from "../services/json-object.reader.ts";
-import type { JsonObject } from "../types/json-object.ts";
+import { WireForm } from "../services/wire-form.ts";
 import { Checkpoint } from "./checkpoint.ts";
 
 export class CheckpointList {
@@ -20,9 +21,8 @@ export class CheckpointList {
   }
 
   public static fromJson(value: unknown): CheckpointList {
-    const reader = new JsonObjectReader(value, Resources.checkpointListModel);
-    reader.refuseOtherFields(CheckpointList.FIELDS);
-    return new CheckpointList(reader.readList(Resources.checkpointsField).map(t => Checkpoint.fromJson(t)));
+    const reader = WireForm.read(value, Resources.checkpointListModel, CheckpointList.FIELDS);
+    return new CheckpointList(WireForm.readArray(reader, Resources.checkpointsField).map(t => Checkpoint.fromJson(t)));
   }
 
   public toJson(): JsonObject {

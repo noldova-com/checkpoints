@@ -10,9 +10,9 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
 import {
-  FieldNotAStringOrNullException, InvalidRelativePathException, MissingFieldException, UnknownFieldException, UnknownUnreadReasonException, UnreadCodeMismatchException,
-  UnreadPath, UnreadReason
+  InvalidRelativePathException, UnknownUnreadReasonException, UnreadCodeMismatchException, UnreadPath, UnreadReason
 } from "@noldova/checkpoints.protocol";
+import { JsonException } from "@noldova/context.json";
 
 describe("UnreadPath", { concurrency: true }, () => {
   it("writes and reads its path and reason, with a null code", () => {
@@ -27,7 +27,7 @@ describe("UnreadPath", { concurrency: true }, () => {
     const json = { path: "a", reason: "Denied", code: null };
 
     for (const field of Object.keys(json))
-      assert.throws(() => UnreadPath.fromJson(Object.fromEntries(Object.entries(json).filter(([key]) => key !== field))), new MissingFieldException("UnreadPath", field));
+      assert.throws(() => UnreadPath.fromJson(Object.fromEntries(Object.entries(json).filter(([key]) => key !== field))), new JsonException("The field is required.", `UnreadPath.${field}`));
   });
 
   it("writes and reads the error code of an unreadable path", () => {
@@ -42,7 +42,7 @@ describe("UnreadPath", { concurrency: true }, () => {
     assert.throws(() => new UnreadPath("a", UnreadReason.Unreadable, null), new UnreadCodeMismatchException(UnreadReason.Unreadable));
     assert.throws(() => new UnreadPath("a", UnreadReason.Denied, "EACCES"), new UnreadCodeMismatchException(UnreadReason.Denied));
     assert.throws(() => UnreadPath.fromJson({ path: "a", reason: "Unreadable", code: null }), new UnreadCodeMismatchException(UnreadReason.Unreadable));
-    assert.throws(() => UnreadPath.fromJson({ path: "a", reason: "Unreadable", code: 5 }), new FieldNotAStringOrNullException("UnreadPath", "code"));
+    assert.throws(() => UnreadPath.fromJson({ path: "a", reason: "Unreadable", code: 5 }), new JsonException("Expected a string.", "UnreadPath.code"));
   });
 
   it("keeps names with dots, spaces and other scripts", () => {
@@ -56,6 +56,6 @@ describe("UnreadPath", { concurrency: true }, () => {
 
   it("refuses JSON with an unknown reason or another field", () => {
     assert.throws(() => UnreadPath.fromJson({ path: "a", reason: "Gone", code: null }), new UnknownUnreadReasonException("Gone"));
-    assert.throws(() => UnreadPath.fromJson({ path: "a", reason: "Denied", code: null, size: 1 }), new UnknownFieldException("UnreadPath", "size"));
+    assert.throws(() => UnreadPath.fromJson({ path: "a", reason: "Denied", code: null, size: 1 }), new JsonException("The field is not part of this message, which accepts no unknown fields.", "UnreadPath.size"));
   });
 });

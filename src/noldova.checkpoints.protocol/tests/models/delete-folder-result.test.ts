@@ -9,9 +9,8 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
-import {
-  DeleteFolderOutcome, DeleteFolderResult, MissingFieldException, UnknownDeleteFolderOutcomeException, UnknownFieldException
-} from "@noldova/checkpoints.protocol";
+import { DeleteFolderOutcome, DeleteFolderResult, UnknownDeleteFolderOutcomeException } from "@noldova/checkpoints.protocol";
+import { JsonException } from "@noldova/context.json";
 
 describe("DeleteFolderResult", { concurrency: true }, () => {
   it("writes and reads its outcome", () => {
@@ -22,7 +21,7 @@ describe("DeleteFolderResult", { concurrency: true }, () => {
   });
 
   it("refuses JSON with another field or an unknown outcome", () => {
-    assert.throws(() => DeleteFolderResult.fromJson({ outcome: "Deleted", bytes: 0 }), new UnknownFieldException("DeleteFolderResult", "bytes"));
+    assert.throws(() => DeleteFolderResult.fromJson({ outcome: "Deleted", bytes: 0 }), new JsonException("The field is not part of this message, which accepts no unknown fields.", "DeleteFolderResult.bytes"));
     assert.throws(() => DeleteFolderResult.fromJson({ outcome: "Gone" }), new UnknownDeleteFolderOutcomeException("Gone"));
   });
 
@@ -30,6 +29,6 @@ describe("DeleteFolderResult", { concurrency: true }, () => {
     const json = { outcome: "Deleted" };
 
     for (const field of Object.keys(json))
-      assert.throws(() => DeleteFolderResult.fromJson(Object.fromEntries(Object.entries(json).filter(([key]) => key !== field))), new MissingFieldException("DeleteFolderResult", field));
+      assert.throws(() => DeleteFolderResult.fromJson(Object.fromEntries(Object.entries(json).filter(([key]) => key !== field))), new JsonException("The field is required.", `DeleteFolderResult.${field}`));
   });
 });

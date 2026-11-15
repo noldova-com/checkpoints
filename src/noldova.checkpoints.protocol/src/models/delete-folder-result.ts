@@ -6,9 +6,10 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import type { JsonObject } from "@noldova/context.json";
+
 import { Resources } from "../resources.ts";
-import { JsonObjectReader } from "../services/json-object.reader.ts";
-import type { JsonObject } from "../types/json-object.ts";
+import { WireForm } from "../services/wire-form.ts";
 import { DeleteFolderOutcome } from "./delete-folder-outcome.ts";
 
 export class DeleteFolderResult {
@@ -20,9 +21,8 @@ export class DeleteFolderResult {
   }
 
   public static fromJson(value: unknown): DeleteFolderResult {
-    const reader = new JsonObjectReader(value, Resources.deleteFolderResultModel);
-    reader.refuseOtherFields(DeleteFolderResult.FIELDS);
-    return new DeleteFolderResult(DeleteFolderOutcome.fromJson(reader.read(Resources.outcomeField)));
+    const reader = WireForm.read(value, Resources.deleteFolderResultModel, DeleteFolderResult.FIELDS);
+    return new DeleteFolderResult(DeleteFolderOutcome.fromJson(reader.readValue(Resources.outcomeField)));
   }
 
   public toJson(): JsonObject {

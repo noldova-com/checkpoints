@@ -6,10 +6,12 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { JsonObjectReader, PathKind, RestoreAction, type JsonObject } from "@noldova/checkpoints.protocol";
+import { PathKind, RestoreAction } from "@noldova/checkpoints.protocol";
+import type { JsonObject } from "@noldova/context.json";
 
 import { JournalFieldMissingException } from "../exceptions/journal-field-missing.exception.ts";
 import { Resources } from "../resources.ts";
+import { StoreFormat } from "../services/store-format.ts";
 import { LinkKind } from "./link-kind.ts";
 
 export class ScriptStep {
@@ -46,18 +48,17 @@ export class ScriptStep {
   }
 
   public static fromJson(value: unknown): ScriptStep {
-    const reader = new JsonObjectReader(value, Resources.scriptStepModel);
-    reader.refuseOtherFields(ScriptStep.FIELDS);
-    const kind = reader.readStringOrNull(Resources.kindField);
-    const linkKind = reader.read(Resources.linkKindField);
+    const reader = StoreFormat.read(value, Resources.scriptStepModel, ScriptStep.FIELDS);
+    const kind = reader.readNullableString(Resources.kindField);
+    const linkKind = reader.readValue(Resources.linkKindField);
     return new ScriptStep(
       reader.readNumber(Resources.indexField),
       reader.readString(Resources.pathField),
-      RestoreAction.fromJson(reader.read(Resources.actionField)),
-      reader.readStringOrNull(Resources.stageField),
-      reader.readStringOrNull(Resources.asideField),
+      RestoreAction.fromJson(reader.readValue(Resources.actionField)),
+      reader.readNullableString(Resources.stageField),
+      reader.readNullableString(Resources.asideField),
       kind === null ? null : PathKind.fromJson(kind),
-      reader.readStringOrNull(Resources.objectIdField),
+      reader.readNullableString(Resources.objectIdField),
       linkKind === null ? null : LinkKind.fromJson(linkKind));
   }
 

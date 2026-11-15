@@ -10,9 +10,10 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
 import {
-  ChangeSide, InvalidCheckpointIdException, InvalidPlanStateException, InvalidRelativePathException, InvalidSizeException, KeepReason, KeptPath, MissingFieldException,
-  PathKind, RestoreAction, RestorePlan, RestoreStep, UnknownFieldException
+  ChangeSide, InvalidCheckpointIdException, InvalidPlanStateException, InvalidRelativePathException, InvalidSizeException, KeepReason, KeptPath, PathKind,
+  RestoreAction, RestorePlan, RestoreStep
 } from "@noldova/checkpoints.protocol";
+import { JsonException } from "@noldova/context.json";
 
 describe("RestorePlan", { concurrency: true }, () => {
   const id = "019a0b6c-7d1e-7f00-8abc-0123456789ab";
@@ -52,7 +53,7 @@ describe("RestorePlan", { concurrency: true }, () => {
 
   it("refuses JSON missing any of its fields, the paths included", () => {
     for (const field of Object.keys(planJson))
-      assert.throws(() => RestorePlan.fromJson(Object.fromEntries(Object.entries(planJson).filter(([key]) => key !== field))), new MissingFieldException("RestorePlan", field));
+      assert.throws(() => RestorePlan.fromJson(Object.fromEntries(Object.entries(planJson).filter(([key]) => key !== field))), new JsonException("The field is required.", `RestorePlan.${field}`));
   });
 
   it("keeps its own copy of the steps and kept paths it was given", () => {
@@ -81,6 +82,6 @@ describe("RestorePlan", { concurrency: true }, () => {
   });
 
   it("refuses JSON with another field", () => {
-    assert.throws(() => RestorePlan.fromJson({ ...planJson, folder: "x" }), new UnknownFieldException("RestorePlan", "folder"));
+    assert.throws(() => RestorePlan.fromJson({ ...planJson, folder: "x" }), new JsonException("The field is not part of this message, which accepts no unknown fields.", "RestorePlan.folder"));
   });
 });

@@ -9,7 +9,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
-import { FieldNotANumberException, MissingFieldException, UnknownFieldException } from "@noldova/checkpoints.protocol";
+import { JsonException } from "@noldova/context.json";
 
 import { StoreFileUnreadableException, UnsupportedStoreFormatException } from "../../src/api/index.ts";
 import { HousekeepingRecord } from "../../src/models/housekeeping-record.ts";
@@ -26,11 +26,12 @@ describe("HousekeepingRecord", { concurrency: true }, () => {
   });
 
   it("refuses a record of a format version it doesn't read, one without its time, and one with a field it doesn't know", () => {
-    const unreadable = (cause: new (...args: never[]) => Error) => (error: unknown): boolean =>
-      error instanceof StoreFileUnreadableException && error.file === "housekeeping.json" && error.cause instanceof cause;
-    assert.throws(() => read(JSON.stringify({ formatVersion: 2, fullPass: 0 })), unreadable(UnsupportedStoreFormatException));
-    assert.throws(() => read(JSON.stringify({ formatVersion: 1 })), unreadable(MissingFieldException));
-    assert.throws(() => read(JSON.stringify({ formatVersion: 1, fullPass: "0" })), unreadable(FieldNotANumberException));
-    assert.throws(() => read(JSON.stringify({ formatVersion: 1, fullPass: 0, lightPass: 0 })), unreadable(UnknownFieldException));
+    const unreadable = (cause: Error) => (error: unknown): boolean => error instanceof StoreFileUnreadableException && error.file === "housekeeping.json"
+      && error.cause instanceof cause.constructor && error.cause.message === cause.message;
+    assert.throws(() => read(JSON.stringify({ formatVersion: 2, fullPass: 0 })), unreadable(new UnsupportedStoreFormatException("2")));
+    assert.throws(() => read(JSON.stringify({ formatVersion: 1 })), unreadable(new JsonException("The field is required.", "HousekeepingRecord.fullPass")));
+    assert.throws(() => read(JSON.stringify({ formatVersion: 1, fullPass: "0" })), unreadable(new JsonException("Expected a number.", "HousekeepingRecord.fullPass")));
+    assert.throws(() => read(JSON.stringify({ formatVersion: 1, fullPass: 0, lightPass: 0 })),
+      unreadable(new JsonException("The field is not part of this message, which accepts no unknown fields.", "HousekeepingRecord.lightPass")));
   });
 });

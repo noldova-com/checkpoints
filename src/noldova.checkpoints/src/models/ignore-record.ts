@@ -6,9 +6,8 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { JsonObjectReader, type JsonObject } from "@noldova/checkpoints.protocol";
+import type { JsonObject } from "@noldova/context.json";
 
-import { StoreFieldNotABooleanException } from "../exceptions/store-field-not-a-boolean.exception.ts";
 import { Resources } from "../resources.ts";
 import { StoreFormat } from "../services/store-format.ts";
 
@@ -23,12 +22,8 @@ export class IgnoreRecord {
   }
 
   public static fromJson(value: unknown): IgnoreRecord {
-    const reader = new JsonObjectReader(value, Resources.ignoreRecordModel);
-    reader.refuseOtherFields(IgnoreRecord.FIELDS);
-    const ignoresCase = reader.read(Resources.ignoresCaseField);
-    if (typeof ignoresCase !== "boolean")
-      throw new StoreFieldNotABooleanException(Resources.ignoresCaseField);
-    return new IgnoreRecord(ignoresCase, StoreFormat.readStringList(reader, Resources.repositoryFoldersField));
+    const reader = StoreFormat.read(value, Resources.ignoreRecordModel, IgnoreRecord.FIELDS);
+    return new IgnoreRecord(reader.readBoolean(Resources.ignoresCaseField), reader.readStringArray(Resources.repositoryFoldersField));
   }
 
   public toJson(): JsonObject {
