@@ -3625,4 +3625,3 @@ export declare class RestoreHeldUpEvent {
    */
   public toJson(): JsonObject;
 }
-

@@ -27,7 +27,7 @@ describe("HousekeepingRecord", { concurrency: true }, () => {
 
   it("refuses a record of a format version it doesn't read, one without its time, and one with a field it doesn't know", () => {
     const unreadable = (cause: Error) => (error: unknown): boolean => error instanceof StoreFileUnreadableException && error.file === "housekeeping.json"
-      && error.cause instanceof cause.constructor && error.cause.message === cause.message;
+      && error.cause instanceof Error && error.cause.constructor === cause.constructor && error.cause.message === cause.message;
     assert.throws(() => read(JSON.stringify({ formatVersion: 2, fullPass: 0 })), unreadable(new UnsupportedStoreFormatException("2")));
     assert.throws(() => read(JSON.stringify({ formatVersion: 1 })), unreadable(new JsonException("The field is required.", "HousekeepingRecord.fullPass")));
     assert.throws(() => read(JSON.stringify({ formatVersion: 1, fullPass: "0" })), unreadable(new JsonException("Expected a number.", "HousekeepingRecord.fullPass")));
