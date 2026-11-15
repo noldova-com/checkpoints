@@ -11,7 +11,7 @@ import { mkdir, mkdtemp, readdir, readFile, readlink, realpath, rm, writeFile } 
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { buffer } from "node:stream/consumers";
-import { setImmediate } from "node:timers/promises";
+import { setTimeout } from "node:timers/promises";
 
 import {
   CaptureRequest,
@@ -52,6 +52,9 @@ export class CheckpointsHarness {
   public static readonly identity: string = "project-1";
   public static readonly unknownId: string = "01890a5d-ac96-774b-bcce-b302099a8057";
 
+  private static readonly appearInterval: number = 10;
+  private static readonly appearLimit: number = 60_000;
+
   private readonly build: GitBuild;
   private host: CheckpointsHost;
   private readonly hosts: CheckpointsHost[];
@@ -89,8 +92,12 @@ export class CheckpointsHarness {
   }
 
   public static async appearedAsync(location: string): Promise<void> {
-    while (!existsSync(location))
-      await setImmediate();
+    const limit = performance.now() + CheckpointsHarness.appearLimit;
+    while (!existsSync(location)) {
+      if (performance.now() > limit)
+        throw new Error(`${location} didn't appear within ${CheckpointsHarness.appearLimit} ms.`);
+      await setTimeout(CheckpointsHarness.appearInterval);
+    }
   }
 
   public static async startAsync(t: ICleanups): Promise<CheckpointsHarness> {
