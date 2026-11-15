@@ -1080,6 +1080,10 @@ export class Resources {
     return ["/pid", String(processId), "/T", "/F"];
   }
 
+  public static formatTestFileEnded(file: string, exitCode: unknown, signal: unknown): string {
+    return `${file}'s test process ended with exit code ${String(exitCode)} and signal ${String(signal)}.\n`;
+  }
+
   public static formatTestFileHung(file: string, limit: number): string {
     return `${file} is still running ${limit} ms after its last test event: a test of it reached its own ${limit} ms limit without ending, or a handle or a process it left keeps it from exiting. The run stops its test processes and fails.\n`;
   }
