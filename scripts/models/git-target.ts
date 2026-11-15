@@ -22,6 +22,7 @@ export class GitTarget {
   public readonly path: readonly string[];
   public readonly platform: string;
   public readonly program: string;
+  public readonly reportedVersion: string | null;
   public readonly sha256: string;
   public readonly size: number;
   public readonly source: string;
@@ -45,6 +46,7 @@ export class GitTarget {
     const gitVersion = text(Resources.gitVersionField);
     const searchPath = GitTarget.readTexts(fields[Resources.pathField], Resources.formatFieldPath(target, Resources.pathField), file);
     const program = text(Resources.programField);
+    const reportedVersion = fields[Resources.reportedVersionField] === undefined ? null : text(Resources.reportedVersionField);
     const sha256 = text(Resources.sha256Field);
     const source = text(Resources.sourceField);
     const url = text(Resources.urlField);
@@ -64,6 +66,7 @@ export class GitTarget {
     this.path = searchPath;
     this.platform = platform;
     this.program = program;
+    this.reportedVersion = reportedVersion;
     this.sha256 = sha256;
     this.size = size;
     this.source = source;

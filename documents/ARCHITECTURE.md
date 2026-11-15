@@ -486,6 +486,7 @@ The journal makes a restore finish whole or not at all.
 The app ships Git as it ships Electron and Noldova Desktop's native addons: a pinned build per target, checked before use, unpacked from the app's archive and signed with the app, as Noldova Desktop's `documents/BUILD.md` says for its own.
 The pinning, the checks and the list of files to unpack are the module's; Noldova Desktop's packaging unpacks and signs them, and the module runs Git from the unpacked copies.
 Each target's build is pinned in `src/noldova.checkpoints.git/builds.json` by its address, its SHA-256 and the Git version and source it was built from.
+A target whose build prints a version other than its Git version also holds `reportedVersion`, the version `git --version` prints, which the tests check in its place: dugite-native's Linux arm64 build prints `2.56.0.dirty`, as the README's Git builds section says.
 
 - Development and tests run the host's pinned build, from its installed package, the same files a packaged app runs.
   There is no fallback to an installed Git: when the running target's package is missing, the module refuses to start Git, naming the target, as Noldova Desktop's runtime refuses a missing addon.
@@ -509,6 +510,7 @@ Each target's build is pinned in `src/noldova.checkpoints.git/builds.json` by it
   A weekly scheduled workflow runs `scripts/check-git-builds.ts`, which compares the latest MinGit and dugite-native releases with the tags in `builds.json`'s addresses and files an issue in this repository for each newer one; the maintainers triage it, and a security fix goes ahead of feature work.
   - The check orders tags by the numbers in them, so `v2.56.0.windows.2` follows `v2.56.0.windows.1` and `v2.53.0-4` follows `v2.53.0-3`.
   - It titles each issue `Pin <source> <tag> in builds.json` and labels it `git-build`.
+  - When a target it would replace holds `reportedVersion`, the issue also asks for that field to be dropped where the new build reports its Git version.
     The maintainers look for open `git-build` issues each week, and the check fails when GitHub leaves the label off.
   - It files a release once: a hidden line at the end of its issue names the source and the tag, and a release whose issue it filed before, open or closed, is never filed again, whatever the issue's title has become.
   - When a source's latest release has its issue, filed in this run or an earlier one, the check closes, with a comment naming that issue, each of the source's issues for an older release still open, since only the newest release is worth pinning.

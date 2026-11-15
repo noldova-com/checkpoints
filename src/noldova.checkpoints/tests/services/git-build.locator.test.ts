@@ -53,11 +53,13 @@ describe("GitBuildLocator", { concurrency: true }, () => {
   it("runs the installed build for this system, which reports the Git version builds.json pins for it", async () => {
     const build = await new GitBuildLocator(import.meta.dirname).locateAsync(process.platform, process.arch);
     const builds = new JsonObjectReader(JSON.parse(await readFile(BUILDS_FILE, "utf8")), "Git builds");
-    const pin = new JsonObjectReader(new JsonObjectReader(builds.read("targets"), "Git builds").read(`${process.platform}-${process.arch}`), "Git build");
+    const fields = new JsonObjectReader(builds.read("targets"), "Git builds").read(`${process.platform}-${process.arch}`);
+    const pin = new JsonObjectReader(fields, "Git build");
+    const reported = typeof fields === "object" && fields !== null && "reportedVersion" in fields ? pin.readString("reportedVersion") : pin.readString("gitVersion");
 
     const { stdout } = await promisify(execFile)(build.program, ["--version"]);
 
-    assert.equal(stdout.trim(), `git version ${pin.readString("gitVersion")}`);
+    assert.equal(stdout.trim(), `git version ${reported}`);
   });
 
   it("runs the program's copy in its exec path, where the build has one, so every Git the module starts is the same file", async () => {

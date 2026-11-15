@@ -265,6 +265,7 @@ export class Resources {
   public static readonly releaseVersionPattern: RegExp = /^0\.0\.([1-9]\d*)$/;
   public static readonly releaseVersionVariable: string = "RELEASE_VERSION";
   public static readonly reportedDifferences: number = 20;
+  public static readonly reportedVersionField: string = "reportedVersion";
   public static readonly repositoryAddress: string = "git+https://github.com/noldova-com/checkpoints.git";
   public static readonly repositoryVariable: string = "GITHUB_REPOSITORY";
   public static readonly revParseCommand: string = "rev-parse";
@@ -744,7 +745,7 @@ export class Resources {
     return `Installing the packed archives for ${packageName} failed with exit code ${exitCode}:\n${output}`;
   }
 
-  public static formatIssueBody(source: string, tag: string, url: string, replaced: string, targets: string): string {
+  public static formatIssueBody(source: string, tag: string, url: string, replaced: string, targets: string, reported: string): string {
     return [
       "## What and why",
       '',
@@ -754,6 +755,7 @@ export class Resources {
       "## Done when",
       '',
       `- [ ] \`${Resources.buildsFile}\` pins ${source} \`${tag}\` for ${targets}, with each archive's address, size and SHA-256, and its Git version and source.`,
+      ...(reported === "" ? [] : [`- [ ] \`${Resources.buildsFile}\` drops \`${Resources.reportedVersionField}\` for ${reported} where the new build reports its Git version.`]),
       "- [ ] A release of the module follows.",
       '',
       "Filed by the weekly Git builds check.",

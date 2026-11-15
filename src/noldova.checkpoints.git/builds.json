@@ -55,6 +55,7 @@
       "size": 25250010,
       "sha256": "d5ce120515bf3013a014e6a918aa87ec0f7a6f5f9687c48d50127e637cb9b6c2",
       "gitVersion": "2.56.0",
+      "reportedVersion": "2.56.0.dirty",
       "source": "https://github.com/git/git/tree/v2.56.0",
       "program": "bin/git",
       "execPath": "libexec/git-core",

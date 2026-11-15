@@ -7,10 +7,12 @@
  */
 
 export class PinnedTag {
+  public readonly reportedVersion: string | null;
   public readonly tag: string;
   public readonly target: string;
 
-  public constructor(target: string, tag: string) {
+  public constructor(target: string, tag: string, reportedVersion: string | null) {
+    this.reportedVersion = reportedVersion;
     this.tag = tag;
     this.target = target;
   }

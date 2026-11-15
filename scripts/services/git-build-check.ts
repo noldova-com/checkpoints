@@ -121,7 +121,8 @@ export class GitBuildCheck {
     const targets = newer.older.map(t => Resources.formatCode(t.target)).join(Resources.listSeparator);
     const replaced = [...new Set(newer.older.map(t => t.tag))]
       .map(t => Resources.formatReplacedRelease(t, newer.older.filter(u => u.tag === t).map(u => Resources.formatCode(u.target)).join(Resources.listSeparator)));
-    return Resources.formatIssueBody(newer.source.name, newer.release.tag, newer.release.url, replaced.join(Resources.clauseSeparator), targets);
+    const reported = newer.older.filter(t => t.reportedVersion !== null).map(t => Resources.formatCode(t.target)).join(Resources.listSeparator);
+    return Resources.formatIssueBody(newer.source.name, newer.release.tag, newer.release.url, replaced.join(Resources.clauseSeparator), targets, reported);
   }
 
   private static numberOf(issue: Readonly<Record<string, unknown>>, context: string): number {
@@ -142,7 +143,7 @@ export class GitBuildCheck {
   private async findNewerAsync(api: GitHubRest, builds: GitBuilds, source: GitBuildSource): Promise<NewerRelease | null> {
     const pinned = builds.targets.flatMap(t => {
       const tag = source.tagOf(t);
-      return tag === null ? [] : [new PinnedTag(t.target, tag)];
+      return tag === null ? [] : [new PinnedTag(t.target, tag, t.reportedVersion)];
     });
     if (pinned.length === 0)
       return null;
