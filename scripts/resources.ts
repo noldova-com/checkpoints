@@ -265,6 +265,7 @@ export class Resources {
   public static readonly releaseVersionPattern: RegExp = /^0\.0\.([1-9]\d*)$/;
   public static readonly releaseVersionVariable: string = "RELEASE_VERSION";
   public static readonly reportedDifferences: number = 20;
+  public static readonly reportedSuffixPattern: RegExp = /^[a-z]+$/;
   public static readonly reportedVersionField: string = "reportedVersion";
   public static readonly repositoryAddress: string = "git+https://github.com/noldova-com/checkpoints.git";
   public static readonly repositoryVariable: string = "GITHUB_REPOSITORY";
@@ -1049,6 +1050,10 @@ export class Resources {
 
   public static formatTargetMissing(archiveName: string, field: string): string {
     return `${archiveName}'s package.json names no single target in ${field}, so npm would install it on every target.`;
+  }
+
+  public static formatTargetReportedVersionInvalid(file: string, target: string, gitVersion: string): string {
+    return `${file}'s ${target}.${Resources.reportedVersionField} must be ${gitVersion}, its gitVersion, then a full stop and lowercase letters, as 2.56.0.dirty is.`;
   }
 
   public static formatTargetSizeInvalid(file: string, target: string): string {
