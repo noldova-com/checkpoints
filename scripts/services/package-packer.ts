@@ -17,6 +17,7 @@ import { ManifestNotObjectException } from "../exceptions/manifest-not-object.ex
 import { OwnDependenciesInvalidException } from "../exceptions/own-dependencies-invalid.exception.ts";
 import { PackageException } from "../exceptions/package.exception.ts";
 import { PackingFailedException } from "../exceptions/packing-failed.exception.ts";
+import { ReadmeMissingException } from "../exceptions/readme-missing.exception.ts";
 import { PackageCopy } from "../models/package-copy.ts";
 import type { WorkspacePart } from "../models/workspace-part.ts";
 import { Resources } from "../resources.ts";
@@ -58,6 +59,7 @@ export class PackagePacker {
     return parts.flatMap(part => {
       const copies = [
         Resources.licenseFile,
+        Resources.readmeFile,
         ...PackagePacker.MODULE_FILES.filter(t => existsSync(path.join(root, part.folder, t))),
         ...filesOf(path.join(part.folder, part.sources), t => t.endsWith(Resources.scriptExtension)).map(t => path.posix.join(part.sources, t)),
         ...filesOf(path.join(part.folder, Resources.nativeFolder), () => true).map(t => path.posix.join(Resources.nativeFolder, t))
@@ -128,6 +130,8 @@ export class PackagePacker {
   private async packAsync(part: WorkspacePart, commit: string | null): Promise<void> {
     const source = path.join(this.root, part.folder);
     const sources = path.join(source, part.sources);
+    if (!existsSync(path.join(source, Resources.readmeFile)))
+      throw new ReadmeMissingException(part.folder, part.name);
     const output = path.join(this.root, ...PackagePacker.workSegments, path.posix.basename(part.folder));
     await rm(output, { recursive: true, force: true });
     const compileArguments = [path.join(this.root, ...PackageBuild.compiler), Resources.projectOption, path.join(sources, Resources.projectFile),
@@ -153,6 +157,7 @@ export class PackagePacker {
     for (const file of PackagePacker.MODULE_FILES.filter(t => existsSync(path.join(source, t))))
       await copyFile(path.join(source, file), path.join(output, file));
     await copyFile(path.join(this.root, Resources.licenseFile), path.join(output, Resources.licenseFile));
+    await copyFile(path.join(source, Resources.readmeFile), path.join(output, Resources.readmeFile));
     const manifestFile = path.posix.join(part.folder, Resources.manifestFile);
     await writeFile(path.join(output, Resources.manifestFile), PackagePacker.manifestOf(await readFile(path.join(this.root, manifestFile), Resources.utf8Encoding), manifestFile, commit));
 
