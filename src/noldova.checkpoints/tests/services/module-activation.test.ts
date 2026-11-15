@@ -27,7 +27,8 @@ import {
   StorageList
 } from "@noldova/checkpoints.protocol";
 import { JsonException, type JsonValue } from "@noldova/context.json";
-import type { OwnedProcess, ProcessRequest } from "@noldova/desktop.runtime";
+import { FailureCode } from "@noldova/desktop.protocol";
+import { MethodFailureException, type OwnedProcess, type ProcessRequest } from "@noldova/desktop.runtime";
 
 import { CheckpointsService } from "../../src/api/index.ts";
 import { CheckpointsHost } from "../../src/services/checkpoints-host.ts";
@@ -259,18 +260,32 @@ describe("ModuleActivation", { concurrency: true }, () => {
     assert.deepEqual([before.folders.map(u => [u.identity, u.path]), deleted.outcome.value, after.folders], [[[CheckpointsHarness.identity, harness.folder]], "Deleted", []]);
   });
 
-  it("refuses a request that isn't the method's wire form", async t => {
+  it("answers a request holding a value its model refuses as invalid parameters, with the refusal's message and the refusal as its cause, for each method that takes a value", async t => {
+    const harness = await CheckpointsHarness.startAsync(t);
+    const folder = { identity: CheckpointsHarness.identity, path: harness.folder };
+    const badFolder = { identity: "a b", path: harness.folder };
+    const refused = (cause: new (...args: never[]) => Error) => (error: unknown): boolean => error instanceof MethodFailureException
+      && error.failure.code === FailureCode.InvalidParams && error.cause instanceof cause && error.failure.message === error.cause.message
+      && error.message === error.cause.message;
+
+    await assert.rejects(harness.context.callAsync("checkpoints.capture", { folder: badFolder, label: null }), refused(InvalidIdentityException));
+    await assert.rejects(harness.context.callAsync("checkpoints.list", { folder: badFolder }), refused(InvalidIdentityException));
+    await assert.rejects(harness.context.callAsync("checkpoints.compare", { folder, from: "1", to: null }), refused(InvalidCheckpointIdException));
+    await assert.rejects(harness.context.callAsync("checkpoints.previewRestore", { folder, checkpoint: "1", paths: null }), refused(InvalidCheckpointIdException));
+    await assert.rejects(harness.context.callAsync("checkpoints.restore", { folder: badFolder, plan: null }), refused(InvalidIdentityException));
+    await assert.rejects(harness.context.callAsync("checkpoints.read", {
+      folder, checkpoint: CheckpointsHarness.unknownId, path: "../a.txt", against: null, limit: 1
+    }), refused(InvalidRelativePathException));
+    await assert.rejects(harness.context.callAsync("checkpoints.deleteFolder", { folder: badFolder }), refused(InvalidIdentityException));
+  });
+
+  it("refuses a request that isn't the method's wire form with the JSON failure itself", async t => {
     const harness = await CheckpointsHarness.startAsync(t);
     const folder = { identity: CheckpointsHarness.identity, path: harness.folder };
 
-    await assert.rejects(harness.context.callAsync("checkpoints.capture", { folder: { identity: "a b", path: harness.folder }, label: null }), InvalidIdentityException);
+    await assert.rejects(harness.context.callAsync("checkpoints.capture", { folder, label: 1 }), new JsonException("Expected a string.", "CaptureRequest.label"));
     await assert.rejects(harness.context.callAsync("checkpoints.list", {}), new JsonException("The field is required.", "ListRequest.folder"));
-    await assert.rejects(harness.context.callAsync("checkpoints.compare", { folder, from: "1", to: null }), InvalidCheckpointIdException);
-    await assert.rejects(harness.context.callAsync("checkpoints.previewRestore", { folder, checkpoint: "1", paths: null }), InvalidCheckpointIdException);
     await assert.rejects(harness.context.callAsync("checkpoints.restore", { folder, plan: null }), new JsonException("Expected a JSON object.", "RestorePlan"));
-    await assert.rejects(harness.context.callAsync("checkpoints.read", {
-      folder, checkpoint: CheckpointsHarness.unknownId, path: "../a.txt", against: null, limit: 1
-    }), InvalidRelativePathException);
     await assert.rejects(harness.context.callAsync("checkpoints.storage", { folder }), new JsonException("The field is not part of this message, which accepts no unknown fields.", "StorageRequest.folder"));
     await assert.rejects(harness.context.callAsync("checkpoints.deleteFolder", {}), new JsonException("The field is required.", "DeleteFolderRequest.folder"));
   });

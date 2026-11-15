@@ -19,10 +19,13 @@ import {
   ReadRequest,
   RestoredEvent,
   RestoreHeldUpEvent,
+  ProtocolException,
   RestoreRequest,
   StorageRequest
 } from "@noldova/checkpoints.protocol";
-import type { IRuntimePartContext } from "@noldova/desktop.runtime";
+import { ExceptionOptions } from "@noldova/context.exceptions";
+import { Failure, FailureCode } from "@noldova/desktop.protocol";
+import { MethodFailureException, type IRuntimePartContext } from "@noldova/desktop.runtime";
 
 import { Resources } from "../resources.ts";
 import { CheckpointsHost } from "./checkpoints-host.ts";
@@ -41,21 +44,32 @@ export class ModuleActivation {
     const service = new CheckpointsHost(context, build, process.platform, restored, heldUp, paused, resumed, t => new RestoreJournal(t), FreeSpace.hasRoomAsync, link,
       FreeSpace.readAsync, rename, rm, lstat, clock);
     context.publishService(Resources.serviceName, service);
-    context.registerMethod(CaptureRequest.method, { handleAsync: async t => (await service.captureAsync(CaptureRequest.fromJson(t.payload), t.signal)).toJson() });
-    context.registerMethod(ListRequest.method, { handleAsync: async t => (await service.listAsync(ListRequest.fromJson(t.payload), t.signal)).toJson() });
-    context.registerMethod(CompareRequest.method, { handleAsync: async t => (await service.compareAsync(CompareRequest.fromJson(t.payload), t.signal)).toJson() });
-    context.registerMethod(PreviewRequest.method, { handleAsync: async t => (await service.previewRestoreAsync(PreviewRequest.fromJson(t.payload), t.signal)).toJson() });
-    context.registerMethod(RestoreRequest.method, { handleAsync: async t => (await service.restoreAsync(RestoreRequest.fromJson(t.payload), t.signal)).toJson() });
-    context.registerMethod(ReadRequest.method, { handleAsync: async t => (await service.readAsync(ReadRequest.fromJson(t.payload), t.signal)).toJson() });
+    context.registerMethod(CaptureRequest.method, { handleAsync: async t => (await service.captureAsync(ModuleActivation.request(() => CaptureRequest.fromJson(t.payload)), t.signal)).toJson() });
+    context.registerMethod(ListRequest.method, { handleAsync: async t => (await service.listAsync(ModuleActivation.request(() => ListRequest.fromJson(t.payload)), t.signal)).toJson() });
+    context.registerMethod(CompareRequest.method, { handleAsync: async t => (await service.compareAsync(ModuleActivation.request(() => CompareRequest.fromJson(t.payload)), t.signal)).toJson() });
+    context.registerMethod(PreviewRequest.method, { handleAsync: async t => (await service.previewRestoreAsync(ModuleActivation.request(() => PreviewRequest.fromJson(t.payload)), t.signal)).toJson() });
+    context.registerMethod(RestoreRequest.method, { handleAsync: async t => (await service.restoreAsync(ModuleActivation.request(() => RestoreRequest.fromJson(t.payload)), t.signal)).toJson() });
+    context.registerMethod(ReadRequest.method, { handleAsync: async t => (await service.readAsync(ModuleActivation.request(() => ReadRequest.fromJson(t.payload)), t.signal)).toJson() });
     context.registerMethod(StorageRequest.method, {
       handleAsync: async t => {
-        StorageRequest.fromJson(t.payload);
+        ModuleActivation.request(() => StorageRequest.fromJson(t.payload));
         return (await service.storageAsync(t.signal)).toJson();
       }
     });
-    context.registerMethod(DeleteFolderRequest.method, { handleAsync: async t => (await service.deleteFolderAsync(DeleteFolderRequest.fromJson(t.payload), t.signal)).toJson() });
+    context.registerMethod(DeleteFolderRequest.method, { handleAsync: async t => (await service.deleteFolderAsync(ModuleActivation.request(() => DeleteFolderRequest.fromJson(t.payload)), t.signal)).toJson() });
     service.startSweep();
     service.startGitOnce();
     return service;
+  }
+
+  private static request<T>(read: () => T): T {
+    try {
+      return read();
+    }
+    catch (error) {
+      if (!(error instanceof ProtocolException))
+        throw error;
+      throw new MethodFailureException(new Failure(FailureCode.InvalidParams, error.message), new ExceptionOptions(error));
+    }
   }
 }
