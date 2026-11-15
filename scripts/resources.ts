@@ -968,6 +968,10 @@ export class Resources {
     return `${moduleName}.protocol`;
   }
 
+  public static formatReadmeMissing(folder: string, name: string): string {
+    return `${folder} lacks ${Resources.readmeFile}, which npm shows as ${name}'s page.`;
+  }
+
   public static formatReleaseCommitInvalid(commit: string | undefined): string {
     return `The commit "${commit}" is not a full 40-character commit hash.`;
   }
