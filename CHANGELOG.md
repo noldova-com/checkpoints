@@ -4,6 +4,14 @@
 
 Each version's section is written by the pull request that changes the version, from the pull requests merged since the previous version; other pull requests don't edit this file.
 
+## 0.0.2
+
+- `@noldova/checkpoints` and `@noldova/checkpoints.protocol` each hold a `README.md`, which npm shows as the package's page.
+  The build refuses to pack either package without one.
+- `@noldova/checkpoints` takes a write to a Git command's input that macOS fails as no longer connected, `ENOTCONN`, as the command having ended early, as it takes a broken pipe, `EPIPE`.
+  On macOS, a read whose Git command stopped reading once it had what it needed no longer fails; a command's exit still says what went wrong.
+- The six Git packages hold the same Git builds as 0.0.1; the eight packages move together.
+
 ## 0.0.1
 
 - The first version of `@noldova/checkpoints` and `@noldova/checkpoints.protocol`, under the MIT License, and of the six `@noldova/checkpoints.git.<os>-<arch>` packages, under the licences of the Git builds they hold.
