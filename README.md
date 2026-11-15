@@ -197,7 +197,7 @@ Every pull request into `main` must pass "Check / Linked issue" and "Build and t
 - `.github/workflows/build-and-test.yml` calls the organization's shared `build-and-test.yml`, v2.30.0, with `publishes: true`, on GitHub-hosted runners, as the `.github` repository's README describes it.
   Each target's job builds, checks the toolchain, Node.js 24.21.0 with npm 11.19.0, and the line endings, `* text=auto eol=lf` in `.gitattributes` and LF only with exactly one final newline in every tracked text file, then runs `npm run test -- --skip-test-details --skip-coverage-details` and checks that the build and the tests changed no tracked file.
   On Linux x64 it also builds a second time and checks that the archives are the same, byte for byte, and on every target it checks the archives as the release does, with `pipelines archive`: each archive's name, version, `gitHead`, scope and licence, and a byte-for-byte copy of every file `--list-copies` lists.
-- Every pull request, draft or ready, runs Linux and Windows x64 and macOS arm64, and every push to `main` every target: Linux, Windows and macOS, each on x64 and ARM64.
+- Every pull request, draft or ready, runs Linux and Windows x64 and macOS arm64, and every push to `main` and every run started by hand every target: Linux, Windows and macOS, each on x64 and ARM64.
   On each, a test runs the installed Git build's `git --version` and expects the version `builds.json` pins for that system.
   A release downloads and checks every target's pinned build.
 - `.github/workflows/module-range.yml` calls Noldova Desktop's "Module range" workflow, pinned to Noldova Desktop 0.0.1's commit, with `src/noldova.checkpoints`, on every pull request, every night and by hand.
