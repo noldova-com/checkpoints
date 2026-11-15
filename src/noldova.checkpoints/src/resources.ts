@@ -311,7 +311,7 @@ export class Resources {
   public static readonly timeField: string = "time";
   public static readonly treeFieldSeparator: string = " ";
   public static readonly typeField: string = "type";
-  public static readonly unknownField: string = "The field is not part of this message, which accepts no unknown fields.";
+  public static readonly unknownField: string = "The field is not part of this record, which accepts no unknown fields.";
   public static readonly unreachableAge: number = 14 * 24 * 60 * 60 * 1000;
   public static readonly unreachableExpiry: string = "2.weeks.ago";
   public static readonly unreadPathModel: string = "UnreadPath";

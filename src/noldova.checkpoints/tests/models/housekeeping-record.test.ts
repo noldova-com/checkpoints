@@ -32,6 +32,6 @@ describe("HousekeepingRecord", { concurrency: true }, () => {
     assert.throws(() => read(JSON.stringify({ formatVersion: 1 })), unreadable(new JsonException("The field is required.", "HousekeepingRecord.fullPass")));
     assert.throws(() => read(JSON.stringify({ formatVersion: 1, fullPass: "0" })), unreadable(new JsonException("Expected a number.", "HousekeepingRecord.fullPass")));
     assert.throws(() => read(JSON.stringify({ formatVersion: 1, fullPass: 0, lightPass: 0 })),
-      unreadable(new JsonException("The field is not part of this message, which accepts no unknown fields.", "HousekeepingRecord.lightPass")));
+      unreadable(new JsonException("The field is not part of this record, which accepts no unknown fields.", "HousekeepingRecord.lightPass")));
   });
 });

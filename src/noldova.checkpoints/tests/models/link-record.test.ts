@@ -25,6 +25,6 @@ describe("LinkRecord", { concurrency: true }, () => {
   });
 
   it("refuses a field it doesn't know", () => {
-    assert.throws(() => LinkRecord.fromJson({ path: "a", linkKind: "File", target: "b" }), new JsonException("The field is not part of this message, which accepts no unknown fields.", "LinkRecord.target"));
+    assert.throws(() => LinkRecord.fromJson({ path: "a", linkKind: "File", target: "b" }), new JsonException("The field is not part of this record, which accepts no unknown fields.", "LinkRecord.target"));
   });
 });

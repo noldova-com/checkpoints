@@ -50,7 +50,7 @@ describe("RestoreScript", { concurrency: true }, () => {
   it("refuses a field it doesn't know, a folder's file id that isn't text, and a format it doesn't read", () => {
     const json = script.toJson();
 
-    assert.throws(() => RestoreScript.fromJson({ ...json, extra: 1 }), new JsonException("The field is not part of this message, which accepts no unknown fields.", "RestoreScript.extra"));
+    assert.throws(() => RestoreScript.fromJson({ ...json, extra: 1 }), new JsonException("The field is not part of this record, which accepts no unknown fields.", "RestoreScript.extra"));
     assert.throws(() => RestoreScript.fromJson({ ...json, folders: { "": 1 } }), new JsonException("Expected a string.", "RestoreScript.folders."));
     assert.throws(() => RestoreScript.fromJson({ ...json, folders: [] }), new JsonException("Expected an object.", "RestoreScript.folders"));
     assert.throws(() => RestoreScript.fromJson({ ...json, folders: "a" }), new JsonException("Expected an object.", "RestoreScript.folders"));

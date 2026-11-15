@@ -29,6 +29,10 @@ describe("WireForm", { concurrency: true }, () => {
     assert.throws(() => WireForm.read({ text: "a", other: 1 }, "Model", ["text"]), new JsonException(unknownField, "Model.other"));
   });
 
+  it("refuses a field the model doesn't have even when its value is undefined, which JSON drops", () => {
+    assert.throws(() => WireForm.read({ text: "a", other: undefined }, "Model", ["text"]), new JsonException(unknownField, "Model.other"));
+  });
+
   it("reads an array of any items, and refuses another value or a missing field", () => {
     const reader = WireForm.read({ list: [1, "a", null], text: "a" }, "Model", ["list", "text"]);
 

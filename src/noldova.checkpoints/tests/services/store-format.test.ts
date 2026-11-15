@@ -15,7 +15,7 @@ import { UnsupportedStoreFormatException } from "../../src/api/index.ts";
 import { StoreFormat } from "../../src/services/store-format.ts";
 
 describe("StoreFormat", { concurrency: true }, () => {
-  const unknownField = "The field is not part of this message, which accepts no unknown fields.";
+  const unknownField = "The field is not part of this record, which accepts no unknown fields.";
 
   it("accepts the format version this module writes", () => {
     assert.doesNotThrow(() => StoreFormat.check(JsonReader.fromValue({ formatVersion: 1 }, "Index")));
@@ -45,6 +45,10 @@ describe("StoreFormat", { concurrency: true }, () => {
     for (const value of [null, [], "text"])
       assert.throws(() => StoreFormat.read(value, "Record", []), new JsonException("Expected a JSON object.", "Record"));
     assert.throws(() => StoreFormat.read({ text: "a", other: 1 }, "Record", ["text"]), new JsonException(unknownField, "Record.other"));
+  });
+
+  it("refuses a field the record doesn't have even when its value is undefined, which JSON drops", () => {
+    assert.throws(() => StoreFormat.read({ text: "a", other: undefined }, "Record", ["text"]), new JsonException(unknownField, "Record.other"));
   });
 
   it("reads an array of any items, and refuses another value", () => {

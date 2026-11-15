@@ -47,6 +47,6 @@ describe("ScriptStep", { concurrency: true }, () => {
   it("refuses a field it doesn't know", () => {
     const json = new ScriptStep(0, "a", RestoreAction.Write, ".~r/0", null, PathKind.File, "d".repeat(40), null).toJson();
 
-    assert.throws(() => ScriptStep.fromJson({ ...json, extra: 1 }), new JsonException("The field is not part of this message, which accepts no unknown fields.", "ScriptStep.extra"));
+    assert.throws(() => ScriptStep.fromJson({ ...json, extra: 1 }), new JsonException("The field is not part of this record, which accepts no unknown fields.", "ScriptStep.extra"));
   });
 });

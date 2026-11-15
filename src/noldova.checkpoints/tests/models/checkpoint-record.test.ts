@@ -97,7 +97,7 @@ describe("CheckpointRecord", { concurrency: true }, () => {
   it("refuses a record of format version 1 whose unread path holds a code, a field that version never wrote", () => {
     const written = { ...checkpoint.toJson(), unreadPaths: [{ path: "locked.db", reason: "Unreadable", code: "EIO" }] };
 
-    assert.throws(() => CheckpointRecord.fromJson({ ...json, formatVersion: 1, checkpoint: written }), new JsonException("The field is not part of this message, which accepts no unknown fields.", "UnreadPath.code"));
+    assert.throws(() => CheckpointRecord.fromJson({ ...json, formatVersion: 1, checkpoint: written }), new JsonException("The field is not part of this record, which accepts no unknown fields.", "UnreadPath.code"));
   });
 
   it("refuses a record of format version 2 whose unread path has no code", () => {

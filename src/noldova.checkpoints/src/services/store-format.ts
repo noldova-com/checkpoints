@@ -13,8 +13,9 @@ import { Resources } from "../resources.ts";
 
 export class StoreFormat {
   public static read(value: unknown, model: string, fields: readonly string[]): JsonReader {
+    const names = typeof value === "object" && value !== null ? Object.keys(value) : [];
     const reader = JsonReader.fromValue(value, model);
-    const unknown = Object.keys(reader.toJson()).find(t => !fields.includes(t));
+    const unknown = names.find(t => !fields.includes(t));
     if (unknown !== undefined)
       throw new JsonException(Resources.unknownField, Resources.formatFieldPath(reader.path, unknown));
     return reader;

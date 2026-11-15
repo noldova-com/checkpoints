@@ -66,7 +66,7 @@ describe("IndexEntry", { concurrency: true }, () => {
   });
 
   it("refuses an entry that isn't what the module wrote", () => {
-    assert.throws(() => IndexEntry.fromJson({ ...json, extra: 1 }), new JsonException("The field is not part of this message, which accepts no unknown fields.", "IndexEntry.extra"));
+    assert.throws(() => IndexEntry.fromJson({ ...json, extra: 1 }), new JsonException("The field is not part of this record, which accepts no unknown fields.", "IndexEntry.extra"));
     assert.throws(() => IndexEntry.fromJson({ ...json, kind: "Socket" }), new UnknownEntryKindException("Socket"));
     assert.throws(() => IndexEntry.fromJson({ ...json, modified: "soon" }), SyntaxError);
     assert.throws(() => IndexEntry.fromJson({ ...json, size: "1.5" }), SyntaxError);

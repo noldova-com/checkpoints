@@ -29,6 +29,6 @@ describe("IgnoreRecord", { concurrency: true }, () => {
 
   it("refuses a record whose repositories' folders aren't all text, or that holds another field", () => {
     assert.throws(() => IgnoreRecord.fromJson({ ignoresCase: false, repositoryFolders: [1] }), new JsonException("Expected a string.", "IgnoreRecord.repositoryFolders.0"));
-    assert.throws(() => IgnoreRecord.fromJson({ ignoresCase: false, repositoryFolders: [], other: 1 }), new JsonException("The field is not part of this message, which accepts no unknown fields.", "IgnoreRecord.other"));
+    assert.throws(() => IgnoreRecord.fromJson({ ignoresCase: false, repositoryFolders: [], other: 1 }), new JsonException("The field is not part of this record, which accepts no unknown fields.", "IgnoreRecord.other"));
   });
 });
