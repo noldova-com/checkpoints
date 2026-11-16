@@ -1,336 +1,336 @@
-folder	0	libexec/
-folder	0	libexec/git-core/
-symlink	0	libexec/git-core/git-reflog	-> git
-symlink	0	libexec/git-core/git-init	-> git
-symlink	0	libexec/git-core/git-describe	-> git
-symlink	0	libexec/git-core/git-cherry-pick	-> git
-symlink	0	libexec/git-core/git-ls-tree	-> git
-file	22158	libexec/git-core/git-instaweb
-symlink	0	libexec/git-core/git-help	-> git
-symlink	0	libexec/git-core/git-worktree	-> git
-symlink	0	libexec/git-core/git-remote-ext	-> git
-file	163288	libexec/git-core/git-cvsserver
-file	10908	libexec/git-core/git-mergetool--lib
-symlink	0	libexec/git-core/git-write-tree	-> git
-symlink	0	libexec/git-core/git-check-mailmap	-> git
-symlink	0	libexec/git-core/git-rebase	-> git
-symlink	0	libexec/git-core/git-update-index	-> git
-symlink	0	libexec/git-core/git-upload-archive	-> git
-symlink	0	libexec/git-core/git-bisect	-> git
-symlink	0	libexec/git-core/git-fast-export	-> git
-symlink	0	libexec/git-core/git-rm	-> git
-symlink	0	libexec/git-core/git-diff-index	-> git
-symlink	0	libexec/git-core/git-log	-> git
-symlink	0	libexec/git-core/git-merge-ours	-> git
-file	72812	libexec/git-core/git-send-email
-symlink	0	libexec/git-core/git-commit-graph	-> git
-symlink	0	libexec/git-core/git-stage	-> git
-file	8398	libexec/git-core/git-sh-setup
-symlink	0	libexec/git-core/git-merge-subtree	-> git
-file	15791	libexec/git-core/git-filter-branch
-symlink	0	libexec/git-core/git-name-rev	-> git
-file	32138	libexec/git-core/git-cvsimport
-file	12910752	libexec/git-core/git-lfs
-symlink	0	libexec/git-core/git-fsck	-> git
-symlink	0	libexec/git-core/git-status	-> git
-symlink	0	libexec/git-core/git-diff-pairs	-> git
-symlink	0	libexec/git-core/git-clean	-> git
-symlink	0	libexec/git-core/git-fsmonitor--daemon	-> git
-symlink	0	libexec/git-core/git-patch-id	-> git
-symlink	0	libexec/git-core/git-ls-files	-> git
-file	2466544	libexec/git-core/git-http-fetch
-symlink	0	libexec/git-core/git-bugreport	-> git
-symlink	0	libexec/git-core/git-multi-pack-index	-> git
-symlink	0	libexec/git-core/git-remote-https	-> git-remote-http
-symlink	0	libexec/git-core/git-receive-pack	-> git
-symlink	0	libexec/git-core/git-merge-recursive	-> git
-symlink	0	libexec/git-core/git-restore	-> git
-file	10493	libexec/git-core/git-submodule
-symlink	0	libexec/git-core/git-mailinfo	-> git
-file	2408504	libexec/git-core/git-http-backend
-symlink	0	libexec/git-core/git-symbolic-ref	-> git
-symlink	0	libexec/git-core/git-checkout--worker	-> git
-symlink	0	libexec/git-core/git-format-patch	-> git
-symlink	0	libexec/git-core/git-count-objects	-> git
-symlink	0	libexec/git-core/git-prune	-> git
-symlink	0	libexec/git-core/git-hash-object	-> git
-symlink	0	libexec/git-core/git-refs	-> git
-symlink	0	libexec/git-core/git-diff-files	-> git
-symlink	0	libexec/git-core/git-remote	-> git
-symlink	0	libexec/git-core/git-remote-fd	-> git
-symlink	0	libexec/git-core/git-bundle	-> git
-symlink	0	libexec/git-core/git-blame	-> git
-symlink	0	libexec/git-core/git-fetch	-> git
-file	2391664	libexec/git-core/git-sh-i18n--envsubst
-symlink	0	libexec/git-core/git-update-server-info	-> git
-file	3695	libexec/git-core/git-merge-one-file
-symlink	0	libexec/git-core/git-switch	-> git
-symlink	0	libexec/git-core/git-verify-pack	-> git
-symlink	0	libexec/git-core/git-rev-parse	-> git
-symlink	0	libexec/git-core/git-branch	-> git
-symlink	0	libexec/git-core/git-diff-tree	-> git
-symlink	0	libexec/git-core/git-check-ref-format	-> git
-symlink	0	libexec/git-core/git-url-parse	-> git
-symlink	0	libexec/git-core/git-checkout-index	-> git
-file	2478896	libexec/git-core/git-remote-http
-symlink	0	libexec/git-core/git-mktree	-> git
-symlink	0	libexec/git-core/git-check-ignore	-> git
-symlink	0	libexec/git-core/git-history	-> git
-symlink	0	libexec/git-core/git-for-each-ref	-> git
-symlink	0	libexec/git-core/git-fetch-pack	-> git
-symlink	0	libexec/git-core/git-submodule--helper	-> git
-symlink	0	libexec/git-core/git-pack-refs	-> git
-file	4170744	libexec/git-core/git
-symlink	0	libexec/git-core/git-apply	-> git
-symlink	0	libexec/git-core/git-hook	-> git
-symlink	0	libexec/git-core/git-mailsplit	-> git
-symlink	0	libexec/git-core/git-ls-remote	-> git
-symlink	0	libexec/git-core/git-index-pack	-> git
-symlink	0	libexec/git-core/git-cat-file	-> git
-symlink	0	libexec/git-core/git-fsck-objects	-> git
-symlink	0	libexec/git-core/git-checkout	-> git
-folder	0	libexec/git-core/mergetools/
-file	818	libexec/git-core/mergetools/deltawalker
-file	418	libexec/git-core/mergetools/opendiff
-file	818	libexec/git-core/mergetools/kdiff3
-file	460	libexec/git-core/mergetools/diffmerge
-file	913	libexec/git-core/mergetools/xxdiff
-file	584	libexec/git-core/mergetools/bc
-file	395	libexec/git-core/mergetools/diffuse
-file	535	libexec/git-core/mergetools/emerge
-file	264	libexec/git-core/mergetools/kompare
-file	493	libexec/git-core/mergetools/examdiff
-file	432	libexec/git-core/mergetools/guiffy
-file	761	libexec/git-core/mergetools/tortoisemerge
-file	423	libexec/git-core/mergetools/smerge
-file	373	libexec/git-core/mergetools/vscode
-file	784	libexec/git-core/mergetools/p4merge
-file	29	libexec/git-core/mergetools/nvimdiff
-file	29	libexec/git-core/mergetools/gvimdiff
-file	403	libexec/git-core/mergetools/tkdiff
-file	515	libexec/git-core/mergetools/araxis
-file	510	libexec/git-core/mergetools/codecompare
-file	2213	libexec/git-core/mergetools/meld
-file	510	libexec/git-core/mergetools/winmerge
-file	453	libexec/git-core/mergetools/ecmerge
-file	18438	libexec/git-core/mergetools/vimdiff
-symlink	0	libexec/git-core/git-am	-> git
-symlink	0	libexec/git-core/git-update-ref	-> git
-file	2412272	libexec/git-core/git-daemon
-symlink	0	libexec/git-core/git-mv	-> git
-symlink	0	libexec/git-core/git-show-ref	-> git
-symlink	0	libexec/git-core/git-repo	-> git
-symlink	0	libexec/git-core/git-column	-> git
-symlink	0	libexec/git-core/git-fast-import	-> git
-symlink	0	libexec/git-core/git-backfill	-> git
-file	3992	libexec/git-core/git-request-pull
-symlink	0	libexec/git-core/git-pack-redundant	-> git
-file	3696	libexec/git-core/git-quiltimport
-symlink	0	libexec/git-core/git-mktag	-> git
-symlink	0	libexec/git-core/git-merge-base	-> git
-symlink	0	libexec/git-core/git-rerere	-> git
-symlink	0	libexec/git-core/git-merge-index	-> git
-symlink	0	libexec/git-core/git-whatchanged	-> git
-file	1680	libexec/git-core/git-sh-i18n
-symlink	0	libexec/git-core/git-unpack-objects	-> git
-symlink	0	libexec/git-core/git-config	-> git
-symlink	0	libexec/git-core/git-for-each-repo	-> git
-symlink	0	libexec/git-core/git-show-index	-> git
-symlink	0	libexec/git-core/git-clone	-> git
-symlink	0	libexec/git-core/git-credential-cache	-> git
-symlink	0	libexec/git-core/git-reset	-> git
-symlink	0	libexec/git-core/git-difftool	-> git
-symlink	0	libexec/git-core/git-range-diff	-> git
-file	2454184	libexec/git-core/scalar
-symlink	0	libexec/git-core/git-var	-> git
-symlink	0	libexec/git-core/git-verify-commit	-> git
-symlink	0	libexec/git-core/git-pull	-> git
-symlink	0	libexec/git-core/git-verify-tag	-> git
-symlink	0	libexec/git-core/git-merge-file	-> git
-symlink	0	libexec/git-core/git-archive	-> git
-symlink	0	libexec/git-core/git-send-pack	-> git
-symlink	0	libexec/git-core/git-show-branch	-> git
-symlink	0	libexec/git-core/git-revert	-> git
-symlink	0	libexec/git-core/git-stash	-> git
-symlink	0	libexec/git-core/git-repack	-> git
-symlink	0	libexec/git-core/git-maintenance	-> git
-symlink	0	libexec/git-core/git-annotate	-> git
-symlink	0	libexec/git-core/git-interpret-trailers	-> git
-symlink	0	libexec/git-core/git-format-rev	-> git
-symlink	0	libexec/git-core/git-stripspace	-> git
-symlink	0	libexec/git-core/git-last-modified	-> git
-symlink	0	libexec/git-core/git-init-db	-> git
-symlink	0	libexec/git-core/git-read-tree	-> git
-symlink	0	libexec/git-core/git-remote-ftps	-> git-remote-http
-symlink	0	libexec/git-core/git-commit-tree	-> git
-symlink	0	libexec/git-core/git-commit	-> git
-symlink	0	libexec/git-core/git-sparse-checkout	-> git
-file	2477	libexec/git-core/git-merge-octopus
-symlink	0	libexec/git-core/git-add	-> git
-symlink	0	libexec/git-core/git-gc	-> git
-symlink	0	libexec/git-core/git-prune-packed	-> git
-file	37002	libexec/git-core/git-archimport
-symlink	0	libexec/git-core/git-credential-store	-> git
-symlink	0	libexec/git-core/git-diagnose	-> git
-symlink	0	libexec/git-core/git-shortlog	-> git
-symlink	0	libexec/git-core/git-tag	-> git
-symlink	0	libexec/git-core/git-upload-pack	-> git
-file	2660	libexec/git-core/git-difftool--helper
-symlink	0	libexec/git-core/git-credential-cache--daemon	-> git
-symlink	0	libexec/git-core/git-remote-ftp	-> git-remote-http
-symlink	0	libexec/git-core/git-check-attr	-> git
-file	4401	libexec/git-core/git-web--browse
-symlink	0	libexec/git-core/git-get-tar-commit-id	-> git
-symlink	0	libexec/git-core/git-fmt-merge-msg	-> git
-symlink	0	libexec/git-core/git-credential	-> git
-symlink	0	libexec/git-core/git-merge-tree	-> git
-file	2395824	libexec/git-core/git-shell
-symlink	0	libexec/git-core/git-replace	-> git
-symlink	0	libexec/git-core/git-merge	-> git
-file	1226	libexec/git-core/git-merge-resolve
-symlink	0	libexec/git-core/git-diff	-> git
-symlink	0	libexec/git-core/git-push	-> git
-file	13149	libexec/git-core/git-cvsexportcommit
-symlink	0	libexec/git-core/git-grep	-> git
-symlink	0	libexec/git-core/git-unpack-file	-> git
-symlink	0	libexec/git-core/git-show	-> git
-symlink	0	libexec/git-core/git-cherry	-> git
-file	11693	libexec/git-core/git-mergetool
-symlink	0	libexec/git-core/git-version	-> git
-symlink	0	libexec/git-core/git-rev-list	-> git
-symlink	0	libexec/git-core/git-notes	-> git
-file	2458920	libexec/git-core/git-imap-send
-symlink	0	libexec/git-core/git-replay	-> git
-symlink	0	libexec/git-core/git-pack-objects	-> git
-folder	0	bin/
-file	4170744	bin/git
-file	2454184	bin/scalar
-folder	0	ssl/
-file	200116	ssl/cacert.pem
 folder	0	share/
-folder	0	share/gitweb/
-file	254254	share/gitweb/gitweb.cgi
-folder	0	share/gitweb/static/
-file	11731	share/gitweb/static/gitweb.css
-file	207	share/gitweb/static/git-logo.png
-file	115	share/gitweb/static/git-favicon.png
-file	48825	share/gitweb/static/gitweb.js
-folder	0	share/bash-completion/
-folder	0	share/bash-completion/completions/
-file	96261	share/bash-completion/completions/git
+folder	0	share/git-core/
+folder	0	share/git-core/templates/
+file	73	share/git-core/templates/description
+folder	0	share/git-core/templates/hooks/
+file	1492	share/git-core/templates/hooks/prepare-commit-msg.sample
+file	424	share/git-core/templates/hooks/pre-applypatch.sample
+file	2783	share/git-core/templates/hooks/push-to-checkout.sample
+file	3650	share/git-core/templates/hooks/update.sample
+file	544	share/git-core/templates/hooks/pre-receive.sample
+file	416	share/git-core/templates/hooks/pre-merge-commit.sample
+file	1374	share/git-core/templates/hooks/pre-push.sample
+file	1649	share/git-core/templates/hooks/pre-commit.sample
+file	2308	share/git-core/templates/hooks/sendemail-validate.sample
+file	1972	share/git-core/templates/hooks/commit-msg.sample
+file	478	share/git-core/templates/hooks/applypatch-msg.sample
+file	4611	share/git-core/templates/hooks/fsmonitor-watchman.sample
+file	189	share/git-core/templates/hooks/post-update.sample
+file	4898	share/git-core/templates/hooks/pre-rebase.sample
+folder	0	share/git-core/templates/info/
+file	240	share/git-core/templates/info/exclude
 folder	0	share/perl5/
-folder	0	share/perl5/FromCPAN/
-file	24923	share/perl5/FromCPAN/Error.pm
-folder	0	share/perl5/FromCPAN/Mail/
-file	6990	share/perl5/FromCPAN/Mail/Address.pm
 file	48387	share/perl5/Git.pm
 folder	0	share/perl5/Git/
 file	4184	share/perl5/Git/Packet.pm
-file	848	share/perl5/Git/IndexInfo.pm
 folder	0	share/perl5/Git/SVN/
-file	4637	share/perl5/Git/SVN/Utils.pm
-file	8196	share/perl5/Git/SVN/Migration.pm
+file	19431	share/perl5/Git/SVN/Ra.pm
 file	9613	share/perl5/Git/SVN/Log.pm
-file	17013	share/perl5/Git/SVN/Editor.pm
-file	1849	share/perl5/Git/SVN/GlobSpec.pm
-file	5370	share/perl5/Git/SVN/Prompt.pm
+file	8196	share/perl5/Git/SVN/Migration.pm
 file	18617	share/perl5/Git/SVN/Fetcher.pm
+file	4637	share/perl5/Git/SVN/Utils.pm
+file	17013	share/perl5/Git/SVN/Editor.pm
 folder	0	share/perl5/Git/SVN/Memoize/
 file	1799	share/perl5/Git/SVN/Memoize/YAML.pm
-file	19431	share/perl5/Git/SVN/Ra.pm
-file	2816	share/perl5/Git/I18N.pm
-file	72828	share/perl5/Git/SVN.pm
-file	3435	share/perl5/Git/LoadCPAN.pm
+file	5370	share/perl5/Git/SVN/Prompt.pm
+file	1849	share/perl5/Git/SVN/GlobSpec.pm
 folder	0	share/perl5/Git/LoadCPAN/
 file	182	share/perl5/Git/LoadCPAN/Error.pm
 folder	0	share/perl5/Git/LoadCPAN/Mail/
 file	198	share/perl5/Git/LoadCPAN/Mail/Address.pm
+file	848	share/perl5/Git/IndexInfo.pm
+file	3435	share/perl5/Git/LoadCPAN.pm
+file	72828	share/perl5/Git/SVN.pm
+file	2816	share/perl5/Git/I18N.pm
+folder	0	share/perl5/FromCPAN/
+file	24923	share/perl5/FromCPAN/Error.pm
+folder	0	share/perl5/FromCPAN/Mail/
+file	6990	share/perl5/FromCPAN/Mail/Address.pm
 folder	0	share/locale/
+folder	0	share/locale/tr/
+folder	0	share/locale/tr/LC_MESSAGES/
+file	770739	share/locale/tr/LC_MESSAGES/git.mo
+folder	0	share/locale/fr/
+folder	0	share/locale/fr/LC_MESSAGES/
+file	792940	share/locale/fr/LC_MESSAGES/git.mo
+folder	0	share/locale/zh_CN/
+folder	0	share/locale/zh_CN/LC_MESSAGES/
+file	709419	share/locale/zh_CN/LC_MESSAGES/git.mo
+folder	0	share/locale/ko/
+folder	0	share/locale/ko/LC_MESSAGES/
+file	450662	share/locale/ko/LC_MESSAGES/git.mo
 folder	0	share/locale/de/
 folder	0	share/locale/de/LC_MESSAGES/
 file	707546	share/locale/de/LC_MESSAGES/git.mo
-folder	0	share/locale/is/
-folder	0	share/locale/is/LC_MESSAGES/
-file	1899	share/locale/is/LC_MESSAGES/git.mo
-folder	0	share/locale/pt_PT/
-folder	0	share/locale/pt_PT/LC_MESSAGES/
-file	487475	share/locale/pt_PT/LC_MESSAGES/git.mo
+folder	0	share/locale/zh_TW/
+folder	0	share/locale/zh_TW/LC_MESSAGES/
+file	695649	share/locale/zh_TW/LC_MESSAGES/git.mo
 folder	0	share/locale/pl/
 folder	0	share/locale/pl/LC_MESSAGES/
 file	613499	share/locale/pl/LC_MESSAGES/git.mo
+folder	0	share/locale/id/
+folder	0	share/locale/id/LC_MESSAGES/
+file	751311	share/locale/id/LC_MESSAGES/git.mo
+folder	0	share/locale/pt_BR/
+folder	0	share/locale/pt_BR/LC_MESSAGES/
+file	772141	share/locale/pt_BR/LC_MESSAGES/git.mo
+folder	0	share/locale/es/
+folder	0	share/locale/es/LC_MESSAGES/
+file	640766	share/locale/es/LC_MESSAGES/git.mo
+folder	0	share/locale/el/
+folder	0	share/locale/el/LC_MESSAGES/
+file	179872	share/locale/el/LC_MESSAGES/git.mo
+folder	0	share/locale/is/
+folder	0	share/locale/is/LC_MESSAGES/
+file	1899	share/locale/is/LC_MESSAGES/git.mo
+folder	0	share/locale/bg/
+folder	0	share/locale/bg/LC_MESSAGES/
+file	1034582	share/locale/bg/LC_MESSAGES/git.mo
+folder	0	share/locale/ru/
+folder	0	share/locale/ru/LC_MESSAGES/
+file	466094	share/locale/ru/LC_MESSAGES/git.mo
+folder	0	share/locale/uk/
+folder	0	share/locale/uk/LC_MESSAGES/
+file	988985	share/locale/uk/LC_MESSAGES/git.mo
+folder	0	share/locale/ca/
+folder	0	share/locale/ca/LC_MESSAGES/
+file	787473	share/locale/ca/LC_MESSAGES/git.mo
+folder	0	share/locale/vi/
+folder	0	share/locale/vi/LC_MESSAGES/
+file	763649	share/locale/vi/LC_MESSAGES/git.mo
+folder	0	share/locale/it/
+folder	0	share/locale/it/LC_MESSAGES/
+file	602746	share/locale/it/LC_MESSAGES/git.mo
+folder	0	share/locale/af/
+folder	0	share/locale/af/LC_MESSAGES/
+file	750480	share/locale/af/LC_MESSAGES/git.mo
+folder	0	share/locale/pt_PT/
+folder	0	share/locale/pt_PT/LC_MESSAGES/
+file	487475	share/locale/pt_PT/LC_MESSAGES/git.mo
 folder	0	share/locale/ga/
 folder	0	share/locale/ga/LC_MESSAGES/
 file	786933	share/locale/ga/LC_MESSAGES/git.mo
 folder	0	share/locale/sv/
 folder	0	share/locale/sv/LC_MESSAGES/
 file	757893	share/locale/sv/LC_MESSAGES/git.mo
-folder	0	share/locale/tr/
-folder	0	share/locale/tr/LC_MESSAGES/
-file	770739	share/locale/tr/LC_MESSAGES/git.mo
-folder	0	share/locale/ca/
-folder	0	share/locale/ca/LC_MESSAGES/
-file	787473	share/locale/ca/LC_MESSAGES/git.mo
-folder	0	share/locale/zh_TW/
-folder	0	share/locale/zh_TW/LC_MESSAGES/
-file	695649	share/locale/zh_TW/LC_MESSAGES/git.mo
-folder	0	share/locale/ru/
-folder	0	share/locale/ru/LC_MESSAGES/
-file	466094	share/locale/ru/LC_MESSAGES/git.mo
-folder	0	share/locale/zh_CN/
-folder	0	share/locale/zh_CN/LC_MESSAGES/
-file	709419	share/locale/zh_CN/LC_MESSAGES/git.mo
-folder	0	share/locale/el/
-folder	0	share/locale/el/LC_MESSAGES/
-file	179872	share/locale/el/LC_MESSAGES/git.mo
-folder	0	share/locale/uk/
-folder	0	share/locale/uk/LC_MESSAGES/
-file	988985	share/locale/uk/LC_MESSAGES/git.mo
-folder	0	share/locale/af/
-folder	0	share/locale/af/LC_MESSAGES/
-file	750480	share/locale/af/LC_MESSAGES/git.mo
-folder	0	share/locale/fr/
-folder	0	share/locale/fr/LC_MESSAGES/
-file	792940	share/locale/fr/LC_MESSAGES/git.mo
-folder	0	share/locale/bg/
-folder	0	share/locale/bg/LC_MESSAGES/
-file	1034582	share/locale/bg/LC_MESSAGES/git.mo
-folder	0	share/locale/es/
-folder	0	share/locale/es/LC_MESSAGES/
-file	640766	share/locale/es/LC_MESSAGES/git.mo
-folder	0	share/locale/id/
-folder	0	share/locale/id/LC_MESSAGES/
-file	751311	share/locale/id/LC_MESSAGES/git.mo
-folder	0	share/locale/ko/
-folder	0	share/locale/ko/LC_MESSAGES/
-file	450662	share/locale/ko/LC_MESSAGES/git.mo
-folder	0	share/locale/it/
-folder	0	share/locale/it/LC_MESSAGES/
-file	602746	share/locale/it/LC_MESSAGES/git.mo
-folder	0	share/locale/pt_BR/
-folder	0	share/locale/pt_BR/LC_MESSAGES/
-file	772141	share/locale/pt_BR/LC_MESSAGES/git.mo
-folder	0	share/locale/vi/
-folder	0	share/locale/vi/LC_MESSAGES/
-file	763649	share/locale/vi/LC_MESSAGES/git.mo
-folder	0	share/git-core/
-folder	0	share/git-core/templates/
-file	73	share/git-core/templates/description
-folder	0	share/git-core/templates/hooks/
-file	4611	share/git-core/templates/hooks/fsmonitor-watchman.sample
-file	1649	share/git-core/templates/hooks/pre-commit.sample
-file	2783	share/git-core/templates/hooks/push-to-checkout.sample
-file	544	share/git-core/templates/hooks/pre-receive.sample
-file	4898	share/git-core/templates/hooks/pre-rebase.sample
-file	1374	share/git-core/templates/hooks/pre-push.sample
-file	3650	share/git-core/templates/hooks/update.sample
-file	424	share/git-core/templates/hooks/pre-applypatch.sample
-file	189	share/git-core/templates/hooks/post-update.sample
-file	478	share/git-core/templates/hooks/applypatch-msg.sample
-file	416	share/git-core/templates/hooks/pre-merge-commit.sample
-file	2308	share/git-core/templates/hooks/sendemail-validate.sample
-file	1972	share/git-core/templates/hooks/commit-msg.sample
-file	1492	share/git-core/templates/hooks/prepare-commit-msg.sample
-folder	0	share/git-core/templates/info/
-file	240	share/git-core/templates/info/exclude
+folder	0	share/gitweb/
+file	254254	share/gitweb/gitweb.cgi
+folder	0	share/gitweb/static/
+file	115	share/gitweb/static/git-favicon.png
+file	11731	share/gitweb/static/gitweb.css
+file	207	share/gitweb/static/git-logo.png
+file	48825	share/gitweb/static/gitweb.js
+folder	0	share/bash-completion/
+folder	0	share/bash-completion/completions/
+file	96261	share/bash-completion/completions/git
+folder	0	bin/
+file	4162560	bin/git
+file	2462376	bin/scalar
+folder	0	libexec/
+folder	0	libexec/git-core/
+symlink	0	libexec/git-core/git-status	-> git
+symlink	0	libexec/git-core/git-remote	-> git
+symlink	0	libexec/git-core/git-rev-list	-> git
+symlink	0	libexec/git-core/git-help	-> git
+symlink	0	libexec/git-core/git-fetch-pack	-> git
+symlink	0	libexec/git-core/git-mktree	-> git
+symlink	0	libexec/git-core/git-for-each-repo	-> git
+symlink	0	libexec/git-core/git-clean	-> git
+symlink	0	libexec/git-core/git-pull	-> git
+symlink	0	libexec/git-core/git-upload-archive	-> git
+symlink	0	libexec/git-core/git-log	-> git
+symlink	0	libexec/git-core/git-reset	-> git
+symlink	0	libexec/git-core/git-merge	-> git
+symlink	0	libexec/git-core/git-rm	-> git
+symlink	0	libexec/git-core/git-ls-tree	-> git
+symlink	0	libexec/git-core/git-send-pack	-> git
+symlink	0	libexec/git-core/git-credential	-> git
+file	13149	libexec/git-core/git-cvsexportcommit
+file	22158	libexec/git-core/git-instaweb
+file	4162560	libexec/git-core/git
+symlink	0	libexec/git-core/git-sparse-checkout	-> git
+symlink	0	libexec/git-core/git-read-tree	-> git
+symlink	0	libexec/git-core/git-remote-ftp	-> git-remote-http
+symlink	0	libexec/git-core/git-mv	-> git
+symlink	0	libexec/git-core/git-diff	-> git
+symlink	0	libexec/git-core/git-unpack-file	-> git
+symlink	0	libexec/git-core/git-submodule--helper	-> git
+symlink	0	libexec/git-core/git-refs	-> git
+symlink	0	libexec/git-core/git-range-diff	-> git
+file	2477	libexec/git-core/git-merge-octopus
+symlink	0	libexec/git-core/git-archive	-> git
+symlink	0	libexec/git-core/git-version	-> git
+symlink	0	libexec/git-core/git-fsck-objects	-> git
+symlink	0	libexec/git-core/git-gc	-> git
+symlink	0	libexec/git-core/git-backfill	-> git
+symlink	0	libexec/git-core/git-remote-fd	-> git
+symlink	0	libexec/git-core/git-fsmonitor--daemon	-> git
+symlink	0	libexec/git-core/git-push	-> git
+file	11693	libexec/git-core/git-mergetool
+symlink	0	libexec/git-core/git-tag	-> git
+symlink	0	libexec/git-core/git-merge-ours	-> git
+file	8398	libexec/git-core/git-sh-setup
+symlink	0	libexec/git-core/git-verify-pack	-> git
+symlink	0	libexec/git-core/git-maintenance	-> git
+symlink	0	libexec/git-core/git-whatchanged	-> git
+file	2416304	libexec/git-core/git-shell
+symlink	0	libexec/git-core/git-interpret-trailers	-> git
+symlink	0	libexec/git-core/git-symbolic-ref	-> git
+symlink	0	libexec/git-core/git-merge-tree	-> git
+folder	0	libexec/git-core/mergetools/
+file	510	libexec/git-core/mergetools/winmerge
+file	2213	libexec/git-core/mergetools/meld
+file	423	libexec/git-core/mergetools/smerge
+file	818	libexec/git-core/mergetools/deltawalker
+file	264	libexec/git-core/mergetools/kompare
+file	493	libexec/git-core/mergetools/examdiff
+file	761	libexec/git-core/mergetools/tortoisemerge
+file	584	libexec/git-core/mergetools/bc
+file	403	libexec/git-core/mergetools/tkdiff
+file	29	libexec/git-core/mergetools/nvimdiff
+file	460	libexec/git-core/mergetools/diffmerge
+file	395	libexec/git-core/mergetools/diffuse
+file	535	libexec/git-core/mergetools/emerge
+file	373	libexec/git-core/mergetools/vscode
+file	453	libexec/git-core/mergetools/ecmerge
+file	510	libexec/git-core/mergetools/codecompare
+file	515	libexec/git-core/mergetools/araxis
+file	29	libexec/git-core/mergetools/gvimdiff
+file	18438	libexec/git-core/mergetools/vimdiff
+file	784	libexec/git-core/mergetools/p4merge
+file	418	libexec/git-core/mergetools/opendiff
+file	818	libexec/git-core/mergetools/kdiff3
+file	432	libexec/git-core/mergetools/guiffy
+file	913	libexec/git-core/mergetools/xxdiff
+symlink	0	libexec/git-core/git-check-mailmap	-> git
+symlink	0	libexec/git-core/git-difftool	-> git
+symlink	0	libexec/git-core/git-fmt-merge-msg	-> git
+symlink	0	libexec/git-core/git-stage	-> git
+symlink	0	libexec/git-core/git-cat-file	-> git
+symlink	0	libexec/git-core/git-describe	-> git
+symlink	0	libexec/git-core/git-write-tree	-> git
+file	1226	libexec/git-core/git-merge-resolve
+file	1680	libexec/git-core/git-sh-i18n
+symlink	0	libexec/git-core/git-checkout--worker	-> git
+symlink	0	libexec/git-core/git-var	-> git
+symlink	0	libexec/git-core/git-hash-object	-> git
+symlink	0	libexec/git-core/git-checkout-index	-> git
+symlink	0	libexec/git-core/git-merge-subtree	-> git
+symlink	0	libexec/git-core/git-bugreport	-> git
+symlink	0	libexec/git-core/git-pack-objects	-> git
+symlink	0	libexec/git-core/git-diff-index	-> git
+symlink	0	libexec/git-core/git-stripspace	-> git
+file	3695	libexec/git-core/git-merge-one-file
+symlink	0	libexec/git-core/git-diff-files	-> git
+file	3992	libexec/git-core/git-request-pull
+file	72812	libexec/git-core/git-send-email
+file	10908	libexec/git-core/git-mergetool--lib
+symlink	0	libexec/git-core/git-remote-https	-> git-remote-http
+file	2479400	libexec/git-core/git-imap-send
+file	10493	libexec/git-core/git-submodule
+symlink	0	libexec/git-core/git-rerere	-> git
+symlink	0	libexec/git-core/git-fetch	-> git
+symlink	0	libexec/git-core/git-commit-tree	-> git
+symlink	0	libexec/git-core/git-repo	-> git
+symlink	0	libexec/git-core/git-merge-index	-> git
+symlink	0	libexec/git-core/git-stash	-> git
+file	3696	libexec/git-core/git-quiltimport
+symlink	0	libexec/git-core/git-history	-> git
+symlink	0	libexec/git-core/git-init-db	-> git
+symlink	0	libexec/git-core/git-column	-> git
+symlink	0	libexec/git-core/git-am	-> git
+symlink	0	libexec/git-core/git-patch-id	-> git
+symlink	0	libexec/git-core/git-check-ref-format	-> git
+symlink	0	libexec/git-core/git-for-each-ref	-> git
+symlink	0	libexec/git-core/git-check-attr	-> git
+symlink	0	libexec/git-core/git-apply	-> git
+symlink	0	libexec/git-core/git-revert	-> git
+symlink	0	libexec/git-core/git-rebase	-> git
+symlink	0	libexec/git-core/git-diff-pairs	-> git
+symlink	0	libexec/git-core/git-replace	-> git
+symlink	0	libexec/git-core/git-check-ignore	-> git
+symlink	0	libexec/git-core/git-fsck	-> git
+symlink	0	libexec/git-core/git-init	-> git
+symlink	0	libexec/git-core/git-fast-import	-> git
+symlink	0	libexec/git-core/git-verify-commit	-> git
+symlink	0	libexec/git-core/git-url-parse	-> git
+symlink	0	libexec/git-core/git-shortlog	-> git
+symlink	0	libexec/git-core/git-notes	-> git
+symlink	0	libexec/git-core/git-name-rev	-> git
+symlink	0	libexec/git-core/git-receive-pack	-> git
+symlink	0	libexec/git-core/git-restore	-> git
+symlink	0	libexec/git-core/git-format-patch	-> git
+symlink	0	libexec/git-core/git-format-rev	-> git
+symlink	0	libexec/git-core/git-checkout	-> git
+symlink	0	libexec/git-core/git-last-modified	-> git
+symlink	0	libexec/git-core/git-update-server-info	-> git
+symlink	0	libexec/git-core/git-credential-cache	-> git
+symlink	0	libexec/git-core/git-credential-cache--daemon	-> git
+symlink	0	libexec/git-core/git-annotate	-> git
+symlink	0	libexec/git-core/git-cherry	-> git
+file	15791	libexec/git-core/git-filter-branch
+file	163288	libexec/git-core/git-cvsserver
+symlink	0	libexec/git-core/git-blame	-> git
+symlink	0	libexec/git-core/git-fast-export	-> git
+symlink	0	libexec/git-core/git-merge-file	-> git
+file	2400312	libexec/git-core/git-http-backend
+symlink	0	libexec/git-core/git-cherry-pick	-> git
+symlink	0	libexec/git-core/git-diff-tree	-> git
+file	2403952	libexec/git-core/git-sh-i18n--envsubst
+symlink	0	libexec/git-core/git-remote-ftps	-> git-remote-http
+symlink	0	libexec/git-core/git-mailinfo	-> git
+symlink	0	libexec/git-core/git-rev-parse	-> git
+file	12910752	libexec/git-core/git-lfs
+symlink	0	libexec/git-core/git-show	-> git
+symlink	0	libexec/git-core/git-branch	-> git
+symlink	0	libexec/git-core/git-add	-> git
+symlink	0	libexec/git-core/git-multi-pack-index	-> git
+symlink	0	libexec/git-core/git-prune-packed	-> git
+symlink	0	libexec/git-core/git-diagnose	-> git
+symlink	0	libexec/git-core/git-index-pack	-> git
+symlink	0	libexec/git-core/git-clone	-> git
+symlink	0	libexec/git-core/git-merge-recursive	-> git
+symlink	0	libexec/git-core/git-config	-> git
+file	2478896	libexec/git-core/git-remote-http
+symlink	0	libexec/git-core/git-count-objects	-> git
+symlink	0	libexec/git-core/git-verify-tag	-> git
+symlink	0	libexec/git-core/git-ls-remote	-> git
+file	4401	libexec/git-core/git-web--browse
+symlink	0	libexec/git-core/git-bisect	-> git
+file	37002	libexec/git-core/git-archimport
+symlink	0	libexec/git-core/git-reflog	-> git
+symlink	0	libexec/git-core/git-get-tar-commit-id	-> git
+file	2408176	libexec/git-core/git-daemon
+file	32138	libexec/git-core/git-cvsimport
+symlink	0	libexec/git-core/git-hook	-> git
+symlink	0	libexec/git-core/git-replay	-> git
+file	2462376	libexec/git-core/scalar
+symlink	0	libexec/git-core/git-ls-files	-> git
+file	2470640	libexec/git-core/git-http-fetch
+symlink	0	libexec/git-core/git-commit-graph	-> git
+symlink	0	libexec/git-core/git-upload-pack	-> git
+symlink	0	libexec/git-core/git-show-branch	-> git
+symlink	0	libexec/git-core/git-pack-redundant	-> git
+symlink	0	libexec/git-core/git-credential-store	-> git
+symlink	0	libexec/git-core/git-mailsplit	-> git
+symlink	0	libexec/git-core/git-mktag	-> git
+symlink	0	libexec/git-core/git-remote-ext	-> git
+symlink	0	libexec/git-core/git-show-index	-> git
+file	2660	libexec/git-core/git-difftool--helper
+symlink	0	libexec/git-core/git-pack-refs	-> git
+symlink	0	libexec/git-core/git-switch	-> git
+symlink	0	libexec/git-core/git-unpack-objects	-> git
+symlink	0	libexec/git-core/git-show-ref	-> git
+symlink	0	libexec/git-core/git-worktree	-> git
+symlink	0	libexec/git-core/git-prune	-> git
+symlink	0	libexec/git-core/git-grep	-> git
+symlink	0	libexec/git-core/git-merge-base	-> git
+symlink	0	libexec/git-core/git-commit	-> git
+symlink	0	libexec/git-core/git-bundle	-> git
+symlink	0	libexec/git-core/git-update-ref	-> git
+symlink	0	libexec/git-core/git-repack	-> git
+symlink	0	libexec/git-core/git-update-index	-> git
 folder	0	etc/
 file	630	etc/gitconfig
+folder	0	ssl/
+file	200116	ssl/cacert.pem

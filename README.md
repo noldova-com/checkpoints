@@ -54,11 +54,11 @@ Each target's build is pinned in [`src/noldova.checkpoints.git/builds.json`](src
 | Package | Built by | Upstream Git source |
 |---|---|---|
 | `@noldova/checkpoints.git.win32-x64`, `@noldova/checkpoints.git.win32-arm64` | MinGit, from [Git for Windows](https://github.com/git-for-windows/git)' releases | [Git for Windows v2.56.1.windows.1](https://github.com/git-for-windows/git/tree/v2.56.1.windows.1) |
-| `@noldova/checkpoints.git.darwin-x64`, `@noldova/checkpoints.git.darwin-arm64`, `@noldova/checkpoints.git.linux-x64`, `@noldova/checkpoints.git.linux-arm64` | [dugite-native](https://github.com/desktop/dugite-native) v2.56.0-2 | [Git v2.56.0](https://github.com/git/git/tree/v2.56.0) |
+| `@noldova/checkpoints.git.darwin-x64`, `@noldova/checkpoints.git.darwin-arm64`, `@noldova/checkpoints.git.linux-x64`, `@noldova/checkpoints.git.linux-arm64` | [dugite-native](https://github.com/desktop/dugite-native) v2.56.1 | [Git v2.56.1](https://github.com/git/git/tree/v2.56.1) |
 
 `builds.json` is the record: when it moves to a newer build, the package's `noldova.git.source` field names the new upstream version.
 
-The Linux arm64 build reports itself as `git version 2.56.0.dirty`, though it is built from Git v2.56.0: dugite-native's Ubuntu build names the cross-compiler's strip tool by editing Git's tracked `Makefile` before it builds, and Git marks a build from a changed tree as dirty ([desktop/dugite-native#553](https://github.com/desktop/dugite-native/pull/553) passes the strip tool to `make` instead).
+The Linux arm64 build reports itself as `git version 2.56.1.dirty`, though it is built from Git v2.56.1: dugite-native's Ubuntu build names the cross-compiler's strip tool by editing Git's tracked `Makefile` before it builds, and Git marks a build from a changed tree as dirty ([desktop/dugite-native#553](https://github.com/desktop/dugite-native/pull/553) passes the strip tool to `make` instead).
 So that target's entry also holds `reportedVersion`, the version the build prints, which the tests check in its place; the weekly Git builds check's issue asks for it to be dropped once a newer build reports its Git version.
 
 Each package's `package.json` names every file of its build in `noldovaDesktop.unpacked`, by its exact path from the package with `/` between folders, so Noldova Desktop's packaging keeps them outside the app's archive, where Git can run them.
