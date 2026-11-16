@@ -1,7 +1,7 @@
 {
   "name": "@noldova/checkpoints.git.darwin-x64",
   "version": "0.0.2",
-  "description": "Git 2.56.0 for darwin-x64, which the checkpoints module runs as its own Git.",
+  "description": "Git 2.56.1 for darwin-x64, which the checkpoints module runs as its own Git.",
   "license": "GPL-2.0-only",
   "repository": {
     "type": "git",
@@ -32,9 +32,9 @@
       "path": [
         "git/bin"
       ],
-      "version": "2.56.0",
-      "source": "https://github.com/git/git/tree/v2.56.0",
-      "build": "https://github.com/desktop/dugite-native/releases/download/v2.56.0-2/dugite-native-v2.56.0-a44aeca-macOS-x64.tar.gz"
+      "version": "2.56.1",
+      "source": "https://github.com/git/git/tree/v2.56.1",
+      "build": "https://github.com/desktop/dugite-native/releases/download/v2.56.1/dugite-native-v2.56.1-238326e-macOS-x64.tar.gz"
     }
   },
   "noldovaDesktop": {

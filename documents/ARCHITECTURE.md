@@ -491,7 +491,7 @@ The journal makes a restore finish whole or not at all.
 The app ships Git as it ships Electron and Noldova Desktop's native addons: a pinned build per target, checked before use, unpacked from the app's archive and signed with the app, as Noldova Desktop's `documents/BUILD.md` says for its own.
 The pinning, the checks and the list of files to unpack are the module's; Noldova Desktop's packaging unpacks and signs them, and the module runs Git from the unpacked copies.
 Each target's build is pinned in `src/noldova.checkpoints.git/builds.json` by its address, its SHA-256 and the Git version and source it was built from.
-A target whose build prints a version other than its Git version also holds `reportedVersion`, the version `git --version` prints, which the tests check in its place: dugite-native's Linux arm64 build prints `2.56.0.dirty`, as the README's Git builds section says.
+A target whose build prints a version other than its Git version also holds `reportedVersion`, the version `git --version` prints, which the tests check in its place: dugite-native's Linux arm64 build prints `2.56.1.dirty`, as the README's Git builds section says.
 The scripts refuse a `reportedVersion` that is not its `gitVersion`, a full stop and lowercase letters, through `TargetReportedVersionInvalidException`.
 
 - Development and tests run the host's pinned build, from its installed package, the same files a packaged app runs.

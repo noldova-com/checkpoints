@@ -11,12 +11,12 @@
   },
   {
     "file": "licenses/git/COPYING",
-    "source": "https://github.com/git/git/blob/v2.56.0/COPYING",
+    "source": "https://github.com/git/git/blob/v2.56.1/COPYING",
     "blob": "536e55524db72bd2acf175208aef4f3dfc148d42"
   },
   {
     "file": "licenses/git/LGPL-2.1",
-    "source": "https://github.com/git/git/blob/v2.56.0/LGPL-2.1",
+    "source": "https://github.com/git/git/blob/v2.56.1/LGPL-2.1",
     "blob": "d38b1b92bdb2893eb4505667375563f2d6d4086b"
   },
   {
