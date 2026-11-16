@@ -1,21 +1,21 @@
 {
   "targets": {
     "win32-x64": {
-      "url": "https://github.com/git-for-windows/git/releases/download/v2.56.0.windows.4/MinGit-2.56.0.4-64-bit.zip",
-      "size": 39846926,
-      "sha256": "e3bf78351fe777fba47ddee5950082f8a98bb0f02604fdc7ba3ee2cb68ffa877",
-      "gitVersion": "2.56.0.windows.4",
-      "source": "https://github.com/git-for-windows/git/tree/v2.56.0.windows.4",
+      "url": "https://github.com/git-for-windows/git/releases/download/v2.56.1.windows.1/MinGit-2.56.1-64-bit.zip",
+      "size": 39849768,
+      "sha256": "4a92850b6e917da4fd010669b614b55dccf5b0ec333a534cc4be4700dfefdafd",
+      "gitVersion": "2.56.1.windows.1",
+      "source": "https://github.com/git-for-windows/git/tree/v2.56.1.windows.1",
       "program": "ucrt64/bin/git.exe",
       "execPath": "ucrt64/libexec/git-core",
       "path": ["ucrt64/bin", "usr/bin"]
     },
     "win32-arm64": {
-      "url": "https://github.com/git-for-windows/git/releases/download/v2.56.0.windows.4/MinGit-2.56.0.4-arm64.zip",
-      "size": 37980967,
-      "sha256": "70f7649f78088c1db1d2f3571ca46a04d5bef06e4e9d56d8ed7f9829e8c6c4db",
-      "gitVersion": "2.56.0.windows.4",
-      "source": "https://github.com/git-for-windows/git/tree/v2.56.0.windows.4",
+      "url": "https://github.com/git-for-windows/git/releases/download/v2.56.1.windows.1/MinGit-2.56.1-arm64.zip",
+      "size": 37983254,
+      "sha256": "96571e442e90523a90e5fd8661b4c4e43bc192910f3c6db938816e6955b4cc8c",
+      "gitVersion": "2.56.1.windows.1",
+      "source": "https://github.com/git-for-windows/git/tree/v2.56.1.windows.1",
       "program": "clangarm64/bin/git.exe",
       "execPath": "clangarm64/libexec/git-core",
       "path": ["clangarm64/bin", "usr/bin"]

@@ -202,7 +202,7 @@
   },
   {
     "name": "mingw-w64-clang-aarch64-git",
-    "version": "2.56.0.4-1",
+    "version": "2.56.1.1-1",
     "license": "GPL-2.0-only",
     "texts": [
       "licenses/git/COPYING",
@@ -211,7 +211,7 @@
   },
   {
     "name": "mingw-w64-clang-aarch64-git-credential-wincred",
-    "version": "2.56.0.4-1",
+    "version": "2.56.1.1-1",
     "license": "GPL-2.0-only",
     "texts": [
       "licenses/git/COPYING"
@@ -227,7 +227,7 @@
   },
   {
     "name": "mingw-w64-clang-aarch64-git-for-windows-addons",
-    "version": "2.56.0.4-1",
+    "version": "2.56.1.1-1",
     "license": "GPL-2.0-only",
     "texts": [
       "licenses/git/COPYING"
@@ -235,7 +235,7 @@
   },
   {
     "name": "mingw-w64-clang-aarch64-git-gui",
-    "version": "2.56.0.4-1",
+    "version": "2.56.1.1-1",
     "license": "GPL-2.0-or-later",
     "texts": [
       "licenses/git/COPYING"
@@ -243,7 +243,7 @@
   },
   {
     "name": "mingw-w64-clang-aarch64-git-perl",
-    "version": "2.56.0.4-1",
+    "version": "2.56.1.1-1",
     "license": "GPL-2.0-only",
     "texts": [
       "licenses/git/COPYING"
@@ -251,7 +251,7 @@
   },
   {
     "name": "mingw-w64-clang-aarch64-git-send-email",
-    "version": "2.56.0.4-1",
+    "version": "2.56.1.1-1",
     "license": "GPL-2.0-only",
     "texts": [
       "licenses/git/COPYING"
@@ -259,7 +259,7 @@
   },
   {
     "name": "mingw-w64-clang-aarch64-git-subtree",
-    "version": "2.56.0.4-1",
+    "version": "2.56.1.1-1",
     "license": "GPL-2.0-only",
     "texts": [
       "licenses/git/COPYING"
@@ -267,7 +267,7 @@
   },
   {
     "name": "mingw-w64-clang-aarch64-gitk",
-    "version": "2.56.0.4-1",
+    "version": "2.56.1.1-1",
     "license": "GPL-2.0-or-later",
     "texts": [
       "licenses/git/COPYING"
