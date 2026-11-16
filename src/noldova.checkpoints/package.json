@@ -1,6 +1,6 @@
 {
   "name": "@noldova/checkpoints",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "The checkpoints module for apps on Noldova Desktop: it keeps a folder's files at chosen moments with its own Git and lists them.",
   "type": "module",
   "license": "MIT",
