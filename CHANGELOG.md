@@ -4,6 +4,22 @@
 
 Each version's section is written by the pull request that changes the version, from the pull requests merged since the previous version; other pull requests don't edit this file.
 
+## 0.0.3
+
+- The six Git packages hold Git v2.56.1, which fixes CVE-2026-111760, CVE-2026-113408, CVE-2026-114466, CVE-2026-114467, CVE-2026-114469 and CVE-2026-105437.
+  - Windows, `win32-x64` and `win32-arm64`: MinGit from Git for Windows v2.56.1.windows.1, in place of v2.56.0.windows.4.
+  - macOS and Linux, `darwin-x64`, `darwin-arm64`, `linux-x64` and `linux-arm64`: dugite-native v2.56.1, in place of v2.56.0-2.
+    The Linux arm64 build still reports itself as `git version 2.56.1.dirty`, as the README says.
+- `@noldova/checkpoints.protocol`'s models, and the module's stored records, read their JSON through `@noldova/context.json`'s `JsonReader`.
+  - A malformed form now rejects with context's `JsonException`, with its message and path. A value the model refuses still rejects with `ProtocolException`.
+  - The protocol no longer exports `JsonObjectReader`, `JsonObject`, `JsonValue`, `FieldNotABooleanException`, `FieldNotAListException`, `FieldNotANumberException`, `FieldNotANumberOrNullException`, `FieldNotAStringException`, `FieldNotAStringListException`, `FieldNotAStringOrNullException`, `MissingFieldException`, `NotAnObjectException` or `UnknownFieldException`.
+    The module no longer has `StoreFieldNotABooleanException` or `StoreFieldNotAStringListException`.
+  - Both packages take `@noldova/context.json` as a peer, `>=0.0.7 <0.1.0`.
+- A `checkpoints.*` request whose form is right, but which holds a value its model refuses, is answered as `InvalidParams`, with the refusal's message, instead of as `Internal`.
+- The packages are built and tested against Noldova Desktop 0.0.2's `@noldova/desktop.protocol` and `@noldova/desktop.runtime`.
+  - `@noldova/desktop.runtime` 0.0.2 takes `@types/node` `>=26.6.6 <27.0.0` as an optional peer.
+  - The module's own peer range for both stays `>=0.0.1 <0.1.0`.
+
 ## 0.0.2
 
 - `@noldova/checkpoints` and `@noldova/checkpoints.protocol` each hold a `README.md`, which npm shows as the package's page.

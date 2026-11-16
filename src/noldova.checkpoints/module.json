@@ -1,6 +1,6 @@
 {
   "id": "checkpoints",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "displayName": "Checkpoints",
   "description": "Keeps a folder's files at chosen moments, with the module's own Git, lists them, compares them and restores one on request.",
   "parts": ["runtime"],
