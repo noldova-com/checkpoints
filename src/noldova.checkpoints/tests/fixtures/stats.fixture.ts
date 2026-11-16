@@ -34,10 +34,10 @@ export class StatsFixture {
       mtime: epoch,
       ctime: epoch,
       birthtime: epoch,
-      atimeInstant: StatsFixture.instant(0n),
-      mtimeInstant: StatsFixture.instant(modified),
-      ctimeInstant: StatsFixture.instant(changed),
-      birthtimeInstant: StatsFixture.instant(0n),
+      atimeInstant: Temporal.Instant.fromEpochNanoseconds(0n),
+      mtimeInstant: Temporal.Instant.fromEpochNanoseconds(modified),
+      ctimeInstant: Temporal.Instant.fromEpochNanoseconds(changed),
+      birthtimeInstant: Temporal.Instant.fromEpochNanoseconds(0n),
       isFile: () => kind === "file",
       isSymbolicLink: () => kind === "link",
       isDirectory: () => kind === "folder",
@@ -47,22 +47,5 @@ export class StatsFixture {
       isFIFO: () => false
     };
     return stats;
-  }
-
-  private static instant(nanoseconds: bigint): unknown {
-    const temporal: unknown = Reflect.get(globalThis, "Temporal");
-    if (typeof temporal !== "object" || temporal === null) {
-      return undefined;
-    }
-    const instantClass: unknown = Reflect.get(temporal, "Instant");
-    if (typeof instantClass !== "function") {
-      return undefined;
-    }
-    const fromEpochNanoseconds: unknown = Reflect.get(instantClass, "fromEpochNanoseconds");
-    if (typeof fromEpochNanoseconds !== "function") {
-      return undefined;
-    }
-    const instant: unknown = Reflect.apply(fromEpochNanoseconds, instantClass, [nanoseconds]);
-    return instant;
   }
 }
