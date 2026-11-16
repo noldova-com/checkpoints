@@ -23,7 +23,7 @@
     "@noldova/context.text": "0.0.8",
     "@noldova/desktop.protocol": "0.0.1",
     "@noldova/desktop.runtime": "0.0.1",
-    "@types/node": "24.19.2",
+    "@types/node": "26.6.6",
     "typescript": "7.0.2"
   }
 }
