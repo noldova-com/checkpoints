@@ -34,10 +34,10 @@ export class StatsFixture {
       mtime: epoch,
       ctime: epoch,
       birthtime: epoch,
-      atimeInstant: StatsFixture.instant(0n),
-      mtimeInstant: StatsFixture.instant(modified),
-      ctimeInstant: StatsFixture.instant(changed),
-      birthtimeInstant: StatsFixture.instant(0n),
+      atimeInstant: undefined,
+      mtimeInstant: undefined,
+      ctimeInstant: undefined,
+      birthtimeInstant: undefined,
       isFile: () => kind === "file",
       isSymbolicLink: () => kind === "link",
       isDirectory: () => kind === "folder",
@@ -47,9 +47,5 @@ export class StatsFixture {
       isFIFO: () => false
     };
     return stats;
-  }
-
-  private static instant(nanoseconds: bigint): Temporal.Instant | undefined {
-    return typeof Temporal === "undefined" ? undefined : Temporal.Instant.fromEpochNanoseconds(nanoseconds);
   }
 }
