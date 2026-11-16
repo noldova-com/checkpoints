@@ -53,7 +53,7 @@ Each target's build is pinned in [`src/noldova.checkpoints.git/builds.json`](src
 
 | Package | Built by | Upstream Git source |
 |---|---|---|
-| `@noldova/checkpoints.git.win32-x64`, `@noldova/checkpoints.git.win32-arm64` | MinGit, from [Git for Windows](https://github.com/git-for-windows/git)' releases | [Git for Windows v2.56.0.windows.4](https://github.com/git-for-windows/git/tree/v2.56.0.windows.4) |
+| `@noldova/checkpoints.git.win32-x64`, `@noldova/checkpoints.git.win32-arm64` | MinGit, from [Git for Windows](https://github.com/git-for-windows/git)' releases | [Git for Windows v2.56.1.windows.1](https://github.com/git-for-windows/git/tree/v2.56.1.windows.1) |
 | `@noldova/checkpoints.git.darwin-x64`, `@noldova/checkpoints.git.darwin-arm64`, `@noldova/checkpoints.git.linux-x64`, `@noldova/checkpoints.git.linux-arm64` | [dugite-native](https://github.com/desktop/dugite-native) v2.56.0-2 | [Git v2.56.0](https://github.com/git/git/tree/v2.56.0) |
 
 `builds.json` is the record: when it moves to a newer build, the package's `noldova.git.source` field names the new upstream version.
