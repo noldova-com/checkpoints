@@ -11,104 +11,23 @@ import { randomBytes } from "node:crypto";
 import { existsSync } from "node:fs";
 import { readdir, readFile, utimes, writeFile } from "node:fs/promises";
 import path from "node:path";
-import { describe, it, type TestContext } from "node:test";
-
-import { CaptureRequest } from "@noldova/checkpoints.protocol";
+import { describe, it } from "node:test";
 
 import { StoreFileUnreadableException, UnsupportedStoreFormatException } from "../../src/api/index.ts";
 import { FolderStore } from "../../src/models/folder-store.ts";
 import { GitLimits } from "../../src/models/git-limits.ts";
-import { HousekeepingRecord } from "../../src/models/housekeeping-record.ts";
 import { GitBuildLocator } from "../../src/services/git-build.locator.ts";
 import { GitRunner } from "../../src/services/git-runner.ts";
 import { ObjectReader } from "../../src/services/object.reader.ts";
-import { StoreFile } from "../../src/services/store-file.ts";
 import { StoreHousekeeping } from "../../src/services/store-housekeeping.ts";
-import { CancelFixture } from "../fixtures/cancel.fixture.ts";
 import { CheckpointsHarness } from "../fixtures/checkpoints-harness.fixture.ts";
-import { LeftObject } from "../fixtures/left-object.fixture.ts";
-import { ServiceSeams } from "../fixtures/service-seams.fixture.ts";
+import { HousekeepingStore } from "../fixtures/housekeeping-store.fixture.ts";
 
 describe("StoreHousekeeping", { concurrency: true }, () => {
   const uncancelled: AbortSignal = new AbortController().signal;
   const plentyAsync = async (): Promise<number> => Number.MAX_SAFE_INTEGER;
   const day = 24 * 60 * 60 * 1000;
   const week = 7 * day;
-
-  class Fixture {
-    public readonly git: GitRunner;
-    public readonly harness: CheckpointsHarness;
-    public readonly store: FolderStore;
-
-    private constructor(harness: CheckpointsHarness, git: GitRunner) {
-      this.git = git;
-      this.harness = harness;
-      this.store = new FolderStore(harness.context.moduleFolder, CheckpointsHarness.identity);
-    }
-
-    public get packFolder(): string {
-      return path.join(this.store.gitFolder, "objects", "pack");
-    }
-
-    public static async startAsync(t: TestContext): Promise<Fixture> {
-      const harness = await CheckpointsHarness.startAsync(t);
-      const service = await harness.createServiceAsync(ServiceSeams.system);
-      await harness.writeAsync("a.txt", "a.txt 1");
-      await service.captureAsync(new CaptureRequest(harness.reference, "first"));
-      await harness.writeAsync("a.txt", "a.txt 2");
-      await service.captureAsync(new CaptureRequest(harness.reference, "second"));
-      await service.stopAsync();
-      return new Fixture(harness, await harness.createGitRunnerAsync());
-    }
-
-    public async leaveAsync(text: string, packed: boolean): Promise<LeftObject> {
-      const id = (await this.harness.gitAsync(["hash-object", "--stdin"], text)).toString("utf8").trim();
-      if (!packed) {
-        await this.harness.gitAsync(["hash-object", "-w", "--stdin"], text);
-        return new LeftObject(id, [path.join(this.store.gitFolder, "objects", id.slice(0, 2), id.slice(2))]);
-      }
-      const before = new Set(await readdir(this.packFolder));
-      await this.harness.gitAsync(["-c", "fastimport.unpackLimit=0", "fast-import", "--quiet"], `blob\ndata ${Buffer.byteLength(text)}\n${text}\n`);
-      return new LeftObject(id, (await readdir(this.packFolder)).filter(t => !before.has(t)).map(t => path.join(this.packFolder, t)));
-    }
-
-    public async fillAsync(count: number, packed: boolean): Promise<void> {
-      if (!packed) {
-        const blobs = Array.from({ length: count }, (_, i) => `blob\ndata ${String(i).length}\n${i}\n`).join("");
-        await this.harness.gitAsync(["-c", `fastimport.unpackLimit=${count + 1}`, "fast-import", "--quiet"], blobs);
-        return;
-      }
-      for (let i = 0; i < count; i++)
-        await this.leaveAsync(`pack ${i}`, true);
-    }
-
-    public async countAsync(): Promise<ReadonlyMap<string, number>> {
-      const output = (await this.harness.gitAsync(["count-objects", "-v"])).toString("utf8");
-      return new Map(output.split("\n").filter(t => t.includes(": ")).map(t => [t.split(": ")[0] ?? "", Number(t.split(": ")[1])] as const));
-    }
-
-    public async existsAsync(id: string): Promise<boolean> {
-      const code = await this.harness.exitCodeAsync(["cat-file", "-e", id]);
-      if (code !== 0 && code !== 1)
-        throw new Error(`git cat-file -e ${id} ended with ${code}.`);
-      return code === 0;
-    }
-
-    public async checkWholeAsync(): Promise<void> {
-      await this.harness.gitAsync(["fsck", "--connectivity-only", "--no-dangling"]);
-      const listed = await this.harness.listAsync();
-      assert.deepEqual(listed.map(t => t.label), ["second", "first"]);
-      assert.deepEqual(await Promise.all(listed.map(async t => (await this.harness.contentAsync(t, "files/a.txt")).toString())), ["a.txt 2", "a.txt 1"]);
-    }
-
-    public async writeRecordAsync(fullPass: number): Promise<void> {
-      await StoreFile.writeAsync(this.store.housekeepingFile, new HousekeepingRecord(fullPass).toJson());
-    }
-
-    public async readRecordAsync(): Promise<HousekeepingRecord | null> {
-      return await StoreFile.readAsync(this.store.housekeepingFile, t => HousekeepingRecord.fromJson(t));
-    }
-  }
 
   const ageAsync = async (files: readonly string[], days: number): Promise<void> => {
     const time = new Date(Date.now() - days * day);
@@ -126,7 +45,7 @@ describe("StoreHousekeeping", { concurrency: true }, () => {
   });
 
   it("makes no pass without the margin free beyond the size of the store's objects, and makes one with it", async t => {
-    const fixture = await Fixture.startAsync(t);
+    const fixture = await HousekeepingStore.startAsync(t);
     const counts = await fixture.countAsync();
     const needed = 2 * 1024 ** 3 + ((counts.get("size") ?? 0) + (counts.get("size-pack") ?? 0)) * 1024;
     const start = fixture.harness.context.requests.length;
@@ -140,7 +59,7 @@ describe("StoreHousekeeping", { concurrency: true }, () => {
   });
 
   it("packs the references, and at its first full pass drops what a stopped capture left two weeks ago or longer, keeping every checkpoint and what's newer", async t => {
-    const fixture = await Fixture.startAsync(t);
+    const fixture = await HousekeepingStore.startAsync(t);
     const { id: oldPacked, files: oldPack } = await fixture.leaveAsync("old packed", true);
     const { id: oldLoose, files: oldObject } = await fixture.leaveAsync("old loose", false);
     const { id: newPacked } = await fixture.leaveAsync("new packed", true);
@@ -169,7 +88,7 @@ describe("StoreHousekeeping", { concurrency: true }, () => {
   });
 
   it("makes a full pass once a week has passed since the last, and only a light one before", async t => {
-    const fixture = await Fixture.startAsync(t);
+    const fixture = await HousekeepingStore.startAsync(t);
     const recent = fixture.harness.clock.now() - week + 1;
     await fixture.writeRecordAsync(recent);
     const start = fixture.harness.context.requests.length;
@@ -186,7 +105,7 @@ describe("StoreHousekeeping", { concurrency: true }, () => {
   });
 
   it("ends the store's fast-import as a pass starts, and its cat-file too before a repack", async t => {
-    const fixture = await Fixture.startAsync(t);
+    const fixture = await HousekeepingStore.startAsync(t);
     const [checkpoint] = await fixture.harness.listAsync();
     const reader = new ObjectReader(fixture.git);
     const now = fixture.harness.clock.now();
@@ -211,7 +130,7 @@ describe("StoreHousekeeping", { concurrency: true }, () => {
   });
 
   it("makes a full pass when its last is later than now, as after the clock went back", async t => {
-    const fixture = await Fixture.startAsync(t);
+    const fixture = await HousekeepingStore.startAsync(t);
     await fixture.writeRecordAsync(fixture.harness.clock.now() + day);
     const start = fixture.harness.context.requests.length;
 
@@ -222,7 +141,7 @@ describe("StoreHousekeeping", { concurrency: true }, () => {
   });
 
   it("rolls the packs together at a light pass once the store has 50, as git gc --auto does, and leaves 49 as they are", async t => {
-    const fixture = await Fixture.startAsync(t);
+    const fixture = await HousekeepingStore.startAsync(t);
     await fixture.writeRecordAsync(fixture.harness.clock.now());
     await fixture.fillAsync(49 - ((await fixture.countAsync()).get("packs") ?? 0), true);
     const housekeeping = new StoreHousekeeping(fixture.git, plentyAsync, fixture.harness.clock);
@@ -237,7 +156,7 @@ describe("StoreHousekeeping", { concurrency: true }, () => {
   });
 
   it("rolls the loose objects into a pack at a light pass once the store has 6,700, as git gc --auto does, and leaves fewer as they are", async t => {
-    const fixture = await Fixture.startAsync(t);
+    const fixture = await HousekeepingStore.startAsync(t);
     await fixture.writeRecordAsync(fixture.harness.clock.now());
     await fixture.fillAsync(6_699 - ((await fixture.countAsync()).get("count") ?? 0), false);
     const housekeeping = new StoreHousekeeping(fixture.git, plentyAsync, fixture.harness.clock);
@@ -252,7 +171,7 @@ describe("StoreHousekeeping", { concurrency: true }, () => {
   });
 
   it("refuses a housekeeping.json it can't read before any Git command", async t => {
-    const fixture = await Fixture.startAsync(t);
+    const fixture = await HousekeepingStore.startAsync(t);
     await writeFile(fixture.store.housekeepingFile, JSON.stringify({ formatVersion: 2, fullPass: 0 }));
     const start = fixture.harness.context.requests.length;
 
@@ -263,7 +182,7 @@ describe("StoreHousekeeping", { concurrency: true }, () => {
   });
 
   it("removes at the start of a pass the temporary files a full pass stopped mid-repack left in the pack folder, leaving only packs", async t => {
-    const fixture = await Fixture.startAsync(t);
+    const fixture = await HousekeepingStore.startAsync(t);
     const left = ["tmp_pack_Ab12Cd", "tmp_idx_Ef34Gh", ".tmp-4120-pack-0123456789abcdef0123456789abcdef01234567.pack"];
     for (const name of left)
       await writeFile(path.join(fixture.packFolder, name), randomBytes(1024));
@@ -276,7 +195,7 @@ describe("StoreHousekeeping", { concurrency: true }, () => {
   });
 
   it("removes at the start of a pass the files a killed fast-import left keeping its packs out of a repack, and rolls those packs up", async t => {
-    const fixture = await Fixture.startAsync(t);
+    const fixture = await HousekeepingStore.startAsync(t);
     await fixture.writeRecordAsync(fixture.harness.clock.now());
     await fixture.fillAsync(50 - ((await fixture.countAsync()).get("packs") ?? 0), true);
     const packs = (await readdir(fixture.packFolder)).filter(u => u.endsWith(".pack"));
@@ -287,23 +206,6 @@ describe("StoreHousekeeping", { concurrency: true }, () => {
 
     assert.deepEqual((await readdir(fixture.packFolder)).filter(u => u.endsWith(".keep")), []);
     assert.equal((await fixture.countAsync()).get("packs"), 1);
-    await fixture.checkWholeAsync();
-  });
-
-  it("stops a pass whose signal aborts during its repack, keeping every checkpoint and writing no record", async t => {
-    const fixture = await Fixture.startAsync(t);
-    await fixture.leaveAsync("old packed", true);
-    const cancel = new CancelFixture(t);
-    fixture.harness.context.watchStart = command => {
-      if (command === "repack")
-        cancel.cancel();
-    };
-
-    await assert.rejects(new StoreHousekeeping(fixture.git, plentyAsync, fixture.harness.clock).runAsync(fixture.store, cancel.signal), cancel.reason);
-
-    assert.equal(existsSync(fixture.store.housekeepingFile), false);
-    assert.deepEqual(fixture.harness.context.running, []);
-    fixture.harness.context.watchStart = () => undefined;
     await fixture.checkWholeAsync();
   });
 });

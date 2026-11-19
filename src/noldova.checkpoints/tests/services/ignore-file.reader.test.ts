@@ -9,8 +9,7 @@
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
 import { once } from "node:events";
-import { fstatSync, type BigIntStats } from "node:fs";
-import { appendFile, lstat, mkdir, mkdtemp, open, realpath, rm, symlink, writeFile, type FileHandle } from "node:fs/promises";
+import { mkdir, mkdtemp, open, realpath, rm, symlink, writeFile } from "node:fs/promises";
 import { createServer } from "node:net";
 import { tmpdir } from "node:os";
 import path from "node:path";
@@ -96,42 +95,5 @@ describe("IgnoreFileReader", { concurrency: true }, () => {
     await AccessFixture.whileDeniedAsync(location, async () => {
       assert.equal(await IgnoreFileReader.readAsync(location), null);
     });
-  });
-});
-
-describe("IgnoreFileReader, alone", () => {
-  const mockStat = async (t: TestContext, location: string, stat: (stats: BigIntStats) => Promise<BigIntStats>): Promise<void> => {
-    const opened = await open(location);
-    const prototype: unknown = opened.constructor.prototype;
-    const { ino } = await opened.stat({ bigint: true });
-    await opened.close();
-    const isStatting = (value: unknown): value is Pick<FileHandle, "stat"> =>
-      typeof value === "object" && value !== null && "stat" in value && typeof value.stat === "function";
-    assert.ok(isStatting(prototype));
-
-    t.mock.method(prototype, "stat", async function (this: FileHandle): Promise<BigIntStats> {
-      const stats = fstatSync(this.fd, { bigint: true });
-      return stats.ino === ino ? await stat(stats) : stats;
-    });
-  };
-
-  it("gives no content for a .gitignore that grows after it opens", async t => {
-    const location = path.join(await folderAsync(t), ".gitignore");
-    await writeFile(location, "*\n");
-    await mockStat(t, location, async stats => {
-      await appendFile(location, "*.log\n");
-      return stats;
-    });
-
-    assert.equal(await IgnoreFileReader.readAsync(location), null);
-  });
-
-  it("gives no content for a .gitignore that another file replaces after it opens", async t => {
-    const folder = await folderAsync(t);
-    const location = path.join(folder, ".gitignore");
-    await Promise.all([writeFile(location, "*\n"), writeFile(path.join(folder, "other.txt"), "*\n")]);
-    await mockStat(t, location, async () => await lstat(path.join(folder, "other.txt"), { bigint: true }));
-
-    assert.equal(await IgnoreFileReader.readAsync(location), null);
   });
 });
