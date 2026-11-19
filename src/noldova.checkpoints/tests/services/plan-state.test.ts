@@ -34,7 +34,7 @@ describe("PlanState", { concurrency: true }, () => {
   const walkOf = (ids: ReadonlyMap<string, string>): WalkResult => {
     const walk = new WalkResult(null);
     for (const [folder, id] of ids)
-      walk.addFolderId(folder, id);
+      walk.addFolder(folder, id, 0n);
     return walk;
   };
   const base: Inputs = { path: "a/b.txt", kind: EntryKind.File, objectId: "a".repeat(40), size: 1, fileId: "1:10", rootId: "1:1", folderId: "1:2" };

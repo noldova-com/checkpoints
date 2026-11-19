@@ -54,7 +54,7 @@ describe("RestorePlan", { concurrency: true }, () => {
     const copied = new RestorePlan(id, steps, [], 2, 3, state, null, given);
     given.length = 0;
 
-    assert.deepEqual(earlier.toJson().earlierPaths, ["b.txt"]);
+    assert.deepEqual(earlier.toJson()["earlierPaths"], ["b.txt"]);
     assert.deepEqual(RestorePlan.fromJson(earlier.toJson()), earlier);
     assert.deepEqual([plan.earlierPaths, copied.earlierPaths], [[], ["a.txt"]]);
   });
