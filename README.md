@@ -112,7 +112,8 @@ Every pull request into `main` must pass "Check / Linked issue" and "Build and t
   A type-check may take 5 minutes and `npm ci` 10.
   A process past its time is stopped with its descendants, and the run fails when it hasn't ended 10 seconds later.
   The tests write their temporary folders under `_build/test-temp`, which the run gives them as `TMPDIR`, `TEMP` and `TMP`.
-  The tests create symbolic links and fail, saying so, where the system won't let them, so on Windows a machine that runs them needs Developer Mode on, as every CI target allows links; the path a system without links takes is reached through a folder the system refuses the link in.
+  Each test file that creates symbolic links first tries one, through `tests/fixtures/link.fixture.ts`; where the system won't let the process create them, as on Windows without Developer Mode, the tests that create one are skipped, saying so, and those that check the module's answer without links run, such as a restore keeping a link as `LinkUnsupported`.
+  Every CI target allows links, and the path a system without links takes is also reached there, through a folder the system refuses the link in; a whole run without links leaves the code that places links uncovered, so its coverage check needs a system that allows them.
   Beside the console's report, the run writes each test's file, name, time and skip to `_build/test-results.jsonl`, the name after its suites' names, each followed by ` > `, and it fails when a test is skipped without a reason or when a file holds two tests of the same name in the same suite.
   After the tests, a whole run reads `documents/ARCHITECTURE.md`'s "Tests:" lines beside those results, through `scripts/services/test-citation-check.ts`, and fails naming each line not written on one line as double-quoted names joined by `; ` and ending in a full stop, and each cited name that is no test's name after its last ` > `; a filtered run skips it, since its results hold only the tests it ran.
   It names each test file whose tests took over 1 second together, the budget for a unit test file, but doesn't fail for it, since one run's time is too noisy to gate on; a file's time is the sum of its top-level tests' and suites' times.
@@ -120,6 +121,7 @@ Every pull request into `main` must pass "Check / Linked issue" and "Build and t
   The maintainer accepted the files below, which are over the budget because they run real Git on real folders or, for two of them, only from the load of a whole run: each is in `acceptedSlowTestFiles` in `scripts/resources.ts` as `src/noldova.checkpoints/tests/` followed by its path below, so a run doesn't name it and the time check passes for it.
   Another file over the budget joins that list only once the maintainer accepts it.
   Each time is the file's time in one whole `npm test` run on each platform; "< 1 s" is within the budget there.
+  "not measured" marks a file accepted after CI last printed its macOS (ARM64) time: no test machine runs macOS on ARM64, and CI prints no accepted file's time.
 
   | File, under `src/noldova.checkpoints/tests/` | Windows (x64) | Linux (x64) | macOS (x64) | macOS (ARM64) | Why |
   |---|---|---|---|---|---|
@@ -138,15 +140,19 @@ Every pull request into `main` must pass "Check / Linked issue" and "Build and t
   | `services/restore-rollback.test.ts` | 7.6 s | 1.6 s | 20.9 s | 3.4 s | Rolls back restores on real folders, staging the checkpoint's files through real Git. |
   | `services/object.reader.test.ts` | 5.6 s | 2.4 s | 18.9 s | 3.2 s | Reads objects, a large one among them, from real stores through cat-file. |
   | `services/restore-scope.test.ts` | 8.6 s | 2.6 s | 16.4 s | 2.3 s | Plans restores limited to listed paths, from checkpoints captured through real Git. |
+  | `services/restore-runner.aside-changed.test.ts` | 4.1 s | 1.2 s | 10.0 s | not measured | A whole restore on a real Git store whose moved-aside folder gains a file while it is walked again, in a process of its own for its `readdir` mock. |
+  | `services/restore-runner.aside-gone.test.ts` | 4.3 s | 1.5 s | 9.7 s | not measured | A whole restore on a real Git store whose moved-aside folder is gone when it is walked again, in a process of its own for its `readdir` mock. |
   | `services/side-loader.test.ts` | 4.9 s | 1.4 s | 8.8 s | 1.6 s | Reads both sides of changes from real stores and real folders. |
   | `services/restore-applier.test.ts` | < 1 s | < 1 s | 8.0 s | 1.0 s | Moves, places and removes real files and folders, flushing each journal record to disk. |
   | `services/restore-runner.retries.test.ts` | 3.9 s | < 1 s | 6.9 s | 1.6 s | A whole restore on a real Git store, in a process of its own for its mock timers. |
   | `services/tree-lister.test.ts` | 3.8 s | < 1 s | 6.8 s | 1.0 s | Lists checkpoint trees with diff-tree on real stores. |
   | `services/blob-stager.test.ts` | 2.4 s | < 1 s | 6.7 s | < 1 s | Stages a checkpoint's files from real stores through cat-file. |
+  | `services/restore-planner.deleted.test.ts` | 1.7 s | < 1 s | 4.7 s | not measured | Plans a restore of a checkpoint captured through real Git while a folder is deleted during the walk, in a process of its own for its `readdir` mock. |
   | `services/blob-batch.writer.test.ts` | 2.3 s | < 1 s | 4.4 s | < 1 s | Writes real files, executables and links from cat-file's output. |
   | `services/store-opener.test.ts` | 2.0 s | < 1 s | 4.2 s | < 1 s | Creates real bare repositories with the build's Git and writes their configuration. |
   | `services/change-describer.test.ts` | 1.5 s | < 1 s | 3.9 s | < 1 s | Describes changes by reading a real store's objects through cat-file. |
   | `resources.test.ts` | < 1 s | < 1 s | 2.9 s | < 1 s | Reads a store's configuration back through the build's Git. |
+  | `services/checkpoint-comparer.deleted.test.ts` | 1.6 s | < 1 s | 2.5 s | not measured | Compares a checkpoint captured through real Git while a folder is deleted during the walk, in a process of its own for its `readdir` mock. |
   | `services/restore-paths.test.ts` | < 1 s | < 1 s | 2.3 s | < 1 s | Places and rolls back real files, hard links and links. |
   | `services/folder-deleter.tries.test.ts` | < 1 s | < 1 s | 2.2 s | < 1 s | Removes real folders between tries, in a process of its own for its mock timers. |
   | `services/folder-walker.test.ts` | < 1 s | < 1 s | 2.1 s | < 1 s | Walks real folders with links, file modes and names the file system holds. |
@@ -167,6 +173,7 @@ Every pull request into `main` must pass "Check / Linked issue" and "Build and t
   No event marks either moment: neither step goes through a seam, and a seam added for these tests alone would be a test-only one.
   `fs.watch` loses events on macOS when FSEvents falls behind under load, and a check on every turn of the event loop would hold a core through the real repacks and prunes the housekeeping tests wait on.
   Two more files mirror no source file of their own: `checkpoints-host.delete.test.ts` holds `CheckpointsHost`'s storage listing and delete, whose tests write files of up to 64 MiB, and `restore-runner.interrupted.test.ts` holds `RestoreRunner`'s crash recovery, whose tests each stop a restore in a Node process of its own; each sits apart from its source's other tests so the runner runs it in a process of its own beside them.
+  Nine files patch `readdir`, through the mock below, so each holds one test in a file and process of its own: `folder-walker.listing.test.ts`, `folder-walker.walked.test.ts`, `folder-walker.deleted.test.ts` and `folder-walker.deleted-subfolder.test.ts` for the walk's folder times and a folder deleted during it, `checkpoint-capture.deleted.test.ts`, `checkpoint-comparer.deleted.test.ts` and `restore-planner.deleted.test.ts` for a folder deleted while a capture, a compare or a preview walks it, and `restore-runner.aside-gone.test.ts` and `restore-runner.aside-changed.test.ts` for a moved-aside folder gone, or changed, while a restore walks it again.
 - On Windows, `npm test` runs the tests through `scripts/without-backup-privileges.ps1`, which disables the backup and restore privileges on its own process token wherever the token holds them, then starts Node with the tests.
   An elevated account, as GitHub's Windows runners use, has those privileges enabled, and Node opens every file with backup semantics, so a test that denies the module a file or a folder would see it read anyway, as no person's app run without them would.
   Only the test run's own token changes: the machine, the account and the module's code stay as they are.
@@ -202,6 +209,8 @@ Every pull request into `main` must pass "Check / Linked issue" and "Build and t
   Those tests run in a describe of their own, after the others, since the mock sees every stat of its process; it changes no production code.
 - One mock of `isFile` on Node's bigint stats, reached through a stats object's class, in `folder-walker.test.ts`, tells the walker, for one file only, that it is no file, as a socket or a named pipe is, which Windows can't make in a folder; every other item gets its real kind, from its mode.
   That test runs in a describe of its own, after the others, since the mock sees every bigint stats object of its process; it changes no production code.
+- One mock of `readdir` on `node:fs`'s `promises`, in `tests/fixtures/listing.fixture.ts`, which `syncBuiltinESMExports` passes to the module's import from `node:fs/promises`, changes the folder just before the module lists a chosen folder, deleting it, a file in it or the folder above, or adding to it, then lists it for real, as another program can while the module walks, a gap the module does nothing in that a test could wait on; each moment acts once, the test fails when one never comes, and every other listing is the real one.
+  Each test that uses it is in a file of its own, since the mock sees every listing of its process; it changes no production code.
 - One spy on Noldova Desktop's `OwnedProcess.stopAsync`, through `mock.method` with no implementation of its own, so the real method runs, in `git-runner.test.ts` and `git-process.test.ts`, counts the stops that cat-file's idle limit and the wait for a command's end ask for: asking for the stop is what the limit changes at once, while the process exits later, so a test checks the count a millisecond before the limit and at it; it changes no production code.
 - One test gives a rollback, through the stager `RestoreRollback`'s constructor takes, a `BlobStager` that stages for real and then removes the staged files, `RemovedOnceStaged` in `restore-rollback.test.ts`: it stands in for another program that removes them between the staging and the rollback, a gap the module does nothing in that a test could wait on.
 - `.github/workflows/build-and-test.yml` calls the organization's shared `build-and-test.yml`, v2.34.0, with `publishes: true`, on GitHub-hosted runners, as the `.github` repository's README describes it.

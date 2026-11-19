@@ -43,6 +43,6 @@ export class CheckpointComparer {
       return (await this.loader.loadCheckpointAsync(store, request.to, signal))?.listing ?? CompareOutcome.CheckpointMissing;
     if (!await Failures.recoverAsync(stat(request.folder.path).then(t => t.isDirectory()), t => Failures.isAbsent(t), false))
       return CompareOutcome.FolderMissing;
-    return await this.loader.loadFolderAsync(store, request.folder.path, mode, signal);
+    return await this.loader.loadFolderAsync(store, request.folder.path, mode, signal) ?? CompareOutcome.FolderMissing;
   }
 }

@@ -71,6 +71,30 @@ export declare class CaptureCheckpointMismatchException extends ProtocolExceptio
 }
 
 /**
+ * Thrown when a capture result holds the content size and its limit other than exactly when its outcome is TooLarge.
+ */
+export declare class CaptureContentMismatchException extends ProtocolException {
+  /**
+   * The outcome the result was given.
+   */
+  public readonly outcome: CaptureOutcome;
+
+  /**
+   * Formats the exception's message from its facts.
+   *
+   * @param outcome The outcome the result was given.
+   * @example
+   * ```ts
+   * import { CaptureContentMismatchException, CaptureOutcome } from "@noldova/checkpoints.protocol";
+   *
+   * const exception = new CaptureContentMismatchException(CaptureOutcome.Captured);
+   * console.log(exception.message, exception.outcome);
+   * ```
+   */
+  public constructor(outcome: CaptureOutcome);
+}
+
+/**
  * Thrown when a capture result holds the space free and the space needed other than exactly when its outcome is LowDiskSpace.
  */
 export declare class CaptureSpaceMismatchException extends ProtocolException {
@@ -140,6 +164,30 @@ export declare class CompareChangesMismatchException extends ProtocolException {
    * ```
    */
   public constructor(outcome: CompareOutcome);
+}
+
+/**
+ * Thrown when a restore plan names an earlier path that none of its steps writes, or names one twice.
+ */
+export declare class EarlierPathsMismatchException extends ProtocolException {
+  /**
+   * The earlier path the plan refused.
+   */
+  public readonly path: string;
+
+  /**
+   * Formats the exception's message from its facts.
+   *
+   * @param path The earlier path the plan refused.
+   * @example
+   * ```ts
+   * import { EarlierPathsMismatchException } from "@noldova/checkpoints.protocol";
+   *
+   * const exception = new EarlierPathsMismatchException("src/a.txt");
+   * console.log(exception.message, exception.path);
+   * ```
+   */
+  public constructor(path: string);
 }
 
 /**
@@ -513,6 +561,30 @@ export declare class RestoreCheckpointsMismatchException extends ProtocolExcepti
    * import { RestoreCheckpointsMismatchException, RestoreOutcome } from "@noldova/checkpoints.protocol";
    *
    * const exception = new RestoreCheckpointsMismatchException(RestoreOutcome.MovedOn);
+   * console.log(exception.message, exception.outcome);
+   * ```
+   */
+  public constructor(outcome: RestoreOutcome);
+}
+
+/**
+ * Thrown when a restore result holds the content size and its limit other than exactly when its outcome is TooLarge.
+ */
+export declare class RestoreContentMismatchException extends ProtocolException {
+  /**
+   * The outcome the result was given.
+   */
+  public readonly outcome: RestoreOutcome;
+
+  /**
+   * Formats the exception's message from its facts.
+   *
+   * @param outcome The outcome the result was given.
+   * @example
+   * ```ts
+   * import { RestoreContentMismatchException, RestoreOutcome } from "@noldova/checkpoints.protocol";
+   *
+   * const exception = new RestoreContentMismatchException(RestoreOutcome.MovedOn);
    * console.log(exception.message, exception.outcome);
    * ```
    */
@@ -961,7 +1033,7 @@ export declare class CaptureOutcome {
   public static readonly Captured: CaptureOutcome;
 
   /**
-   * The folder's path is missing, so no checkpoint was taken; a missing folder is never captured as empty.
+   * The folder's path is missing, or the folder was deleted or renamed while it was walked, so no checkpoint was taken; a missing folder is never captured as empty.
    */
   public static readonly FolderMissing: CaptureOutcome;
 
@@ -975,6 +1047,12 @@ export declare class CaptureOutcome {
    * checkpoint was taken; the result says the space free and the space needed.
    */
   public static readonly LowDiskSpace: CaptureOutcome;
+
+  /**
+   * The new and changed content the checkpoint would write is over 1 GiB, so no checkpoint was taken; the result says the content's size
+   * and the limit. Nothing was written.
+   */
+  public static readonly TooLarge: CaptureOutcome;
 
   /**
    * Whether the capture took a checkpoint.
@@ -1033,6 +1111,11 @@ export declare class UnreadReason {
    * The name isn't valid Unicode, so the API can't name it; the path is shown with replacement characters.
    */
   public static readonly InvalidName: UnreadReason;
+
+  /**
+   * The file is over 10 MiB, more than a checkpoint keeps, so its content isn't read or kept; a restore leaves it as it is.
+   */
+  public static readonly TooLarge: UnreadReason;
 
   /**
    * The system gave an error reading the path that is about this one path only, such as a name too long for it, a network share that timed out,
@@ -1287,6 +1370,17 @@ export declare class CaptureRequest {
   public static readonly method: string;
 
   /**
+   * The time the checkpoint stands for, such as when an agent's turn started, or `null` for the folder as the capture reads it. A file
+   * whose modification or change time is at or after it, less 2 seconds for file systems that keep times to 2 seconds, isn't read, nor is
+   * one gone, rewritten or retargeted by the time it's read, nor one gone from a folder changed at or after it, nor one replaced by such a
+   * folder: the checkpoint keeps the earlier checkpoint's copy,
+   * or leaves the file out when that has none. So a capture taken beside the turn, which finishes after the turn changed files, keeps
+   * the folder as the turn began, but for a file changed both since the earlier checkpoint and as the turn began, which it keeps as the
+   * earlier checkpoint had it.
+   */
+  public readonly asOf: Date | null;
+
+  /**
    * The folder to take a checkpoint of.
    */
   public readonly folder: FolderReference;
@@ -1299,7 +1393,9 @@ export declare class CaptureRequest {
   /**
    * @param folder The folder to take a checkpoint of.
    * @param label The label to attach, of up to 1,024 characters, or `null`.
-   * @throws {ProtocolException} Thrown synchronously when the label is longer than 1,024 characters.
+   * @param asOf The time the checkpoint stands for, or `null`, the default, for the folder as the capture reads it; the request keeps a
+   * copy.
+   * @throws {ProtocolException} Thrown synchronously when the label is longer than 1,024 characters, or the time is no date.
    * @example
    * ```ts
    * import { CaptureRequest, FolderReference } from "@noldova/checkpoints.protocol";
@@ -1308,7 +1404,7 @@ export declare class CaptureRequest {
    * console.log(CaptureRequest.method, request.toJson());
    * ```
    */
-  public constructor(folder: FolderReference, label: string | null);
+  public constructor(folder: FolderReference, label: string | null, asOf?: Date | null);
 
   /**
    * Reads a request from its wire form.
@@ -1322,7 +1418,7 @@ export declare class CaptureRequest {
    * import { CaptureRequest } from "@noldova/checkpoints.protocol";
    *
    * const folderJson = { identity: "project-1", path: "/work/project" };
-   * const request = CaptureRequest.fromJson({ folder: folderJson, label: null });
+   * const request = CaptureRequest.fromJson({ folder: folderJson, label: null, asOf: "2026-11-19T03:30:00.000Z" });
    * console.log(request.label);
    * ```
    */
@@ -1344,13 +1440,23 @@ export declare class CaptureRequest {
 
 /**
  * What a capture did: the checkpoint it took, or why it took none, with the space free and the space needed when it took none for want
- * of space.
+ * of space, and the content's size and its limit when it took none for having too much to write.
  */
 export declare class CaptureResult {
   /**
    * The checkpoint taken, or `null` when none was.
    */
   public readonly checkpoint: Checkpoint | null;
+
+  /**
+   * The most new and changed content a checkpoint writes, 1 GiB, when the outcome is `TooLarge`, or `null`.
+   */
+  public readonly contentLimit: number | null;
+
+  /**
+   * The bytes of new and changed content the checkpoint would have written, when the outcome is `TooLarge`, or `null`.
+   */
+  public readonly contentSize: number | null;
 
   /**
    * Whether the capture took a checkpoint.
@@ -1372,8 +1478,10 @@ export declare class CaptureResult {
    * @param checkpoint The checkpoint taken, or `null` when none was.
    * @param spaceFree The bytes free, when the outcome is `LowDiskSpace`, or `null`.
    * @param spaceNeeded The bytes needed, when the outcome is `LowDiskSpace`, or `null`.
-   * @throws {ProtocolException} Thrown synchronously when the outcome and the checkpoint or the space disagree, or a size isn't a whole
-   * number of bytes.
+   * @param contentSize The bytes of content to write, when the outcome is `TooLarge`, or `null`, the default.
+   * @param contentLimit The content limit in bytes, when the outcome is `TooLarge`, or `null`, the default.
+   * @throws {ProtocolException} Thrown synchronously when the outcome and the checkpoint, the space or the content disagree, or a size
+   * isn't a whole number of bytes.
    * @example
    * ```ts
    * import { CaptureOutcome, CaptureResult } from "@noldova/checkpoints.protocol";
@@ -1382,7 +1490,9 @@ export declare class CaptureResult {
    * console.log(result.spaceNeeded);
    * ```
    */
-  public constructor(outcome: CaptureOutcome, checkpoint: Checkpoint | null, spaceFree: number | null, spaceNeeded: number | null);
+  public constructor(
+    outcome: CaptureOutcome, checkpoint: Checkpoint | null, spaceFree: number | null, spaceNeeded: number | null, contentSize?: number | null,
+    contentLimit?: number | null);
 
   /**
    * Reads a result from its wire form.
@@ -1395,7 +1505,9 @@ export declare class CaptureResult {
    * ```ts
    * import { CaptureResult } from "@noldova/checkpoints.protocol";
    *
-   * const result = CaptureResult.fromJson({ outcome: "FolderMissing", checkpoint: null, spaceFree: null, spaceNeeded: null });
+   * const result = CaptureResult.fromJson({
+   *   outcome: "FolderMissing", checkpoint: null, spaceFree: null, spaceNeeded: null, contentSize: null, contentLimit: null
+   * });
    * console.log(result.outcome.isCaptured);
    * ```
    */
@@ -1797,7 +1909,7 @@ export declare class CompareOutcome {
   public static readonly Compared: CompareOutcome;
 
   /**
-   * The comparison was with the folder now, and the folder's path is missing; a missing folder is never compared as empty.
+   * The comparison was with the folder now, and the folder's path is missing, or the folder was deleted or renamed while it was walked; a missing folder is never compared as empty.
    */
   public static readonly FolderMissing: CompareOutcome;
 
@@ -2351,6 +2463,11 @@ export declare class KeepReason {
   public static readonly LinkUnsupported: KeepReason;
 
   /**
+   * The checkpoint didn't keep the file, since it was over 10 MiB when the checkpoint was taken.
+   */
+  public static readonly TooLarge: KeepReason;
+
+  /**
    * The reason's wire value.
    */
   public readonly value: string;
@@ -2528,6 +2645,13 @@ export declare class RestorePlan {
   public readonly checkpoint: string;
 
   /**
+   * The paths among the steps' that the restore writes as the earlier checkpoint had them, since they changed as the checkpoint's time
+   * began, in their paths' byte order; such a file, if the person also changed it since the earlier checkpoint, comes back as it was
+   * then rather than as the checkpoint's time found it.
+   */
+  public readonly earlierPaths: readonly string[];
+
+  /**
    * The paths the restore is limited to, as its preview asked, or `null` for the whole folder; the restore plans again with them. The
    * wire form always holds the paths, as `null` for the whole folder, and a wire form without them is refused.
    */
@@ -2562,8 +2686,10 @@ export declare class RestorePlan {
    * @param spaceNeeded The free space in bytes the restore needs.
    * @param state The SHA-256 of the folder's state when planned.
    * @param paths The paths the restore is limited to, or `null` for the whole folder.
+   * @param earlierPaths The steps' paths that the restore writes as the earlier checkpoint had them; none by default.
    * @throws {ProtocolException} Thrown synchronously when the id isn't a lowercase UUID version 7, a size isn't a whole number of 0 or
-   * more, the state isn't a lowercase SHA-256 in hexadecimal, or a path has an empty name, "." or "..", or holds "\" on any system.
+   * more, the state isn't a lowercase SHA-256 in hexadecimal, a path has an empty name, "." or "..", or holds "\" on any system, or an
+   * earlier path is no step's or is named twice.
    * @example
    * ```ts
    * import { KeepReason, KeptPath, RestorePlan } from "@noldova/checkpoints.protocol";
@@ -2576,7 +2702,7 @@ export declare class RestorePlan {
    */
   public constructor(
     checkpoint: string, steps: readonly RestoreStep[], stays: readonly KeptPath[], bytesToWrite: number, spaceNeeded: number, state: string,
-    paths: readonly string[] | null);
+    paths: readonly string[] | null, earlierPaths?: readonly string[]);
 
   /**
    * Reads a plan from its wire form.
@@ -2591,7 +2717,9 @@ export declare class RestorePlan {
    *
    * const id = "01928f6e-7a3b-7c4d-8e5f-0a1b2c3d4e5f";
    * const state = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
-   * const plan = RestorePlan.fromJson({ checkpoint: id, steps: [], stays: [], bytesToWrite: 0, spaceNeeded: 0, state, paths: ["src"] });
+   * const plan = RestorePlan.fromJson({
+   *   checkpoint: id, steps: [], stays: [], bytesToWrite: 0, spaceNeeded: 0, state, paths: ["src"], earlierPaths: []
+   * });
    * console.log(plan.paths);
    * ```
    */
@@ -2627,7 +2755,7 @@ export declare class PreviewOutcome {
   public static readonly CheckpointMissing: PreviewOutcome;
 
   /**
-   * The folder's path is missing.
+   * The folder's path is missing, or the folder was deleted or renamed while it was walked.
    */
   public static readonly FolderMissing: PreviewOutcome;
 
@@ -2835,7 +2963,7 @@ export declare class RestoreOutcome {
   public static readonly CheckpointMissing: RestoreOutcome;
 
   /**
-   * The folder's path is missing.
+   * The folder's path is missing, or the folder was deleted or renamed while it was walked; nothing was restored.
    */
   public static readonly FolderMissing: RestoreOutcome;
 
@@ -2854,6 +2982,12 @@ export declare class RestoreOutcome {
    * failed.
    */
   public static readonly RolledBack: RestoreOutcome;
+
+  /**
+   * The checkpoint taken before the restore would write over 1 GiB of new and changed content, so it wasn't taken and nothing was
+   * changed; the result gives that size and the limit.
+   */
+  public static readonly TooLarge: RestoreOutcome;
 
   /**
    * Whether the restore finished.
@@ -2943,7 +3077,7 @@ export declare class RestoreRequest {
    * const id = "01928f6e-7a3b-7c4d-8e5f-0a1b2c3d4e5f";
    * const state = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
    * const folderJson = { identity: "project-1", path: "/work/project" };
-   * const request = RestoreRequest.fromJson({ folder: folderJson, plan: { checkpoint: id, steps: [], stays: [], bytesToWrite: 0, spaceNeeded: 0, state, paths: null } });
+   * const request = RestoreRequest.fromJson({ folder: folderJson, plan: { checkpoint: id, steps: [], stays: [], bytesToWrite: 0, spaceNeeded: 0, state, paths: null, earlierPaths: [] } });
    * console.log(request.plan.checkpoint);
    * ```
    */
@@ -2977,6 +3111,17 @@ export declare class RestoreResult {
   public readonly before: Checkpoint | null;
 
   /**
+   * The most new and changed content a checkpoint writes, 1 GiB, when the outcome is {@link RestoreOutcome.TooLarge}, or `null`.
+   */
+  public readonly contentLimit: number | null;
+
+  /**
+   * The bytes of new and changed content the checkpoint taken before the restore would have written, when the outcome is
+   * {@link RestoreOutcome.TooLarge}, or `null`.
+   */
+  public readonly contentSize: number | null;
+
+  /**
    * Whether the restore finished.
    */
   public readonly outcome: RestoreOutcome;
@@ -2991,8 +3136,11 @@ export declare class RestoreResult {
    * @param outcome Whether the restore finished.
    * @param before The checkpoint taken before the restore, or `null`.
    * @param recovered The checkpoint that keeps what another program wrote, or `null`.
+   * @param contentSize The bytes of content to write, when the outcome is {@link RestoreOutcome.TooLarge}, or `null`, the default.
+   * @param contentLimit The content limit in bytes, when the outcome is {@link RestoreOutcome.TooLarge}, or `null`, the default.
    * @throws {ProtocolException} Thrown synchronously when the result holds a checkpoint before other than exactly when its outcome is
-   * {@link RestoreOutcome.Restored} or {@link RestoreOutcome.RolledBack}, or a recovered one when it isn't Restored.
+   * {@link RestoreOutcome.Restored} or {@link RestoreOutcome.RolledBack}, a recovered one when it isn't Restored, or the content size
+   * and its limit other than exactly when it is TooLarge, or a size isn't a whole number of bytes.
    * @example
    * ```ts
    * import { RestoreOutcome, RestoreResult } from "@noldova/checkpoints.protocol";
@@ -3001,7 +3149,7 @@ export declare class RestoreResult {
    * console.log(result.outcome.isRestored);
    * ```
    */
-  public constructor(outcome: RestoreOutcome, before: Checkpoint | null, recovered: Checkpoint | null);
+  public constructor(outcome: RestoreOutcome, before: Checkpoint | null, recovered: Checkpoint | null, contentSize?: number | null, contentLimit?: number | null);
 
   /**
    * Reads a result from its wire form.
@@ -3014,7 +3162,7 @@ export declare class RestoreResult {
    * ```ts
    * import { RestoreResult } from "@noldova/checkpoints.protocol";
    *
-   * const result = RestoreResult.fromJson({ outcome: "HeldUp", before: null, recovered: null });
+   * const result = RestoreResult.fromJson({ outcome: "HeldUp", before: null, recovered: null, contentSize: null, contentLimit: null });
    * console.log(result.before);
    * ```
    */

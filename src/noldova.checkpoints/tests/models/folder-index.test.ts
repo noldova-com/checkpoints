@@ -30,6 +30,14 @@ describe("FolderIndex", { concurrency: true }, () => {
     assert.equal(index.findUnchanged(walked("a.txt", 7n * second))?.objectId, objectId);
   });
 
+  it("finds the entry it holds for a path, changed or not, and none for a path it doesn't know", () => {
+    const index = new FolderIndex(10n * second, [IndexEntry.of(walked("a.txt", 9n * second), objectId)]);
+
+    assert.equal(index.find("a.txt")?.objectId, objectId);
+    assert.equal(index.find("b.txt"), null);
+    assert.equal(FolderIndex.Empty.find("a.txt"), null);
+  });
+
   it("vouches for no file it doesn't know, nor one written within two seconds of the last capture's start", () => {
     const index = new FolderIndex(10n * second, [IndexEntry.of(walked("a.txt", 8n * second), objectId)]);
 

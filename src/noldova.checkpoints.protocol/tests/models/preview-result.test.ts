@@ -13,7 +13,7 @@ import { PreviewOutcome, PreviewPlanMismatchException, PreviewResult, RestorePla
 import { JsonException } from "@noldova/context.json";
 
 describe("PreviewResult", { concurrency: true }, () => {
-  const planJson = { checkpoint: "019a0b6c-7d1e-7f00-8abc-0123456789ab", steps: [], stays: [], bytesToWrite: 0, spaceNeeded: 0, state: "a".repeat(64), paths: null };
+  const planJson = { checkpoint: "019a0b6c-7d1e-7f00-8abc-0123456789ab", steps: [], stays: [], bytesToWrite: 0, spaceNeeded: 0, state: "a".repeat(64), paths: null, earlierPaths: [] };
   const plan = RestorePlan.fromJson(planJson);
 
   it("writes and reads a plan", () => {

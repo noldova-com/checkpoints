@@ -17,10 +17,12 @@ describe("CaptureOutcome", { concurrency: true }, () => {
     assert.deepEqual([CaptureOutcome.FolderMissing.toJson(), CaptureOutcome.FolderMissing.isCaptured], ["FolderMissing", false]);
     assert.deepEqual([CaptureOutcome.HeldUp.toJson(), CaptureOutcome.HeldUp.isCaptured], ["HeldUp", false]);
     assert.deepEqual([CaptureOutcome.LowDiskSpace.toJson(), CaptureOutcome.LowDiskSpace.isCaptured], ["LowDiskSpace", false]);
+    assert.deepEqual([CaptureOutcome.TooLarge.toJson(), CaptureOutcome.TooLarge.isCaptured], ["TooLarge", false]);
     assert.equal(CaptureOutcome.fromJson("Captured"), CaptureOutcome.Captured);
     assert.equal(CaptureOutcome.fromJson("FolderMissing"), CaptureOutcome.FolderMissing);
     assert.equal(CaptureOutcome.fromJson("HeldUp"), CaptureOutcome.HeldUp);
     assert.equal(CaptureOutcome.fromJson("LowDiskSpace"), CaptureOutcome.LowDiskSpace);
+    assert.equal(CaptureOutcome.fromJson("TooLarge"), CaptureOutcome.TooLarge);
   });
 
   it("refuses a name it doesn't know", () => {

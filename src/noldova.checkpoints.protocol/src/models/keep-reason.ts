@@ -14,7 +14,8 @@ export class KeepReason {
   public static readonly Ignored: KeepReason = new KeepReason("Ignored");
   public static readonly Unread: KeepReason = new KeepReason("Unread");
   public static readonly LinkUnsupported: KeepReason = new KeepReason("LinkUnsupported");
-  private static readonly ALL: readonly KeepReason[] = [KeepReason.Repository, KeepReason.RepositoryFolder, KeepReason.Ignored, KeepReason.Unread, KeepReason.LinkUnsupported];
+  public static readonly TooLarge: KeepReason = new KeepReason("TooLarge");
+  private static readonly ALL: readonly KeepReason[] = [KeepReason.Repository, KeepReason.RepositoryFolder, KeepReason.Ignored, KeepReason.Unread, KeepReason.LinkUnsupported, KeepReason.TooLarge];
   public readonly value: string;
 
   private constructor(value: string) {

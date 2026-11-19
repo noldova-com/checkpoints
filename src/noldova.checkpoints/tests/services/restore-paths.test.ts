@@ -20,6 +20,8 @@ import { AccessFixture } from "../fixtures/access.fixture.ts";
 import { FailureFixture } from "../fixtures/failure.fixture.ts";
 import { LinkFixture } from "../fixtures/link.fixture.ts";
 
+const withoutLinks = await LinkFixture.withoutLinksAsync();
+
 describe("RestorePaths", { concurrency: true }, () => {
   const folderAsync = async (t: TestContext): Promise<string> => {
     const folder = await mkdtemp(path.join(tmpdir(), "restore-paths-"));
@@ -185,7 +187,7 @@ describe("RestorePaths", { concurrency: true }, () => {
     assert.deepEqual(await readdir(folder), ["staged"]);
   });
 
-  it("places a link by a new link to the same target, a file's, a folder's or a missing one's, and gives its file id", async t => {
+  it("places a link by a new link to the same target, a file's, a folder's or a missing one's, and gives its file id", { skip: withoutLinks }, async t => {
     const folder = await folderAsync(t);
     await writeFile(path.join(folder, "target.txt"), "target");
     await mkdir(path.join(folder, "dir"));
@@ -204,7 +206,7 @@ describe("RestorePaths", { concurrency: true }, () => {
     assert.deepEqual(copies, await Promise.all(["file", "dir-link", "missing"].map(async u => RestorePaths.fileIdOf(await lstat(path.join(folder, u), { bigint: true })))));
   });
 
-  it("never places a link over what another program put at its name, and finishes one that stopped before its old name went", async t => {
+  it("never places a link over what another program put at its name, and finishes one that stopped before its old name went", { skip: withoutLinks }, async t => {
     const folder = await folderAsync(t);
     await writeFile(path.join(folder, "target.txt"), "target");
     await writeFile(path.join(folder, "a.txt"), "another program's");
@@ -222,9 +224,8 @@ describe("RestorePaths", { concurrency: true }, () => {
     assert.deepEqual((await readdir(folder)).sort(), ["a.txt", "b", "c", "target.txt"]);
   });
 
-  it("places a link to a folder, or to one that is gone, by a new link, never over what another program put at its name", async t => {
+  it("places a link to a folder, or to one that is gone, by a new link, never over what another program put at its name", { skip: withoutLinks }, async t => {
     const folder = await folderAsync(t);
-    await LinkFixture.requireAsync(folder);
     await mkdir(path.join(folder, "dir"));
     await mkdir(path.join(folder, "gone"));
     await mkdir(path.join(folder, "other"));
@@ -246,7 +247,7 @@ describe("RestorePaths", { concurrency: true }, () => {
     assert.deepEqual((await readdir(folder)).sort(), ["dir", "l", "m", "other", "staged-taken", "taken-link", "taken.txt"]);
   });
 
-  it("places a link to a target that isn't there, or whose folder isn't, as a link to a file", async t => {
+  it("places a link to a target that isn't there, or whose folder isn't, as a link to a file", { skip: withoutLinks }, async t => {
     const folder = await folderAsync(t);
     await writeFile(path.join(folder, "target.txt"), "target");
     await stagedFileLinkAsync(folder);
@@ -260,7 +261,7 @@ describe("RestorePaths", { concurrency: true }, () => {
     assert.deepEqual((await readdir(folder)).sort(), ["missing", "staged-file", "target.txt", "under"]);
   });
 
-  it("places a link to a target the system won't let it look at as a link to a file", { skip: AccessFixture.isRoot ? "root reads past any file mode" : false }, async t => {
+  it("places a link to a target the system won't let it look at as a link to a file", { skip: AccessFixture.isRoot ? "root reads past any file mode" : withoutLinks }, async t => {
     const folder = await folderAsync(t);
     await mkdir(path.join(folder, "closed"));
     await writeFile(path.join(folder, "closed", "secret.txt"), "secret");
@@ -276,7 +277,7 @@ describe("RestorePaths", { concurrency: true }, () => {
     assert.deepEqual((await readdir(folder)).sort(), ["closed", "link", "staged-file"]);
   });
 
-  it("places a link whose target is a loop of links as a link to a file", async t => {
+  it("places a link whose target is a loop of links as a link to a file", { skip: withoutLinks }, async t => {
     const folder = await folderAsync(t);
     await stagedFileLinkAsync(folder);
     await symlink("loop-b", path.join(folder, "loop-a"), "file");
@@ -290,7 +291,7 @@ describe("RestorePaths", { concurrency: true }, () => {
     assert.deepEqual((await readdir(folder)).sort(), ["link", "loop-a", "loop-b", "staged-file"]);
   });
 
-  it("fails a link whose target it can't look at for another reason, keeping its old name", { skip: process.platform === "win32" ? "Windows reports a name too long as not there" : false }, async t => {
+  it("fails a link whose target it can't look at for another reason, keeping its old name", { skip: process.platform === "win32" ? "Windows reports a name too long as not there" : withoutLinks }, async t => {
     const folder = await folderAsync(t);
     await stagedFileLinkAsync(folder);
     await symlink("x".repeat(300), path.join(folder, "staged-long"), "file");

@@ -7,6 +7,7 @@
  */
 
 import { createHash } from "node:crypto";
+import type { BigIntStats } from "node:fs";
 import { lstat, open, readlink } from "node:fs/promises";
 
 import { UnreadPath, UnreadReason } from "@noldova/checkpoints.protocol";
@@ -45,6 +46,8 @@ export class EntryReader {
       if (EntryKind.ofStats(this.platform, stats) !== entry.kind)
         return new UnreadPath(entry.path, UnreadReason.Changing, null);
       current = new WalkedEntry(entry.path, entry.location, entry.kind, stats);
+      if (current.isTooLarge)
+        return new UnreadPath(entry.path, UnreadReason.TooLarge, null);
     }
   }
 
@@ -84,14 +87,21 @@ export class EntryReader {
     }
   }
 
-  private static async readLinkAsync(input: InputWriter, entry: WalkedEntry): Promise<string | ReadFailure> {
-    const target = await readlink(entry.location, Resources.bufferEncoding).catch((t: unknown) => ReadFailure.of(t));
-    if (target instanceof ReadFailure)
-      return target;
+  private static async readLinkAsync(input: InputWriter, entry: WalkedEntry): Promise<string | ReadFailure | null> {
+    const read = await EntryReader.readTargetAsync(entry.location).catch((t: unknown) => ReadFailure.of(t));
+    if (read instanceof ReadFailure)
+      return read;
+    if (!entry.isUnchanged(read.stats))
+      return null;
 
-    await input.writeAsync(Resources.formatFastImportBlob(target.length));
-    await input.writeAsync(target);
+    await input.writeAsync(Resources.formatFastImportBlob(read.target.length));
+    await input.writeAsync(read.target);
     await input.writeAsync(Resources.lineFeed);
-    return FolderFileReader.linkIdOf(target);
+    return FolderFileReader.linkIdOf(read.target);
+  }
+
+  private static async readTargetAsync(location: string): Promise<{ readonly stats: BigIntStats; readonly target: Buffer }> {
+    const target = await readlink(location, Resources.bufferEncoding);
+    return { stats: await lstat(location, { bigint: true }), target };
   }
 }

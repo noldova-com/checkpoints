@@ -15,7 +15,7 @@ import { JsonException } from "@noldova/context.json";
 describe("RestoreRequest", { concurrency: true }, () => {
   const folder = new FolderReference("project-1", "/work/project");
   const folderJson = { identity: "project-1", path: "/work/project" };
-  const planJson = { checkpoint: "019a0b6c-7d1e-7f00-8abc-0123456789ab", steps: [], stays: [], bytesToWrite: 0, spaceNeeded: 0, state: "a".repeat(64), paths: null };
+  const planJson = { checkpoint: "019a0b6c-7d1e-7f00-8abc-0123456789ab", steps: [], stays: [], bytesToWrite: 0, spaceNeeded: 0, state: "a".repeat(64), paths: null, earlierPaths: [] };
 
   it("writes and reads its folder and plan", () => {
     const request = new RestoreRequest(folder, RestorePlan.fromJson(planJson));

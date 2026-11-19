@@ -12,8 +12,9 @@ export class UnreadReason {
   public static readonly Changing: UnreadReason = new UnreadReason("Changing");
   public static readonly Denied: UnreadReason = new UnreadReason("Denied");
   public static readonly InvalidName: UnreadReason = new UnreadReason("InvalidName");
+  public static readonly TooLarge: UnreadReason = new UnreadReason("TooLarge");
   public static readonly Unreadable: UnreadReason = new UnreadReason("Unreadable");
-  private static readonly ALL: readonly UnreadReason[] = [UnreadReason.Changing, UnreadReason.Denied, UnreadReason.InvalidName, UnreadReason.Unreadable];
+  private static readonly ALL: readonly UnreadReason[] = [UnreadReason.Changing, UnreadReason.Denied, UnreadReason.InvalidName, UnreadReason.TooLarge, UnreadReason.Unreadable];
   public readonly value: string;
 
   private constructor(value: string) {

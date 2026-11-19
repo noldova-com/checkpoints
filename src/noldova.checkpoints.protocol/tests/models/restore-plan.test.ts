@@ -10,7 +10,7 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
 import {
-  ChangeSide, InvalidCheckpointIdException, InvalidPlanStateException, InvalidRelativePathException, InvalidSizeException, KeepReason, KeptPath, PathKind,
+  ChangeSide, EarlierPathsMismatchException, InvalidCheckpointIdException, InvalidPlanStateException, InvalidRelativePathException, InvalidSizeException, KeepReason, KeptPath, PathKind,
   RestoreAction, RestorePlan, RestoreStep
 } from "@noldova/checkpoints.protocol";
 import { JsonException } from "@noldova/context.json";
@@ -27,7 +27,8 @@ describe("RestorePlan", { concurrency: true }, () => {
     bytesToWrite: 0,
     spaceNeeded: 1024,
     state,
-    paths: null
+    paths: null,
+    earlierPaths: []
   };
 
   it("writes and reads its checkpoint, steps, kept paths, sizes and state", () => {
@@ -37,12 +38,31 @@ describe("RestorePlan", { concurrency: true }, () => {
 
   it("writes and reads the paths its preview was limited to, and null paths as the whole folder", () => {
     const limited = new RestorePlan(id, [], [], 0, 0, state, ["src"]);
-    const limitedJson = { checkpoint: id, steps: [], stays: [], bytesToWrite: 0, spaceNeeded: 0, state, paths: ["src"] };
+    const limitedJson = { checkpoint: id, steps: [], stays: [], bytesToWrite: 0, spaceNeeded: 0, state, paths: ["src"], earlierPaths: [] };
 
     assert.deepEqual(limited.toJson(), limitedJson);
     assert.deepEqual(RestorePlan.fromJson(limitedJson), limited);
     assert.equal(RestorePlan.fromJson({ ...limitedJson, paths: null }).paths, null);
     assert.equal(plan.paths, null);
+  });
+
+  it("writes and reads the paths it writes as the earlier checkpoint had them, none by default", () => {
+    const steps = [new RestoreStep("a.txt", RestoreAction.Delete, new ChangeSide(PathKind.File, 1, true), null),
+      new RestoreStep("b.txt", RestoreAction.Write, null, new ChangeSide(PathKind.File, 2, true))];
+    const earlier = new RestorePlan(id, steps, [], 2, 3, state, null, ["b.txt"]);
+    const given = ["a.txt"];
+    const copied = new RestorePlan(id, steps, [], 2, 3, state, null, given);
+    given.length = 0;
+
+    assert.deepEqual(earlier.toJson()["earlierPaths"], ["b.txt"]);
+    assert.deepEqual(RestorePlan.fromJson(earlier.toJson()), earlier);
+    assert.deepEqual([plan.earlierPaths, copied.earlierPaths], [[], ["a.txt"]]);
+  });
+
+  it("refuses an earlier path that no step writes, or that it names twice", () => {
+    assert.throws(() => new RestorePlan(id, plan.steps, [], 0, 1024, state, null, ["b.txt"]), new EarlierPathsMismatchException("b.txt"));
+    assert.throws(() => new RestorePlan(id, plan.steps, [], 0, 1024, state, null, ["a.txt", "a.txt"]), new EarlierPathsMismatchException("a.txt"));
+    assert.throws(() => RestorePlan.fromJson({ ...planJson, earlierPaths: [".git"] }), new EarlierPathsMismatchException(".git"));
   });
 
   it("refuses a path with an empty name, \".\" or \"..\", or one holding \"\\\"", () => {

@@ -31,6 +31,8 @@ const output = (...objects: readonly (readonly [string, string])[]): Buffer =>
 const first = "1".repeat(40);
 const second = "2".repeat(40);
 
+const withoutLinks = await LinkFixture.withoutLinksAsync();
+
 describe("BlobBatchWriter", { concurrency: true }, () => {
   it("writes each object's content to its file however the output is cut into chunks", async t => {
     const batch = output([first, "first content\nwith a line feed"], [second, ""]);
@@ -48,9 +50,8 @@ describe("BlobBatchWriter", { concurrency: true }, () => {
     }
   });
 
-  it("creates a link, a file or a folder one as Windows needs, with its target as the object holds it", async t => {
+  it("creates a link, a file or a folder one as Windows needs, with its target as the object holds it", { skip: withoutLinks }, async t => {
     const folder = await folderAsync(t);
-    await LinkFixture.requireAsync(folder);
     for (const [name, kind] of [["file-link", LinkKind.File], ["folder-link", LinkKind.Folder], ["link", null]] as const) {
       const writer = new BlobBatchWriter([new StagedBlob(first, path.join(folder, name), PathKind.Link, kind)]);
 

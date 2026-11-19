@@ -8,7 +8,7 @@
 
 import assert from "node:assert/strict";
 import { constants, type BigIntStats } from "node:fs";
-import { chmod, link, lstat, mkdir, mkdtemp, realpath, rm, symlink, writeFile } from "node:fs/promises";
+import { chmod, link, lstat, mkdir, mkdtemp, realpath, rm, symlink, utimes, writeFile } from "node:fs/promises";
 import { createServer } from "node:net";
 import { tmpdir } from "node:os";
 import path from "node:path";
@@ -19,11 +19,19 @@ import { CaptureMode, UnreadPath, UnreadReason } from "@noldova/checkpoints.prot
 import { EntryKind } from "../../src/models/entry-kind.ts";
 import { LinkKind } from "../../src/models/link-kind.ts";
 import { LinkRecord } from "../../src/models/link-record.ts";
+import type { WalkResult } from "../../src/models/walk-result.ts";
 import { FolderWalker } from "../../src/services/folder-walker.ts";
 import { AccessFixture } from "../fixtures/access.fixture.ts";
 import { CancelFixture } from "../fixtures/cancel.fixture.ts";
 import { CaseFixture } from "../fixtures/case.fixture.ts";
 import { LinkFixture } from "../fixtures/link.fixture.ts";
+
+const withoutLinks = await LinkFixture.withoutLinksAsync();
+const walkAsync = async (walker: FolderWalker, folder: string, mode: CaptureMode, signal: AbortSignal = new AbortController().signal): Promise<WalkResult> => {
+  const result = await walker.walkAsync(folder, mode, signal);
+  assert.ok(result !== null);
+  return result;
+};
 
 describe("FolderWalker", { concurrency: true }, () => {
   const uncancelled: AbortSignal = new AbortController().signal;
@@ -50,13 +58,33 @@ describe("FolderWalker", { concurrency: true }, () => {
     await writeAsync(folder, "Z.txt", "z");
     await writeAsync(folder, "src/lib/x.ts", "x");
 
-    const result = await new FolderWalker(process.platform).walkAsync(folder, CaptureMode.EveryFile, uncancelled);
+    const result = await walkAsync(new FolderWalker(process.platform), folder, CaptureMode.EveryFile, uncancelled);
 
     assert.deepEqual(result.entries.map(t => t.path), ["Z.txt", "a.txt", "b.txt", "src/lib/x.ts"]);
     assert.deepEqual(result.entries.map(t => t.kind), [EntryKind.File, EntryKind.File, EntryKind.File, EntryKind.File]);
     assert.equal(result.entries[3]?.location, path.join(folder, "src", "lib", "x.ts"));
     assert.equal(result.entries[1]?.size, 1);
     assert.deepEqual([result.emptyFolders, result.links, result.unreadPaths], [[], [], []]);
+  });
+
+  it("records each folder it walks, the walked one too, with the later of its modification and change times", async t => {
+    const folder = await folderAsync(t);
+    await writeAsync(folder, "src/lib/x.ts", "x");
+    const later = new Date(Date.now() + 3_600_000);
+    await utimes(path.join(folder, "src"), later, later);
+
+    const result = await walkAsync(new FolderWalker(process.platform), folder, CaptureMode.EveryFile, uncancelled);
+    const timeOf = async (location: string): Promise<bigint> => {
+      const stats = await lstat(location, { bigint: true });
+      return stats.mtimeNs > stats.ctimeNs ? stats.mtimeNs : stats.ctimeNs;
+    };
+    const source = await lstat(path.join(folder, "src"), { bigint: true });
+
+    assert.deepEqual([...result.folderTimes.keys()], ["", "src", "src/lib"]);
+    assert.equal(result.folderTimes.get(""), await timeOf(folder));
+    assert.ok(source.mtimeNs > source.ctimeNs);
+    assert.equal(result.folderTimes.get("src"), source.mtimeNs);
+    assert.equal(result.folderTimes.get("src/lib"), await timeOf(path.join(folder, "src", "lib")));
   });
 
   it("stops before its next entry once its signal aborts, inside a folder too, with the signal's reason", async t => {
@@ -81,7 +109,7 @@ describe("FolderWalker", { concurrency: true }, () => {
     await writeAsync(folder, "only/.git/config", "");
     await writeAsync(folder, ".gitignore", "");
 
-    const result = await new FolderWalker(process.platform).walkAsync(folder, CaptureMode.EveryFile, uncancelled);
+    const result = await walkAsync(new FolderWalker(process.platform), folder, CaptureMode.EveryFile, uncancelled);
 
     assert.deepEqual(result.entries.map(t => t.path), [".gitignore", "vendor/lib/x.ts"]);
     assert.deepEqual(result.emptyFolders, ["modules/sub", "only"]);
@@ -97,7 +125,7 @@ describe("FolderWalker", { concurrency: true }, () => {
     await writeAsync(folder, "src/a.ts", "a");
 
     for (const mode of [CaptureMode.EveryFile, CaptureMode.IgnoreFiles]) {
-      const result = await new FolderWalker(process.platform).walkAsync(folder, mode, uncancelled);
+      const result = await walkAsync(new FolderWalker(process.platform), folder, mode, uncancelled);
 
       assert.deepEqual(result.repositoryPaths, [".git", "modules/sub/.git", "vendor/lib/.git", "vendor/lib/deep/.git"]);
       assert.deepEqual([...result.repositoryFolders].sort(), ["modules", "modules/sub", "vendor", "vendor/lib", "vendor/lib/deep"]);
@@ -112,7 +140,7 @@ describe("FolderWalker", { concurrency: true }, () => {
     await writeAsync(folder, "b/GIT~1/hooks/post-checkout", "");
     await writeAsync(folder, "c/.g\u200Cit", "gitdir: elsewhere\n");
 
-    const result = await new FolderWalker(process.platform).walkAsync(folder, CaptureMode.EveryFile, uncancelled);
+    const result = await walkAsync(new FolderWalker(process.platform), folder, CaptureMode.EveryFile, uncancelled);
 
     assert.deepEqual(result.entries.map(t => t.path), ["a/.git~"]);
     assert.deepEqual(result.emptyFolders, ["b", "c"]);
@@ -124,7 +152,7 @@ describe("FolderWalker", { concurrency: true }, () => {
     await link(pointer, path.join(folder, "sub", "alias"));
     await writeAsync(folder, "sub/x.ts", "x");
 
-    const result = await new FolderWalker(process.platform).walkAsync(folder, CaptureMode.EveryFile, uncancelled);
+    const result = await walkAsync(new FolderWalker(process.platform), folder, CaptureMode.EveryFile, uncancelled);
 
     assert.deepEqual(result.entries.map(t => t.path), ["sub/x.ts"]);
     assert.deepEqual(result.repositoryPaths, ["sub/.git", "sub/alias"]);
@@ -136,7 +164,7 @@ describe("FolderWalker", { concurrency: true }, () => {
     await writeAsync(folder, "a.txt", "a");
 
     await AccessFixture.whileDeniedAsync(path.join(folder, ".git"), async () => {
-      const result = await new FolderWalker(process.platform).walkAsync(folder, CaptureMode.EveryFile, uncancelled);
+      const result = await walkAsync(new FolderWalker(process.platform), folder, CaptureMode.EveryFile, uncancelled);
 
       assert.deepEqual([result.entries.map(t => t.path), result.unreadPaths], [["a.txt"], []]);
     });
@@ -147,11 +175,11 @@ describe("FolderWalker", { concurrency: true }, () => {
     await mkdir(path.join(folder, "logs", "old"), { recursive: true });
     await mkdir(path.join(folder, "cache"));
 
-    const result = await new FolderWalker(process.platform).walkAsync(folder, CaptureMode.EveryFile, uncancelled);
+    const result = await walkAsync(new FolderWalker(process.platform), folder, CaptureMode.EveryFile, uncancelled);
 
     assert.deepEqual(result.emptyFolders, ["cache", "logs/old"]);
     assert.deepEqual(result.entries, []);
-    assert.deepEqual((await new FolderWalker(process.platform).walkAsync(path.join(folder, "cache"), CaptureMode.EveryFile, uncancelled)).emptyFolders, []);
+    assert.deepEqual((await walkAsync(new FolderWalker(process.platform), path.join(folder, "cache"), CaptureMode.EveryFile, uncancelled)).emptyFolders, []);
   });
 
   it("keeps a link as a link and never follows it", async t => {
@@ -159,7 +187,7 @@ describe("FolderWalker", { concurrency: true }, () => {
     await writeAsync(folder, "real/inside.txt", "inside");
     await symlink(path.join(folder, "real"), path.join(folder, "out"), "junction");
 
-    const result = await new FolderWalker("linux").walkAsync(folder, CaptureMode.EveryFile, uncancelled);
+    const result = await walkAsync(new FolderWalker("linux"), folder, CaptureMode.EveryFile, uncancelled);
 
     assert.deepEqual(result.entries.map(t => [t.path, t.kind]), [["out", EntryKind.Link], ["real/inside.txt", EntryKind.File]]);
     assert.deepEqual(result.links, []);
@@ -175,19 +203,19 @@ describe("FolderWalker", { concurrency: true }, () => {
     await symlink(path.join(folder, "loop-b"), path.join(folder, "loop-a"), "junction");
     await symlink(path.join(folder, "loop-a"), path.join(folder, "loop-b"), "junction");
 
-    const result = await new FolderWalker("win32").walkAsync(folder, CaptureMode.EveryFile, uncancelled);
+    const result = await walkAsync(new FolderWalker("win32"), folder, CaptureMode.EveryFile, uncancelled);
 
     assert.deepEqual(result.links, [new LinkRecord("folder-link", LinkKind.Folder), new LinkRecord("loop-a", LinkKind.File), new LinkRecord("loop-b", LinkKind.File),
       new LinkRecord("missing-link", LinkKind.File)]);
     assert.deepEqual(result.emptyFolders, ["real"]);
   });
 
-  it("records on Windows a link to a file that is there as a file link", async t => {
+  it("records on Windows a link to a file that is there as a file link", { skip: withoutLinks }, async t => {
     const folder = await folderAsync(t);
     await writeAsync(folder, "real.txt", "real");
     await LinkFixture.symlinkAsync(path.join(folder, "real.txt"), path.join(folder, "file-link"), "file");
 
-    const result = await new FolderWalker("win32").walkAsync(folder, CaptureMode.EveryFile, uncancelled);
+    const result = await walkAsync(new FolderWalker("win32"), folder, CaptureMode.EveryFile, uncancelled);
 
     assert.deepEqual(result.entries.map(t => [t.path, t.kind]), [["file-link", EntryKind.Link], ["real.txt", EntryKind.File]]);
     assert.deepEqual(result.links, [new LinkRecord("file-link", LinkKind.File)]);
@@ -199,7 +227,7 @@ describe("FolderWalker", { concurrency: true }, () => {
     await symlink(path.join(folder, "closed", "target"), path.join(folder, "out"), "junction");
 
     await AccessFixture.whileHiddenAsync(path.join(folder, "closed", "target"), async () => {
-      const result = await new FolderWalker("win32").walkAsync(folder, CaptureMode.EveryFile, uncancelled);
+      const result = await walkAsync(new FolderWalker("win32"), folder, CaptureMode.EveryFile, uncancelled);
 
       assert.deepEqual(result.unreadPaths, [new UnreadPath(isWindows ? "closed/target" : "closed", UnreadReason.Denied, null), new UnreadPath("out", UnreadReason.Denied, null)]);
       assert.deepEqual(result.entries, []);
@@ -212,7 +240,7 @@ describe("FolderWalker", { concurrency: true }, () => {
     await chmod(await writeAsync(folder, "run.sh", "#!/bin/sh\n"), 0o755);
     await writeAsync(folder, "read.me", "");
 
-    const result = await new FolderWalker(process.platform).walkAsync(folder, CaptureMode.EveryFile, uncancelled);
+    const result = await walkAsync(new FolderWalker(process.platform), folder, CaptureMode.EveryFile, uncancelled);
 
     assert.deepEqual(result.entries.map(t => [t.path, t.kind]), [["read.me", EntryKind.File], ["run.sh", EntryKind.Executable]]);
   });
@@ -224,7 +252,7 @@ describe("FolderWalker", { concurrency: true }, () => {
     await new Promise<void>(resolve => server.listen(path.join(folder, "run", "s.sock"), resolve));
     t.after(() => new Promise<void>(resolve => server.close(() => resolve())));
 
-    const result = await new FolderWalker(process.platform).walkAsync(folder, CaptureMode.EveryFile, uncancelled);
+    const result = await walkAsync(new FolderWalker(process.platform), folder, CaptureMode.EveryFile, uncancelled);
 
     assert.deepEqual(result.entries, []);
     assert.deepEqual(result.emptyFolders, ["run"]);
@@ -235,7 +263,7 @@ describe("FolderWalker", { concurrency: true }, () => {
     await mkdir(path.join(folder, "odd"));
     await writeFile(Buffer.concat([Buffer.from(path.join(folder, "odd") + path.sep), Buffer.from([0x61, 0xff])]), "");
 
-    const result = await new FolderWalker(process.platform).walkAsync(folder, CaptureMode.EveryFile, uncancelled);
+    const result = await walkAsync(new FolderWalker(process.platform), folder, CaptureMode.EveryFile, uncancelled);
 
     assert.deepEqual(result.unreadPaths, [new UnreadPath("odd/a�", UnreadReason.InvalidName, null)]);
     assert.deepEqual(result.emptyFolders, []);
@@ -247,7 +275,7 @@ describe("FolderWalker", { concurrency: true }, () => {
     await writeAsync(folder, "open.txt", "o");
 
     await AccessFixture.whileDeniedAsync(path.join(folder, "closed"), async () => {
-      const result = await new FolderWalker(process.platform).walkAsync(folder, CaptureMode.EveryFile, uncancelled);
+      const result = await walkAsync(new FolderWalker(process.platform), folder, CaptureMode.EveryFile, uncancelled);
 
       assert.deepEqual(result.unreadPaths, [new UnreadPath("closed", UnreadReason.Denied, null)]);
       assert.deepEqual(result.entries.map(t => t.path), ["open.txt"]);
@@ -260,7 +288,7 @@ describe("FolderWalker", { concurrency: true }, () => {
     await writeAsync(folder, ".gitignore", "*.log\n");
     await writeAsync(folder, "a.log", "a");
 
-    const result = await new FolderWalker(process.platform).walkAsync(folder, CaptureMode.EveryFile, uncancelled);
+    const result = await walkAsync(new FolderWalker(process.platform), folder, CaptureMode.EveryFile, uncancelled);
 
     assert.deepEqual(result.entries.map(t => t.path), [".gitignore", "a.log"]);
     assert.equal(result.rules, null);
@@ -273,7 +301,7 @@ describe("FolderWalker", { concurrency: true }, () => {
     for (const file of ["a.log", "keep.log", "build/x", "src/build/y", "cache/z", "src/cache/z", "lib/cache", "docs/a/b/c.tmp", "docs/c.tmp", "#notes", "src/a.log", "src/b.log"])
       await writeAsync(folder, file, "x");
 
-    const result = await new FolderWalker(process.platform).walkAsync(folder, CaptureMode.IgnoreFiles, uncancelled);
+    const result = await walkAsync(new FolderWalker(process.platform), folder, CaptureMode.IgnoreFiles, uncancelled);
 
     assert.deepEqual(result.entries.map(t => t.path), [".gitignore", "keep.log", "lib/cache", "src/.gitignore", "src/a.log", "src/build/y"]);
     assert.deepEqual(result.emptyFolders, ["docs/a/b"]);
@@ -289,7 +317,7 @@ describe("FolderWalker", { concurrency: true }, () => {
     await writeAsync(folder, "logs/keep.txt", "k");
     await writeAsync(folder, "logs/drop.txt", "d");
 
-    const result = await new FolderWalker(process.platform).walkAsync(folder, CaptureMode.IgnoreFiles, uncancelled);
+    const result = await walkAsync(new FolderWalker(process.platform), folder, CaptureMode.IgnoreFiles, uncancelled);
 
     assert.deepEqual(result.entries.map(t => t.path), [".gitignore", "logs/keep.txt"]);
     assert.deepEqual(result.rules?.files.map(t => t.folderPath), [""]);
@@ -302,8 +330,8 @@ describe("FolderWalker", { concurrency: true }, () => {
     await writeAsync(folder, "src/a.log", "a");
     await writeAsync(folder, "src/a.ts", "a");
 
-    const ignoring = await new FolderWalker(process.platform).walkAsync(folder, CaptureMode.IgnoreFiles, uncancelled);
-    const everyFile = await new FolderWalker(process.platform).walkAsync(folder, CaptureMode.EveryFile, uncancelled);
+    const ignoring = await walkAsync(new FolderWalker(process.platform), folder, CaptureMode.IgnoreFiles, uncancelled);
+    const everyFile = await walkAsync(new FolderWalker(process.platform), folder, CaptureMode.EveryFile, uncancelled);
 
     assert.deepEqual(ignoring.ignoredPaths, ["out", "src/a.log"]);
     assert.deepEqual(everyFile.ignoredPaths, []);
@@ -320,7 +348,7 @@ describe("FolderWalker", { concurrency: true }, () => {
     await writeAsync(folder, "vendor/skip/x", "x");
     await writeAsync(folder, "vendor/a.log", "a");
 
-    const result = await new FolderWalker(process.platform).walkAsync(folder, CaptureMode.IgnoreFiles, uncancelled);
+    const result = await walkAsync(new FolderWalker(process.platform), folder, CaptureMode.IgnoreFiles, uncancelled);
 
     assert.deepEqual(result.entries.map(t => t.path), [".gitignore", "vendor/lib/.gitignore", "vendor/lib/a.log"]);
     assert.deepEqual(result.rules?.repositoryFolders, ["vendor/lib"]);
@@ -332,7 +360,7 @@ describe("FolderWalker", { concurrency: true }, () => {
     await writeAsync(folder, ".gitignore", "!.git\n!.git/**\n");
     await writeAsync(folder, ".git/HEAD", "ref: refs/heads/main\n");
 
-    const result = await new FolderWalker(process.platform).walkAsync(folder, CaptureMode.IgnoreFiles, uncancelled);
+    const result = await walkAsync(new FolderWalker(process.platform), folder, CaptureMode.IgnoreFiles, uncancelled);
 
     assert.deepEqual(result.entries.map(t => t.path), [".gitignore"]);
   });
@@ -342,7 +370,7 @@ describe("FolderWalker", { concurrency: true }, () => {
     await writeAsync(folder, ".gitignore/x", "*.log\n");
     await writeAsync(folder, "a.log", "a");
 
-    const result = await new FolderWalker(process.platform).walkAsync(folder, CaptureMode.IgnoreFiles, uncancelled);
+    const result = await walkAsync(new FolderWalker(process.platform), folder, CaptureMode.IgnoreFiles, uncancelled);
 
     assert.deepEqual(result.entries.map(t => t.path), [".gitignore/x", "a.log"]);
     assert.deepEqual(result.rules?.files, []);
@@ -354,7 +382,7 @@ describe("FolderWalker", { concurrency: true }, () => {
     await writeAsync(folder, "a.log", "a");
 
     await AccessFixture.whileDeniedAsync(ignoreFile, async () => {
-      const result = await new FolderWalker(process.platform).walkAsync(folder, CaptureMode.IgnoreFiles, uncancelled);
+      const result = await walkAsync(new FolderWalker(process.platform), folder, CaptureMode.IgnoreFiles, uncancelled);
 
       assert.deepEqual(result.entries.map(t => t.path), [".gitignore", "a.log"]);
       assert.deepEqual(result.rules?.files, []);
@@ -367,7 +395,7 @@ describe("FolderWalker", { concurrency: true }, () => {
     await writeAsync(folder, "a.log", "a");
     const volumeIgnoresCase = await CaseFixture.ignoresCaseAsync();
 
-    const result = await new FolderWalker(volumeIgnoresCase ? "linux" : "win32").walkAsync(folder, CaptureMode.IgnoreFiles, uncancelled);
+    const result = await walkAsync(new FolderWalker(volumeIgnoresCase ? "linux" : "win32"), folder, CaptureMode.IgnoreFiles, uncancelled);
 
     assert.equal(result.rules?.ignoresCase, volumeIgnoresCase);
     assert.deepEqual(result.entries.map(t => t.path), volumeIgnoresCase ? [".gitignore"] : [".gitignore", "a.log"]);
@@ -379,7 +407,7 @@ describe("FolderWalker", { concurrency: true }, () => {
     await writeAsync(folder, "a.log", "a");
     const volumeIgnoresCase = await CaseFixture.ignoresCaseAsync();
 
-    const result = await new FolderWalker(process.platform).walkAsync(folder, CaptureMode.IgnoreFiles, uncancelled);
+    const result = await walkAsync(new FolderWalker(process.platform), folder, CaptureMode.IgnoreFiles, uncancelled);
 
     assert.deepEqual(result.entries.map(t => t.path), volumeIgnoresCase ? [".GITIGNORE"] : [".GITIGNORE", "a.log"]);
     assert.deepEqual(result.rules?.files.map(t => t.folderPath), volumeIgnoresCase ? [""] : []);
@@ -391,7 +419,7 @@ describe("FolderWalker", { concurrency: true }, () => {
     for (const file of ["données/x.txt", "cafe.txt", "café.txt", "日本語.md", "😀.txt"])
       await writeAsync(folder, file, "x");
 
-    const result = await new FolderWalker(process.platform).walkAsync(folder, CaptureMode.IgnoreFiles, uncancelled);
+    const result = await walkAsync(new FolderWalker(process.platform), folder, CaptureMode.IgnoreFiles, uncancelled);
 
     assert.deepEqual(result.entries.map(t => t.path).sort(), [".gitignore", "café.txt", "😀.txt"].sort());
   });
@@ -413,7 +441,7 @@ describe("FolderWalker, alone", () => {
       return this.ino !== stats.ino && (this.mode & BigInt(constants.S_IFMT)) === BigInt(constants.S_IFREG);
     });
 
-    const result = await new FolderWalker(process.platform).walkAsync(folder, CaptureMode.EveryFile, new AbortController().signal);
+    const result = await walkAsync(new FolderWalker(process.platform), folder, CaptureMode.EveryFile, new AbortController().signal);
 
     assert.deepEqual(result.entries, []);
     assert.deepEqual(result.emptyFolders, ["run"]);
