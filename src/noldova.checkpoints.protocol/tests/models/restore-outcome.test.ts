@@ -15,11 +15,11 @@ describe("RestoreOutcome", { concurrency: true }, () => {
   it("writes and reads each outcome by its name, and says which restored", () => {
     const outcomes = [
       RestoreOutcome.Restored, RestoreOutcome.MovedOn, RestoreOutcome.CheckpointMissing, RestoreOutcome.FolderMissing,
-      RestoreOutcome.LowDiskSpace, RestoreOutcome.HeldUp, RestoreOutcome.RolledBack
+      RestoreOutcome.LowDiskSpace, RestoreOutcome.HeldUp, RestoreOutcome.RolledBack, RestoreOutcome.TooLarge
     ];
     assert.deepEqual(outcomes.map(t => [t.toJson(), t.isRestored]), [
       ["Restored", true], ["MovedOn", false], ["CheckpointMissing", false], ["FolderMissing", false],
-      ["LowDiskSpace", false], ["HeldUp", false], ["RolledBack", false]
+      ["LowDiskSpace", false], ["HeldUp", false], ["RolledBack", false], ["TooLarge", false]
     ]);
     for (const outcome of outcomes)
       assert.equal(RestoreOutcome.fromJson(outcome.toJson()), outcome);

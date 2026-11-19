@@ -8,7 +8,7 @@
 
 import { stat } from "node:fs/promises";
 
-import { CaptureMode, CaptureOutcome, CaptureResult, Checkpoint, UnreadPath } from "@noldova/checkpoints.protocol";
+import { CaptureMode, CaptureOutcome, CaptureResult, Checkpoint, UnreadPath, UnreadReason } from "@noldova/checkpoints.protocol";
 
 import { CheckpointRecord } from "../models/checkpoint-record.ts";
 import { EntryKind } from "../models/entry-kind.ts";
@@ -17,6 +17,7 @@ import { FolderRecord } from "../models/folder-record.ts";
 import type { FolderStore } from "../models/folder-store.ts";
 import { IgnoreRecord } from "../models/ignore-record.ts";
 import { IndexEntry } from "../models/index-entry.ts";
+import type { WalkResult } from "../models/walk-result.ts";
 import type { WalkedEntry } from "../models/walked-entry.ts";
 import { Resources } from "../resources.ts";
 import type { CheckpointIdSource } from "./checkpoint-id-source.ts";
@@ -30,6 +31,7 @@ import type { FreeSpace } from "./free-space.ts";
 import { GitPath } from "./git-path.ts";
 import type { GitRunner } from "./git-runner.ts";
 import type { InputWriter } from "./input-writer.ts";
+import { RelativePath } from "./relative-path.ts";
 import { StoreFile } from "./store-file.ts";
 import type { StoreOpener } from "./store-opener.ts";
 
@@ -62,7 +64,9 @@ export class CheckpointCapture {
     this.walker = walker;
   }
 
-  public async captureAsync(store: FolderStore, folder: string, label: string | null, mode: CaptureMode, signal: AbortSignal): Promise<CaptureResult> {
+  public async captureAsync(
+    store: FolderStore, folder: string, label: string | null, mode: CaptureMode, asOf: Date | null, signal: AbortSignal
+  ): Promise<CaptureResult> {
     if (!await Failures.recoverAsync(stat(folder).then(t => t.isDirectory()), t => Failures.isAbsent(t), false))
       return new CaptureResult(CaptureOutcome.FolderMissing, null, null, null);
 
@@ -70,15 +74,29 @@ export class CheckpointCapture {
     const start = this.clock.fileTime();
     await this.opener.openAsync(store, signal);
     const walk = await this.walker.walkAsync(folder, mode, signal);
+    if (walk === null)
+      return new CaptureResult(CaptureOutcome.FolderMissing, null, null, null);
     const index = await StoreFile.readAsync(store.indexFile, t => FolderIndex.fromJson(t)) ?? FolderIndex.Empty;
     const parent = await this.lister.findNewestAsync(store, signal);
-    const adding = walk.entries.reduce((sum, t) => index.findUnchanged(t) === null ? sum + t.size : sum, 0);
+    const cutoff = asOf === null ? null : BigInt(asOf.getTime()) * Resources.nanosecondsPerMillisecond - Resources.racyWindowNanoseconds;
+    const adding = walk.entries.reduce((sum, t) => CheckpointCapture.needsRead(t, index, cutoff) ? sum + t.size : sum, 0);
+    if (adding > Resources.maximumCaptureContent)
+      return new CaptureResult(CaptureOutcome.TooLarge, null, null, null, adding, Resources.maximumCaptureContent);
     const free = await this.readFreeAsync(store.folder);
     if (free < Resources.spaceMargin + adding)
       return new CaptureResult(CaptureOutcome.LowDiskSpace, null, free, Resources.spaceMargin + adding);
 
     const kept: IndexEntry[] = [];
+    let files: readonly IndexEntry[] = kept;
+    const earlierPaths: string[] = [];
     const unreadPaths: UnreadPath[] = [...walk.unreadPaths];
+    const keepEarlier = (path: string): void => {
+      const earlier = index.find(path);
+      if (earlier === null)
+        return;
+      kept.push(earlier);
+      earlierPaths.push(path);
+    };
     const leftovers = new FastImportLeftovers(store);
     let left = free;
     const imported = await this.importAsync(store, async input => {
@@ -90,19 +108,37 @@ export class CheckpointCapture {
       for (const entry of walk.entries) {
         signal.throwIfAborted();
         const known = index.findUnchanged(entry);
-        const result = known === null ? await this.reader.readAsync(input, entry) : IndexEntry.of(entry, known.objectId);
-        if (input.isStopped)
-          return null;
-        if (result instanceof IndexEntry)
-          kept.push(result);
-        if (result instanceof UnreadPath)
-          unreadPaths.push(result);
+        if (entry.isTooLarge)
+          unreadPaths.push(new UnreadPath(entry.path, UnreadReason.TooLarge, null));
+        else if (known !== null)
+          kept.push(IndexEntry.of(entry, known.objectId));
+        else if (CheckpointCapture.isAtOrAfter(entry, cutoff))
+          keepEarlier(entry.path);
+        else {
+          const result = await this.reader.readAsync(input, entry);
+          if (input.isStopped)
+            return null;
+          if (result instanceof IndexEntry && !CheckpointCapture.isAtOrAfter(result, cutoff))
+            kept.push(result);
+          else if (cutoff !== null && (result === null || result instanceof IndexEntry || result.reason === UnreadReason.Changing))
+            keepEarlier(entry.path);
+          else if (result instanceof UnreadPath)
+            unreadPaths.push(result);
+        }
       }
+      const gone = CheckpointCapture.goneSince(index, walk, cutoff);
+      for (const path of gone)
+        keepEarlier(path);
 
-      const taken = new Checkpoint(this.ids.next(), time, mode, label, unreadPaths);
+      const replaced = gone.filter(t => walk.folderTimes.has(t));
+      const isInside = (path: string): boolean => replaced.some(t => path.startsWith(`${t}${Resources.relativePathSeparator}`));
+      const isOutside = (entry: { readonly path: string }): boolean => !isInside(entry.path);
+      files = kept.filter(isOutside);
+      const taken = new Checkpoint(this.ids.next(), time, mode, label, unreadPaths.filter(isOutside));
       const ignoreRecord = walk.rules === null ? null : new IgnoreRecord(walk.rules.ignoresCase, walk.rules.repositoryFolders);
-      const record = new CheckpointRecord(taken, walk.emptyFolders, walk.links, ignoreRecord);
-      await input.writeAsync(CheckpointCapture.formatCommit(taken, parent, kept));
+      const emptyFolders = walk.emptyFolders.filter(t => !replaced.includes(t) && !isInside(t));
+      const record = new CheckpointRecord(taken, emptyFolders, walk.links.filter(isOutside), ignoreRecord, earlierPaths);
+      await input.writeAsync(CheckpointCapture.formatCommit(taken, parent, files));
       for (const file of walk.rules?.files ?? [])
         await input.writeAsync(CheckpointCapture.formatInline(GitPath.ofRule(file.folderPath), file.content));
       input.stopMetering();
@@ -115,7 +151,7 @@ export class CheckpointCapture {
     }
 
     const checkpoint = imported;
-    await StoreFile.writeAsync(store.indexFile, new FolderIndex(start, kept).toJson());
+    await StoreFile.writeAsync(store.indexFile, new FolderIndex(start, files).toJson());
     await StoreFile.writeAsync(store.folderFile, new FolderRecord(folder).toJson());
     return new CaptureResult(CaptureOutcome.Captured, checkpoint, null, null);
   }
@@ -145,6 +181,36 @@ export class CheckpointCapture {
       await input.writeAsync(CheckpointCapture.formatInline(Resources.checkpointFile, Buffer.from(JSON.stringify(new CheckpointRecord(taken, [], [], null).toJson()))));
       return taken;
     }, Resources.neverCancelled);
+  }
+
+  private static goneSince(index: FolderIndex, walk: WalkResult, cutoff: bigint | null): readonly string[] {
+    if (cutoff === null)
+      return [];
+    const walked = new Set(walk.entries.map(t => t.path));
+    const leftOut = new Set([...walk.ignoredPaths, ...walk.repositoryPaths, ...walk.unreadPaths.map(t => t.path)]);
+    return index.entries.map(t => t.path).filter(path => {
+      if (walked.has(path) || leftOut.has(path))
+        return false;
+      if (walk.folderTimes.has(path) && walk.entries.some(t => t.path.startsWith(`${path}${Resources.relativePathSeparator}`) && !CheckpointCapture.isAtOrAfter(t, cutoff)))
+        return false;
+      let folder = path;
+      let time = walk.folderTimes.get(folder);
+      while (time === undefined) {
+        if (leftOut.has(folder))
+          return false;
+        folder = RelativePath.parentOf(folder);
+        time = walk.folderTimes.get(folder);
+      }
+      return time >= cutoff;
+    });
+  }
+
+  private static isAtOrAfter(entry: WalkedEntry | IndexEntry, cutoff: bigint | null): boolean {
+    return cutoff !== null && (entry.modified >= cutoff || entry.changed >= cutoff);
+  }
+
+  private static needsRead(entry: WalkedEntry, index: FolderIndex, cutoff: bigint | null): boolean {
+    return !entry.isTooLarge && index.findUnchanged(entry) === null && !CheckpointCapture.isAtOrAfter(entry, cutoff);
   }
 
   private async importAsync(store: FolderStore, write: (input: InputWriter) => Promise<Checkpoint | null>, signal: AbortSignal): Promise<Checkpoint | null> {

@@ -6,7 +6,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { UnreadPath, type CaptureMode } from "@noldova/checkpoints.protocol";
+import { UnreadPath, UnreadReason, type CaptureMode } from "@noldova/checkpoints.protocol";
 
 import { StoreObjectMissingException } from "../exceptions/store-object-missing.exception.ts";
 import { StoreObjectNotABlobException } from "../exceptions/store-object-not-a-blob.exception.ts";
@@ -53,18 +53,24 @@ export class SideLoader {
     return new LoadedCheckpoint(record, new SideListing(tree.files, record.emptyFolders, record.checkpoint.unreadPaths, await this.readRulesAsync(store, record, tree.rules, signal)));
   }
 
-  public async loadFolderAsync(store: FolderStore, folder: string, mode: CaptureMode, signal: AbortSignal): Promise<SideListing> {
-    return (await this.loadFolderWalkAsync(store, folder, mode, signal)).listing;
+  public async loadFolderAsync(store: FolderStore, folder: string, mode: CaptureMode, signal: AbortSignal): Promise<SideListing | null> {
+    return (await this.loadFolderWalkAsync(store, folder, mode, signal))?.listing ?? null;
   }
 
-  public async loadFolderWalkAsync(store: FolderStore, folder: string, mode: CaptureMode, signal: AbortSignal): Promise<WalkedListing> {
+  public async loadFolderWalkAsync(store: FolderStore, folder: string, mode: CaptureMode, signal: AbortSignal): Promise<WalkedListing | null> {
     const walk = await this.walker.walkAsync(folder, mode, signal);
+    if (walk === null)
+      return null;
     const index = await StoreFile.readAsync(store.indexFile, t => FolderIndex.fromJson(t)) ?? FolderIndex.Empty;
     const files = new Map<string, FolderFile>();
     const unreadPaths: UnreadPath[] = [...walk.unreadPaths];
     const discarded = InputWriter.discarding();
     for (const entry of walk.entries) {
       signal.throwIfAborted();
+      if (entry.isTooLarge) {
+        unreadPaths.push(new UnreadPath(entry.path, UnreadReason.TooLarge, null));
+        continue;
+      }
       const known = index.findUnchanged(entry);
       const read = known === null ? await this.reader.readAsync(discarded, entry) : IndexEntry.of(entry, known.objectId);
       if (read instanceof IndexEntry)

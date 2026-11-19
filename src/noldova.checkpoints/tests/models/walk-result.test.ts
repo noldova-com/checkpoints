@@ -53,6 +53,16 @@ describe("WalkResult", { concurrency: true }, () => {
     assert.deepEqual([...result.repositoryFolders], ["vendor/lib", "vendor", "vendor/lib/deep", "tools"]);
   });
 
+  it("keeps each folder's file id and latest time by its path", () => {
+    const result = new WalkResult(null);
+
+    result.addFolder("", "1:2", 5n);
+    result.addFolder("src", "1:3", 7n);
+
+    assert.deepEqual([...result.folderIds], [["", "1:2"], ["src", "1:3"]]);
+    assert.deepEqual([...result.folderTimes], [["", 5n], ["src", 7n]]);
+  });
+
   it("keeps the rules a walk that follows the ignore files is given, and none for one that doesn't", () => {
     const rules = new IgnoreRules(false);
 

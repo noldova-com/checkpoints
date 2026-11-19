@@ -22,12 +22,14 @@ describe("CheckpointRecord", { concurrency: true }, () => {
   const checkpoint = new Checkpoint("019a0b6c-7d1e-7f00-8abc-0123456789ab", new Date("2026-10-18T12:00:00.000Z"), CaptureMode.EveryFile, "Turn 3",
     [new UnreadPath("locked.db", UnreadReason.Denied, null)]);
   const json = {
-    formatVersion: 2,
+    formatVersion: 3,
     checkpoint: checkpoint.toJson(),
     emptyFolders: ["logs"],
     links: [{ path: "out", linkKind: "Folder" }],
-    ignoreRules: null
+    ignoreRules: null,
+    earlierPaths: []
   };
+  const olderJson = Object.fromEntries(Object.entries(json).filter(([t]) => t !== "earlierPaths"));
 
   it("writes the checkpoint with its empty folders and its links' kinds, and reads them back", () => {
     const record = new CheckpointRecord(checkpoint, ["logs"], [new LinkRecord("out", LinkKind.Folder)], null);
@@ -66,6 +68,26 @@ describe("CheckpointRecord", { concurrency: true }, () => {
       new IgnoreRulesMismatchException(CaptureMode.IgnoreFiles));
   });
 
+  it("writes the paths it keeps as the earlier checkpoint had them, as its own copy, and reads them back", () => {
+    const given = ["a.txt", "src/b.txt"];
+    const record = new CheckpointRecord(checkpoint, [], [], null, given);
+    given.length = 0;
+
+    assert.deepEqual(record.toJson()["earlierPaths"], ["a.txt", "src/b.txt"]);
+    assert.deepEqual(CheckpointRecord.fromJson(record.toJson()).earlierPaths, ["a.txt", "src/b.txt"]);
+    assert.deepEqual(new CheckpointRecord(checkpoint, [], [], null).earlierPaths, []);
+  });
+
+  it("reads a record of format version 2, written before it kept earlier paths, as one with none, and refuses one that names them", () => {
+    const read = CheckpointRecord.fromJson({ ...olderJson, formatVersion: 2 });
+
+    assert.deepEqual(read.earlierPaths, []);
+    assert.deepEqual(read.toJson(), json);
+    assert.throws(() => CheckpointRecord.fromJson({ ...json, formatVersion: 2, earlierPaths: [] }),
+      new JsonException("The field is not part of this record, which accepts no unknown fields.", "CheckpointRecord.earlierPaths"));
+    assert.throws(() => CheckpointRecord.fromJson({ ...json, earlierPaths: [7] }), new JsonException("Expected a string.", "CheckpointRecord.earlierPaths.0"));
+  });
+
   it("refuses a record whose empty folders aren't all text", () => {
     assert.throws(() => CheckpointRecord.fromJson({ ...json, emptyFolders: ["logs", 7] }), new JsonException("Expected a string.", "CheckpointRecord.emptyFolders.1"));
   });
@@ -87,7 +109,7 @@ describe("CheckpointRecord", { concurrency: true }, () => {
   });
 
   it("refuses a record of format version 1 whose checkpoint, unread paths or an unread path isn't the shape it reads, as the checkpoint's own reading refuses it", () => {
-    const readAsVersion1 = (written: unknown): CheckpointRecord => CheckpointRecord.fromJson({ ...json, formatVersion: 1, checkpoint: written });
+    const readAsVersion1 = (written: unknown): CheckpointRecord => CheckpointRecord.fromJson({ ...olderJson, formatVersion: 1, checkpoint: written });
 
     assert.throws(() => readAsVersion1([]), new JsonException("Expected a JSON object.", "Checkpoint"));
     assert.throws(() => readAsVersion1({ ...checkpoint.toJson(), unreadPaths: "locked.db" }), new JsonException("Expected an array.", "Checkpoint.unreadPaths"));
@@ -97,7 +119,7 @@ describe("CheckpointRecord", { concurrency: true }, () => {
   it("refuses a record of format version 1 whose unread path holds a code, a field that version never wrote", () => {
     const written = { ...checkpoint.toJson(), unreadPaths: [{ path: "locked.db", reason: "Unreadable", code: "EIO" }] };
 
-    assert.throws(() => CheckpointRecord.fromJson({ ...json, formatVersion: 1, checkpoint: written }), new JsonException("The field is not part of this record, which accepts no unknown fields.", "UnreadPath.code"));
+    assert.throws(() => CheckpointRecord.fromJson({ ...olderJson, formatVersion: 1, checkpoint: written }), new JsonException("The field is not part of this record, which accepts no unknown fields.", "UnreadPath.code"));
   });
 
   it("refuses a record of format version 2 whose unread path has no code", () => {
@@ -107,6 +129,6 @@ describe("CheckpointRecord", { concurrency: true }, () => {
   });
 
   it("refuses a record of a format version newer than the one it writes, naming it", () => {
-    assert.throws(() => CheckpointRecord.fromJson({ ...json, formatVersion: 3 }), new UnsupportedStoreFormatException("3"));
+    assert.throws(() => CheckpointRecord.fromJson({ ...json, formatVersion: 4 }), new UnsupportedStoreFormatException("4"));
   });
 });

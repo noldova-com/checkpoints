@@ -7,10 +7,12 @@
  */
 
 export { CaptureCheckpointMismatchException } from "../exceptions/capture-checkpoint-mismatch.exception.ts";
+export { CaptureContentMismatchException } from "../exceptions/capture-content-mismatch.exception.ts";
 export { CaptureSpaceMismatchException } from "../exceptions/capture-space-mismatch.exception.ts";
 export { ChangeSidesMismatchException } from "../exceptions/change-sides-mismatch.exception.ts";
 export { CompareChangesMismatchException } from "../exceptions/compare-changes-mismatch.exception.ts";
 export { ContentTooLongException } from "../exceptions/content-too-long.exception.ts";
+export { EarlierPathsMismatchException } from "../exceptions/earlier-paths-mismatch.exception.ts";
 export { InvalidBase64Exception } from "../exceptions/invalid-base64.exception.ts";
 export { InvalidCheckpointIdException } from "../exceptions/invalid-checkpoint-id.exception.ts";
 export { InvalidDateException } from "../exceptions/invalid-date.exception.ts";
@@ -27,6 +29,7 @@ export { ProtocolException } from "../exceptions/protocol.exception.ts";
 export { ReadCutMismatchException } from "../exceptions/read-cut-mismatch.exception.ts";
 export { ReadOutcomeMismatchException } from "../exceptions/read-outcome-mismatch.exception.ts";
 export { RestoreCheckpointsMismatchException } from "../exceptions/restore-checkpoints-mismatch.exception.ts";
+export { RestoreContentMismatchException } from "../exceptions/restore-content-mismatch.exception.ts";
 export { SideSizeMismatchException } from "../exceptions/side-size-mismatch.exception.ts";
 export { StepSidesMismatchException } from "../exceptions/step-sides-mismatch.exception.ts";
 export { UnknownCaptureModeException } from "../exceptions/unknown-capture-mode.exception.ts";

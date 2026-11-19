@@ -140,7 +140,9 @@ describe("SideLoader", { concurrency: true }, () => {
     const start = harness.context.requests.length;
 
     const every = await loader.loadFolderAsync(store, harness.folder, CaptureMode.EveryFile, uncancelled);
+    assert.ok(every !== null);
     const following = await loader.loadFolderAsync(store, harness.folder, CaptureMode.IgnoreFiles, uncancelled);
+    assert.ok(following !== null);
 
     const stats = await lstat(location, { bigint: true });
     assert.deepEqual(every.entryOf("a.txt"), new FolderFile(EntryKind.File, idOf("alpha 2"), location, 7, `${stats.dev}:${stats.ino}`));
@@ -164,6 +166,7 @@ describe("SideLoader", { concurrency: true }, () => {
     await writeFile(path.join(harness.store, "index"), JSON.stringify({ formatVersion: 1, start: later, entries }));
 
     const listing = await loader.loadFolderAsync(store, harness.folder, CaptureMode.EveryFile, uncancelled);
+    assert.ok(listing !== null);
 
     const planted = listing.entryOf("a.txt");
     assert.ok(planted instanceof FolderFile);
@@ -187,8 +190,9 @@ describe("SideLoader", { concurrency: true }, () => {
 
     const listing = await loader.loadFolderAsync(new FolderStore(harness.context.moduleFolder, CheckpointsHarness.identity), harness.folder, CaptureMode.EveryFile,
       uncancelled);
+    assert.ok(listing !== null);
 
-    const now = (await real.walkAsync(harness.folder, CaptureMode.EveryFile, uncancelled)).entries.find(u => u.path === "a.txt");
+    const now = (await real.walkAsync(harness.folder, CaptureMode.EveryFile, uncancelled))?.entries.find(u => u.path === "a.txt");
     assert.ok(now !== undefined);
     assert.deepEqual(listing.entryOf("a.txt"), new FolderFile(EntryKind.File, idOf("replaced"), location, 8, now.fileId));
   });
@@ -203,6 +207,7 @@ describe("SideLoader", { concurrency: true }, () => {
     await AccessFixture.whileDeniedAsync(secret, async () => {
       await AccessFixture.whileDeniedAsync(path.join(harness.folder, "closed"), async () => {
         const listing = await loader.loadFolderAsync(store, harness.folder, CaptureMode.EveryFile, uncancelled);
+        assert.ok(listing !== null);
 
         assert.deepEqual(["closed", "secret.txt"].map(u => listing.unreadReasonOf(u)), [UnreadReason.Denied, UnreadReason.Denied]);
         assert.deepEqual(listing.paths, ["closed", "secret.txt"]);

@@ -16,8 +16,10 @@ export class RestoreOutcome {
   public static readonly LowDiskSpace: RestoreOutcome = new RestoreOutcome("LowDiskSpace", false);
   public static readonly HeldUp: RestoreOutcome = new RestoreOutcome("HeldUp", false);
   public static readonly RolledBack: RestoreOutcome = new RestoreOutcome("RolledBack", false);
+  public static readonly TooLarge: RestoreOutcome = new RestoreOutcome("TooLarge", false);
   private static readonly ALL: readonly RestoreOutcome[] = [
-    RestoreOutcome.Restored, RestoreOutcome.MovedOn, RestoreOutcome.CheckpointMissing, RestoreOutcome.FolderMissing, RestoreOutcome.LowDiskSpace, RestoreOutcome.HeldUp, RestoreOutcome.RolledBack
+    RestoreOutcome.Restored, RestoreOutcome.MovedOn, RestoreOutcome.CheckpointMissing, RestoreOutcome.FolderMissing, RestoreOutcome.LowDiskSpace, RestoreOutcome.HeldUp,
+    RestoreOutcome.RolledBack, RestoreOutcome.TooLarge
   ];
   public readonly isRestored: boolean;
   public readonly value: string;

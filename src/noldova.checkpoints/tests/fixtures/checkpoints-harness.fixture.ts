@@ -142,8 +142,8 @@ export class CheckpointsHarness {
     await this.host.stopAsync();
   }
 
-  public async captureAsync(label: string | null): Promise<CaptureResult> {
-    return await this.service.captureAsync(new CaptureRequest(new FolderReference(CheckpointsHarness.identity, this.folder), label));
+  public async captureAsync(label: string | null, asOf: Date | null = null): Promise<CaptureResult> {
+    return await this.service.captureAsync(new CaptureRequest(new FolderReference(CheckpointsHarness.identity, this.folder), label, asOf));
   }
 
   public async createServiceAsync(seams: ServiceSeams): Promise<CheckpointsHost> {
@@ -226,6 +226,18 @@ export class CheckpointsHarness {
     if (result.plan === null)
       throw new Error(`The preview gave ${result.outcome.value}.`);
     return result.plan;
+  }
+
+  public async replaceFileAsync(checkpoint: Checkpoint, name: string, content: Uint8Array): Promise<void> {
+    const reference = `refs/checkpoints/${checkpoint.id}`;
+    const textAsync = async (args: readonly string[], input: string | Uint8Array = ""): Promise<string> => (await this.gitAsync(args, input)).toString("utf8");
+    const blob = (await textAsync(["hash-object", "-w", "--stdin"], content)).trim();
+    const files = (await textAsync(["ls-tree", `${reference}:files`])).split("\n").filter(t => t !== "" && !t.endsWith(`\t${name}`));
+    const filesTree = (await textAsync(["mktree"], [...files, `100644 blob ${blob}\t${name}`, ""].join("\n"))).trim();
+    const root = (await textAsync(["ls-tree", reference])).split("\n").filter(t => t !== "" && !t.endsWith("\tfiles"));
+    const rootTree = (await textAsync(["mktree"], [...root, `040000 tree ${filesTree}\tfiles`, ""].join("\n"))).trim();
+    const commit = (await textAsync(["cat-file", "commit", reference])).replace(/^tree [0-9a-f]+\n/, `tree ${rootTree}\n`);
+    await this.gitAsync(["update-ref", reference, (await textAsync(["hash-object", "-t", "commit", "-w", "--stdin"], commit)).trim()]);
   }
 
   public async restoreAsync(plan: RestorePlan, service: CheckpointsHost = this.service): Promise<RestoreResult> {

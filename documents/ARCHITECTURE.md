@@ -22,7 +22,8 @@ A whole `npm test` run fails when a cited name matches no test it ran, or a "Tes
 
 ## Noldova's decisions
 
-- A checkpoint keeps every file in the folder by default: no ignore rules, no cap on a file's size or on the number of files, and a large file streamed, never held in memory.
+- A checkpoint keeps every file in the folder by default: no ignore rules, no cap on the number of files, and each file streamed, never held in memory.
+  It leaves out a file over 10 MiB, listing it as too large, and takes no checkpoint when the new and changed files come to over 1 GiB, so a build's output or a download never makes a checkpoint hold up a turn; both limits are fixed.
   A setting makes it follow the folder's `.gitignore` files instead.
 - Every `.git` in the folder, its own and each nested repository's or submodule's, is never kept, read or restored, in either mode, so a restore never touches the person's branches, commits or stashes.
 - The store lives outside the folder, in the app's data directory under `~/.noldova/<app>/`, and the person never sees it.
@@ -60,13 +61,15 @@ The runtime part publishes one service, and the same calls as `checkpoints.*` me
 - A folder is named by an identity the app owns and the folder's current path on this device.
   The identity is 1 to 64 characters of letters, digits and `-`, such as a project's id; the store is keyed by it, so a moved folder keeps its checkpoints.
 - `capture` takes a checkpoint of a folder and returns it; the app may attach a label of up to 1 KiB, such as the turn it belongs to.
-  It answers `Captured` with the checkpoint, or `LowDiskSpace` with the space free and the space needed, in bytes ([Low disk space](#low-disk-space)), or `FolderMissing` or `HeldUp`.
+  It answers `Captured` with the checkpoint, or `LowDiskSpace` with the space free and the space needed, in bytes ([Low disk space](#low-disk-space)), or `TooLarge` with the size of the new and changed files and its 1 GiB limit, or `FolderMissing` or `HeldUp`.
+  The app may also give the time a turn started, `asOf`, and take the checkpoint after the turn starts, which keeps the folder as it was at that time ([The turn's start](#the-turns-start)).
 - `list` returns a folder's checkpoints, newest first.
 - `compare` gives the changes between two checkpoints, or between one and the folder now, and `read` gives one file's content at a checkpoint, or its line diff against another checkpoint or the folder now, up to a size the caller sets.
   `compare` answers `Compared` with its changes, or `CheckpointMissing` or `FolderMissing`; `read` answers `Read` with the bytes, the whole size and whether the bytes are cut, or `CheckpointMissing`, `FolderMissing`, `PathMissing`, `Unknown` or `Binary` ([Changes](#changes)).
-- `previewRestore` returns the restore's plan: what it writes, replaces and deletes, what stays as it is and why, and the space it needs.
+- `previewRestore` returns the restore's plan: what it writes, replaces and deletes, which of the files it writes are as the checkpoint before had them, what stays as it is and why, and the space it needs.
 - `restore` carries out a plan the person accepted, and refuses a plan the folder has moved on from.
-  It answers `Restored` with the checkpoint taken before it, and one that keeps what another program changed meanwhile, or `RolledBack` with the checkpoint taken before it, or `MovedOn`, `LowDiskSpace`, `CheckpointMissing`, `FolderMissing` or `HeldUp` ([Restoring](#restoring)).
+  It answers `Restored` with the checkpoint taken before it, and one that keeps what another program changed meanwhile, or `RolledBack` with the checkpoint taken before it, or `MovedOn`, `LowDiskSpace`, `TooLarge` with the size of the new and changed files and its 1 GiB limit, `CheckpointMissing`, `FolderMissing` or `HeldUp` ([Restoring](#restoring)).
+  `capture`, `compare`, `previewRestore` and `restore` also answer `FolderMissing` when the folder is deleted or renamed while they walk it, and a restore whose moved-aside folder is gone when it walks it again keeps nothing from it, nor a file in it deleted after that walk.
 - `storage` lists every folder's space used, the largest first and folders of one size by identity: its identity, the path it had at its last capture, or none when its `folder.json` can't be read, and the sum of the sizes of its store's files.
   It reads outside the folders' queues, so it never waits for an operation or stops a housekeeping pass, and its sizes are a snapshot: a capture or a pass running as it reads may change them at once.
   A file or folder that goes away as it reads is left out, and so is a store a delete is moving aside; a delete waits for a read of the store that has started, since Windows refuses to rename a folder while a program lists or reads in it.
@@ -114,7 +117,8 @@ modules/checkpoints/
 - Each checkpoint is one commit, whose parent is the folder's previous checkpoint, and one reference, `refs/checkpoints/<id>`.
 - The commit's tree holds these entries:
   - `files/`, the folder's files, as [Which files a checkpoint keeps](#which-files-a-checkpoint-keeps) says;
-  - `checkpoint.json`, the format version, the mode, the label, the folders that were empty, each link's kind, each path that couldn't be read, with its reason and, for an unreadable one, the system's error code, and `ignoreRules`: for a checkpoint that followed the ignore files, whether letter case was ignored and the folders of the nested repositories, and `null` for one of every file;
+  - `checkpoint.json`, the format version, the mode, the label, the folders that were empty, each link's kind, each path that couldn't be read, with its reason and, for an unreadable one, the system's error code, `ignoreRules`: for a checkpoint that followed the ignore files, whether letter case was ignored and the folders of the nested repositories, and `null` for one of every file, and `earlierPaths`, each path kept as the checkpoint before had it ([The turn's start](#the-turns-start));
+    format version 3 added `earlierPaths`, and a record of version 2 reads as one with none;
   - `rules/`, only in a checkpoint that followed the ignore files: each `.gitignore` the capture followed, at `rules/<folder>/.gitignore`, as it read it ([Following the ignore files](#following-the-ignore-files)).
 - The commit's author and committer name the module, with the time of the capture, and its message is `Checkpoint <id>`.
 - `list` reads the references and their `checkpoint.json` in one `for-each-ref` and one `cat-file --batch`.
@@ -201,7 +205,10 @@ The module walks the folder itself, reading names as bytes, and never follows a 
 - A folder with nothing in it is listed in `checkpoint.json`, since Git keeps no empty folders.
 - The executable bit is kept on macOS and Linux; other attributes, extended attributes, times and hard links are not, and a restored file gets the restore's time.
 - A name Git can't hold, such as a Windows name with an unpaired surrogate, is listed among the paths that couldn't be read.
-- A large file is kept like any other: the module streams it, and Git writes a file over `core.bigFileThreshold` into its store without holding it in memory.
+- A file over 10 MiB isn't read: the checkpoint lists it as too large and keeps no content for it, and a restore of that checkpoint leaves it as it is; a link is kept whatever size it reports.
+  A preview doesn't read one in the folder now either, so a file the checkpoint holds that has since grown past 10 MiB stays as it is, as too large; nor does a capture read a file that grows past 10 MiB once the walk has seen it.
+  A file of up to 10 MiB is streamed, and Git writes a file over `core.bigFileThreshold` into its store without holding it in memory; a checkpoint an earlier version took may hold larger files, and they restore like any other.
+- Tests: "leaves out a file over 10 MiB as too large, keeps one of exactly 10 MiB, and its restore preview keeps the one left out"; "takes no checkpoint when the content it would add is over 1 GiB, and gives that size and the limit"; "restores a large file a checkpoint kept before the size limit, and a file's letter case where the folder ignores case"; "keeps a file that grew past 10 MiB since the checkpoint as too large, and restores the rest"; "lists a file that grows past 10 MiB once the walk has seen it as too large, without reading it again".
 
 ### Following the ignore files
 
@@ -251,8 +258,8 @@ The module walks the folder itself, reading names as bytes, and never follows a 
 ## Taking a checkpoint
 
 1. Check the folder exists.
-2. Walk the folder and compare each file with the index, which gives the size of the new and changed files.
-3. Check the free space for that size ([Low disk space](#low-disk-space)).
+2. Walk the folder and compare each file with the index, which gives the size of the new and changed files, leaving out each file over 10 MiB and, with `asOf`, each file the turn changed ([The turn's start](#the-turns-start)).
+3. Answer `TooLarge` when that size is over 1 GiB, and otherwise check the free space for it ([Low disk space](#low-disk-space)).
 4. Stream each new or changed file's content to the store's `fast-import`, hashing it on the way for the index; Git skips content its store already holds.
 5. Then write the commit, listing every path's object, with the store's newest checkpoint as its parent, and ask for a `checkpoint`, which writes the pack and the reference, then for the commit's mark, which `fast-import` tells once both are written.
 6. Write the new index.
@@ -279,6 +286,23 @@ The module walks the folder itself, reading names as bytes, and never follows a 
 - An interrupted or cancelled capture leaves no reference, so no checkpoint; its stray objects are removed by the next pruning ([Cancelling](#cancelling)).
 - A folder with no files gives a checkpoint whose `files/` is empty.
 - A capture that finds nothing changed still gives a new checkpoint, with its own label, sharing all its content with the last.
+
+### The turn's start
+
+- An app that takes a checkpoint for each turn of an agent gives the time the turn started, `asOf`, and takes the checkpoint once the turn is under way or done, in the background, so the turn never waits for it.
+  The checkpoint then keeps each file the turn changed as the last checkpoint had it, as far as the files' times tell, not as it was when the turn started: a restore of it undoes the turn and, with it, any change the person made to those files after the last checkpoint and before the turn.
+- A file whose modification or change time is at or after `asOf`, less two seconds, is the turn's: the checkpoint keeps it as the checkpoint before had it, and leaves it out when that one didn't hold it.
+  The two seconds cover a file system that keeps times to two seconds, such as FAT, as the index's do ([The module's index](#the-modules-index)).
+- A file the turn deletes, rewrites or keeps changing while the capture reads it, and a link it retargets then, is kept the same way: a read that finds the file changed reads it again, and keeps the earlier copy when its time is now at or after the cutoff.
+- A file gone before the walk from a folder whose time is at or after the cutoff, or from under a folder gone with it, is kept as the checkpoint before had it; one gone from an older folder is left out, since it went before the turn.
+  A folder's time is read again once the walk has been through what it holds, so a file the turn deletes anywhere in it while the walk runs, a later sibling of a folder being walked too, still counts as the turn's; a folder deleted while the walk is inside it keeps no time, and the folder above it decides.
+  A file replaced by a folder of the same name is decided by that folder's own time, and is the person's change, kept as the folder now is, when the folder holds a file older than the cutoff; when the earlier file is kept, the folder's contents are left out, since the checkpoint can't hold both.
+  A path the walk leaves out as ignored, as a repository's or as unreadable, or one under such a folder, is never brought back.
+- `checkpoint.json` lists each path so kept as `earlierPaths`, and a restore's plan names those its steps write ([The preview](#the-preview)), so the person can see which copies are the last checkpoint's.
+- The times are the file system's, so the cutoff follows the clock: one stepped back between turns makes the files changed since the last turn look like the turn's, and they keep their earlier copies; one stepped forward makes the turn's files look older, and the checkpoint keeps them as the turn left them.
+  A program that sets a file's times back, as an unpacker may, can likewise make the checkpoint keep that file as the turn left it.
+- A capture without `asOf`, such as the one before a restore, keeps the folder as it reads it.
+- Tests: "keeps the earlier copy of a file changed at or after the turn's start, leaves out a file new since then, and its restore preview names the earlier copies"; "counts a file changed within two seconds before the turn's start as the turn's, since a filesystem may keep times to two seconds, and reads one changed earlier"; "keeps the earlier copy of each file changed since the last turn when the clock stepped back between turns"; "keeps the earlier copy of a file the turn deletes while the capture reads, and leaves out a new one it deletes"; "keeps the earlier copy of a file deleted from a folder changed at or after the turn's start, a whole deleted folder's too, and none from an older folder"; "brings back no earlier copy of a path the ignore files now ignore, a file or one under an ignored folder"; "brings back no earlier copy of a file under a folder the walk can't read"; "keeps the earlier copy of a file the turn rewrites, or a link it retargets, while the capture reads it"; "keeps the earlier copy of a file the turn replaced by a folder, and leaves out what the folder holds"; "takes a folder's time after it lists the folder, so a file deleted before the listing shows in the folder's time"; "takes a folder's time again once it has walked what the folder holds, so a later file deleted meanwhile shows in it"; "keeps no time for a folder deleted while it walks what the folder holds, so the folder above it decides"; "keeps a folder the person put in place of a file before the turn, by a file in it older than the turn's start, with what the turn added left out".
 
 ## Changes
 
@@ -322,9 +346,10 @@ A restore runs only on the person's request, through its preview.
   - each `.git`, and each name left out as one ([The `.git` left out](#the-git-left-out)), which the restore never reads, writes, replaces or deletes; a real `.GIT` on a folder that tells letter case apart stays for the same reason, since Git treats it as repository storage;
   - each folder that holds a `.git` at any depth, and each folder above one, which the restore never moves, replaces, renames or removes ([A repository's folders](#a-repositorys-folders));
   - in a checkpoint that followed the ignore files, a path ignored by the checkpoint's rules or by the folder's current ones, the folder now walked in the checkpoint's own mode, as [Changes](#changes) says;
-  - a path the checkpoint couldn't read;
+  - a path the checkpoint couldn't read, or that the checkpoint or the folder now holds over 10 MiB;
   - a link this system won't let the module create, in the checkpoint or in the folder now, since a rollback puts a moved-aside link back by creating it again.
 - The plan records each path's state now, the file id of each folder on its way from the folder's root, and the bytes the restore will write.
+- The plan's `earlierPaths` names each path a step writes that the checkpoint kept as the checkpoint before had it, so the preview can say those copies are the last checkpoint's, which undoes any change made to them after it ([The turn's start](#the-turns-start)).
 - A preview may list the paths the restore is limited to, `paths`, relative with "/" between names; without them it plans the whole folder.
   Each must equal the path a comparison gives exactly, letter case and Unicode normalisation included, and one holding `\` is refused on every system.
   The plan then holds only the changes at or under a listed path, and those above one that the restore needs: a change whose checkpoint side is a folder, such as a file now where the checkpoint holds a folder, but never a path the checkpoint doesn't hold, nor a file written over a folder now.
@@ -366,6 +391,7 @@ The restore writes only where the plan says, never through a link and never into
 2. Take a checkpoint of the folder now, labelled `Before restore`, in the restored checkpoint's mode.
    It is the restore's way back and the person's undo.
    When it finds a planned file or link with other content or another file id than the plan did, or couldn't read a planned path, the restore ends with `MovedOn` before it changes anything.
+   When the checkpoint would add over 1 GiB, it isn't taken, and the restore ends with `TooLarge`, with that size and the limit, before it changes anything.
 3. Write the journal, `restore.json`, with the whole script ([The journal](#the-journal)).
 4. Stage: write each new content into a folder of the restore's own at the folder's root, `.~<restore id>/`, as `<step>`, and flush each staged file to disk.
    The temporary names don't grow with the targets' names, so a target whose name is at the system's limit restores too.
@@ -392,7 +418,7 @@ The restore writes only where the plan says, never through a link and never into
 
 - Once the journal is marked as cleaning the folder holds the checkpoint, and only a `.git` found in a moved-aside folder rolls the restore back.
   Any other failure from then on, such as a moved-aside item another program holds open, keeps the journal: the restore answers `Restored`, the module raises `checkpoints.restoreHeldUp` with the restore's folder, `.~<restore id>`, and it finishes the cleanup at a later operation on the folder, holding the folder up meanwhile ([An interrupted restore](#an-interrupted-restore)).
-- Tests: "counts a restore done whose moved-aside items it can't remove yet, holds the folder up, and removes them once it can"; "takes the checkpoint of the changed moved-aside items once when the restore stops after recording its id"; "places a file by a hard link that keeps its file id, then removes its old name"; "never places a file over one another program put at its name, and finishes a placement that stopped before its old name went"; "places a file by a copy where the volume makes no hard link, created on a free name and its file id given before its content, times and mode"; "never copies a file over another program's, even one of the same bytes, and makes again a copy the journal recorded, which a stop may have left part written"; "makes again a copy a restore placed on a volume without hard links, when it stopped right after recording the copy"; "makes again a copy a rollback returned on a volume without hard links, when it stopped right after recording the copy"; "makes again a copy a rollback made again from the checkpoint taken before the restore on a volume without hard links, when it stopped right after recording the copy"; "places a link by a new link to the same target, a file's, a folder's or a missing one's, and gives its file id"; "never places a link over what another program put at its name, and finishes one that stopped before its old name went"; "rolls back a link it placed by a new link, by the new link's file id"; "restores on a volume without hard links by copies, and rolls back by the copies' file ids"; "places a link to a folder, or to one that is gone, by a new link, never over what another program put at its name"; "keeps a link the folder has now, which a rollback would make again, when the system won't let the module create one".
+- Tests: "counts a restore done whose moved-aside items it can't remove yet, holds the folder up, and removes them once it can"; "takes the checkpoint of the changed moved-aside items once when the restore stops after recording its id"; "places a file by a hard link that keeps its file id, then removes its old name"; "never places a file over one another program put at its name, and finishes a placement that stopped before its old name went"; "places a file by a copy where the volume makes no hard link, created on a free name and its file id given before its content, times and mode"; "never copies a file over another program's, even one of the same bytes, and makes again a copy the journal recorded, which a stop may have left part written"; "makes again a copy a restore placed on a volume without hard links, when it stopped right after recording the copy"; "makes again a copy a rollback returned on a volume without hard links, when it stopped right after recording the copy"; "makes again a copy a rollback made again from the checkpoint taken before the restore on a volume without hard links, when it stopped right after recording the copy"; "places a link by a new link to the same target, a file's, a folder's or a missing one's, and gives its file id"; "never places a link over what another program put at its name, and finishes one that stopped before its old name went"; "rolls back a link it placed by a new link, by the new link's file id"; "restores on a volume without hard links by copies, and rolls back by the copies' file ids"; "places a link to a folder, or to one that is gone, by a new link, never over what another program put at its name"; "keeps a link the folder has now, which a rollback would make again, when the system won't let the module create one"; "keeps a link as one it can't create, and restores the rest, when this process can't create links".
 
 - Letter case: on a system that ignores case, a file whose name differs only by case is moved aside under its old name before the new one is placed, so it is never deleted as a separate file.
   A folder to create whose path differs only by case from a folder the restore removes, and which is empty once its items are moved aside, is renamed to the checkpoint's case instead, on any system; a folder the system already finds at the path, on a system that ignores case one under another case that holds what stays, such as a `.git`, is used under the case it has.
@@ -446,7 +472,7 @@ The journal makes a restore finish whole or not at all.
 - A restore whose checkpoint taken before it runs out of space answers `LowDiskSpace` and changes nothing.
   Only the captures the app asks for pause and resume the folder's captures: a restore's checkpoint taken before it posts no notification and raises neither event, since the restore's own answer tells the app.
 - The store's housekeeping runs only with 2 GiB free on the store's volume beyond the size of the store's objects ([Keeping and deleting](#keeping-and-deleting)).
-- Tests: "takes no checkpoint where the store's volume lacks 2 GiB free beyond the new and changed files, and answers the space free and needed"; "stops a capture whose store's volume falls below the margin while its content streams, and leaves the store as it was"; "takes a capture whose 64 MiB step falls on its final write, checking no space there, since fast-import completes there, and keeps its objects"; "posts the low-disk-space notification for a capture without the space, replaces it at the next, and dismisses it at one taken after"; "raises the paused event at each capture without the space, and the resumed event once, at the next one taken, for that folder alone"; "refuses a restore without the free space it needs, or whose checkpoint taken before it runs out of space, and changes nothing".
+- Tests: "takes no checkpoint where the store's volume lacks 2 GiB free beyond the new and changed files, and answers the space free and needed"; "stops a capture whose store's volume falls below the margin while its content streams, and leaves the store as it was"; "takes a capture whose 64 MiB step falls on its final write, checking no space there, since fast-import completes there, and keeps its objects"; "posts the low-disk-space notification for a capture without the space, replaces it at the next, and dismisses it at one taken after"; "raises the paused event at each capture without the space, and the resumed event once, at the next one taken, for that folder alone"; "refuses a restore without the free space it needs, or whose checkpoint taken before it runs out of space, and changes nothing"; "refuses a restore whose checkpoint taken before it would add over 1 GiB, with that size and the limit, and changes nothing".
 
 ## Keeping and deleting
 

@@ -23,6 +23,7 @@ import { WalkedEntry } from "../models/walked-entry.ts";
 import { WalkResult } from "../models/walk-result.ts";
 import { Resources } from "../resources.ts";
 import { CaseProbe } from "./case-probe.ts";
+import { Failures } from "./failures.ts";
 import { IgnoreFileReader } from "./ignore-file.reader.ts";
 import { NameDecoder } from "./name-decoder.ts";
 import { RelativePath } from "./relative-path.ts";
@@ -35,11 +36,17 @@ export class FolderWalker {
     this.platform = platform;
   }
 
-  public async walkAsync(folder: string, mode: CaptureMode, signal: AbortSignal): Promise<WalkResult> {
+  public async walkAsync(folder: string, mode: CaptureMode, signal: AbortSignal): Promise<WalkResult | null> {
+    return await Failures.recoverAsync(this.walkFolderAsync(folder, mode, signal), t => Failures.isAbsent(t), null);
+  }
+
+  private async walkFolderAsync(folder: string, mode: CaptureMode, signal: AbortSignal): Promise<WalkResult> {
     const names = (await readdir(folder, Resources.bufferEncoding)).sort(Buffer.compare);
     const result = new WalkResult(mode === CaptureMode.IgnoreFiles ? new IgnoreRules(await CaseProbe.ignoresCaseAsync(folder, names, this.platform)) : null);
-    result.addFolderId("", FolderWalker.idOf(await stat(folder, { bigint: true })));
+    const root = await stat(folder, { bigint: true });
+    result.addFolder("", FolderWalker.idOf(root), FolderWalker.timeOf(root));
     await this.walkNamesAsync(folder, "", names, result, signal);
+    result.addFolder("", FolderWalker.idOf(root), FolderWalker.timeOf(await stat(folder, { bigint: true })));
     return result;
   }
 
@@ -52,6 +59,10 @@ export class FolderWalker {
     if (leavesOut(stats))
       return null;
     return new WalkedChild(stats, stats.isDirectory() ? (await readdir(location, Resources.bufferEncoding)).sort(Buffer.compare) : null);
+  }
+
+  private static timeOf(stats: BigIntStats): bigint {
+    return stats.mtimeNs > stats.ctimeNs ? stats.mtimeNs : stats.ctimeNs;
   }
 
   private static leavesOut(stats: BigIntStats, childPath: string, repositories: ReadonlySet<string>, result: WalkResult): boolean {
@@ -98,9 +109,14 @@ export class FolderWalker {
 
     const { stats, names } = read;
     if (names !== null) {
-      result.addFolderId(childPath, FolderWalker.idOf(stats));
+      result.addFolder(childPath, FolderWalker.idOf(stats), FolderWalker.timeOf(stats));
       if (!await this.walkNamesAsync(location, childPath, names, result, signal))
         result.addEmptyFolder(childPath);
+      const after = await lstat(location, { bigint: true }).catch((t: unknown) => ReadFailure.of(t));
+      if (after instanceof ReadFailure)
+        result.forgetFolderTime(childPath);
+      else
+        result.addFolder(childPath, FolderWalker.idOf(stats), FolderWalker.timeOf(after));
       return true;
     }
 

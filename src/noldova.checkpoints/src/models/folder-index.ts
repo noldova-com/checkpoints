@@ -34,6 +34,10 @@ export class FolderIndex {
     return new FolderIndex(BigInt(reader.readString(Resources.startField)), StoreFormat.readArray(reader, Resources.entriesField).map(t => IndexEntry.fromJson(t)));
   }
 
+  public find(path: string): IndexEntry | null {
+    return this.byPath.get(path) ?? null;
+  }
+
   public findUnchanged(entry: WalkedEntry): IndexEntry | null {
     const known = this.byPath.get(entry.path);
     return known !== undefined && known.matches(entry, this.start - Resources.racyWindowNanoseconds) ? known : null;

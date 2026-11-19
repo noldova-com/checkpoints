@@ -137,7 +137,7 @@ export class CheckpointsHost extends CheckpointsService {
       if (!await this.runner.recoverAsync(store, request.folder.identity, request.folder.path))
         return new CaptureResult(CaptureOutcome.HeldUp, null, null, null);
       const result = await this.capture.captureAsync(store, request.folder.path, request.label,
-        this.settings.read(Resources.followIgnoreFilesSetting) === true ? CaptureMode.IgnoreFiles : CaptureMode.EveryFile, stopped);
+        this.settings.read(Resources.followIgnoreFilesSetting) === true ? CaptureMode.IgnoreFiles : CaptureMode.EveryFile, request.asOf, stopped);
       this.pause.report(request.folder.identity, result);
       return result;
     }, signal);

@@ -30,6 +30,10 @@ export class WalkedEntry {
     this.size = Number(stats.size);
   }
 
+  public get isTooLarge(): boolean {
+    return this.kind !== EntryKind.Link && this.size > Resources.maximumFileSize;
+  }
+
   public isUnchanged(stats: BigIntStats): boolean {
     return stats.size === BigInt(this.size) && stats.mtimeNs === this.modified && stats.ctimeNs === this.changed && Resources.formatFileId(stats.dev, stats.ino) === this.fileId;
   }

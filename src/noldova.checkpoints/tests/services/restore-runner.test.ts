@@ -7,13 +7,15 @@
  */
 
 import assert from "node:assert/strict";
-import { appendFileSync, writeFileSync, type BigIntStats } from "node:fs";
+import { appendFileSync, truncateSync, writeFileSync, type BigIntStats } from "node:fs";
 import { chmod, lstat, lutimes, mkdir, readdir, readFile, readlink, rename, rm, symlink, unlink, utimes, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { describe, it, type TestContext } from "node:test";
 
 import {
   CaptureOutcome,
+  KeepReason,
+  KeptPath,
   PreviewOutcome,
   RestoreOutcome,
   RestorePlan,
@@ -37,6 +39,7 @@ import { StopPoint } from "../fixtures/stop-point.fixture.ts";
 import { StoppedRestore } from "../fixtures/stopped-restore.fixture.ts";
 
 const linkType = process.platform === "win32" ? "junction" : "dir";
+const withoutLinks = await LinkFixture.withoutLinksAsync();
 const scriptAsync = async (harness: CheckpointsHarness): Promise<ScriptView> => await RestoreFolder.of(harness).scriptAsync();
 const locationOf = (harness: CheckpointsHarness, relativePath: string): string => RestoreFolder.of(harness).locationOf(relativePath);
 const asideOfAsync = async (harness: CheckpointsHarness, relativePath: string): Promise<string> => await RestoreFolder.of(harness).asideOfAsync(relativePath);
@@ -113,12 +116,13 @@ describe("RestoreRunner", { concurrency: true }, () => {
     await RestoreFolder.of(harness).assertCleanAsync();
   });
 
-  it("restores a large file and a file's letter case where the folder ignores case", async t => {
+  it("restores a large file a checkpoint kept before the size limit, and a file's letter case where the folder ignores case", async t => {
     const harness = await CheckpointsHarness.startAsync(t);
     const large = Buffer.alloc(40 * 1024 * 1024, 7);
-    await harness.writeAsync("large.bin", large);
+    await harness.writeAsync("large.bin", "large");
     await harness.writeAsync("Docs/Readme.md", "readme");
     const checkpoint = await harness.checkpointAsync(null);
+    await harness.replaceFileAsync(checkpoint, "large.bin", large);
     await harness.writeAsync("large.bin", "small now");
     await rename(path.join(harness.folder, "Docs", "Readme.md"), path.join(harness.folder, "Docs", "README.md"));
     await rename(path.join(harness.folder, "Docs"), path.join(harness.folder, "docs"));
@@ -132,7 +136,26 @@ describe("RestoreRunner", { concurrency: true }, () => {
     await RestoreFolder.of(harness).assertCleanAsync();
   });
 
-  it("restores a file that is a link", async t => {
+  it("keeps a file that grew past 10 MiB since the checkpoint as too large, and restores the rest", async t => {
+    const harness = await CheckpointsHarness.startAsync(t);
+    const limit = 10 * 1024 * 1024;
+    const grown = await harness.writeAsync("grown.bin", "small");
+    await harness.writeAsync("a.txt", "alpha");
+    const checkpoint = await harness.checkpointAsync(null);
+    truncateSync(grown, limit + 1);
+    await harness.writeAsync("a.txt", "alpha!");
+
+    const plan = await harness.planAsync(checkpoint);
+    const result = await harness.restoreAsync(plan);
+
+    assert.deepEqual(plan.stays, [new KeptPath("grown.bin", KeepReason.TooLarge)]);
+    assert.deepEqual(plan.steps.map(u => u.path), ["a.txt"]);
+    assert.equal(result.outcome, RestoreOutcome.Restored);
+    assert.equal(await readFile(path.join(harness.folder, "a.txt"), "utf8"), "alpha");
+    assert.equal((await lstat(grown)).size, limit + 1);
+  });
+
+  it("restores a file that is a link", { skip: withoutLinks }, async t => {
     const harness = await CheckpointsHarness.startAsync(t);
     await harness.writeAsync("target.txt", "target");
     await LinkFixture.symlinkAsync("target.txt", path.join(harness.folder, "link"), "file");
@@ -146,7 +169,27 @@ describe("RestoreRunner", { concurrency: true }, () => {
     assert.deepEqual(await harness.snapshotAsync(), [["link", "link:target.txt"], ["target.txt", Buffer.from("target").toString("base64")]]);
   });
 
-  it("rolls back a link it placed by a new link, by the new link's file id", async t => {
+  it("keeps a link as one it can't create, and restores the rest, when this process can't create links", { skip: withoutLinks === false ? LinkFixture.withLinks : false }, async t => {
+    const harness = await CheckpointsHarness.startAsync(t);
+    await mkdir(path.join(harness.folder, "target"));
+    await symlink(path.join(harness.folder, "target"), path.join(harness.folder, "link"), linkType);
+    await harness.writeAsync("a.txt", "alpha");
+    const checkpoint = await harness.checkpointAsync(null);
+    await rm(path.join(harness.folder, "link"));
+    await harness.writeAsync("link", "a file now");
+    await harness.writeAsync("a.txt", "alpha!");
+
+    const plan = await harness.planAsync(checkpoint);
+    const result = await harness.restoreAsync(plan);
+
+    assert.deepEqual(plan.stays, [new KeptPath("link", KeepReason.LinkUnsupported)]);
+    assert.deepEqual(plan.steps.map(u => u.path), ["a.txt"]);
+    assert.equal(result.outcome, RestoreOutcome.Restored);
+    assert.deepEqual([await readFile(path.join(harness.folder, "a.txt"), "utf8"), await readFile(path.join(harness.folder, "link"), "utf8")], ["alpha", "a file now"]);
+    await RestoreFolder.of(harness).assertCleanAsync();
+  });
+
+  it("rolls back a link it placed by a new link, by the new link's file id", { skip: withoutLinks }, async t => {
     const harness = await CheckpointsHarness.startAsync(t);
     await harness.writeAsync("target.txt", "target");
     await LinkFixture.symlinkAsync("target.txt", path.join(harness.folder, "link"), "file");
@@ -661,6 +704,29 @@ describe("RestoreRunner", { concurrency: true }, () => {
     assert.match(await readFile(changing, "utf8"), /^written by another programz+$/);
   });
 
+  it("refuses a restore whose checkpoint taken before it would add over 1 GiB, with that size and the limit, and changes nothing", async t => {
+    const harness = await CheckpointsHarness.startAsync(t);
+    const { checkpoint } = await PreparedRestore.prepareAsync(harness);
+    const plan = await harness.planAsync(checkpoint);
+    const listed = await harness.listAsync();
+    const size = 10 * 1024 * 1024;
+    const service = await harness.createServiceAsync(ServiceSeams.system.withHasRoom(async () => {
+      for (let count = 0; count < 103; count++)
+        truncateSync(await harness.writeAsync(`part-${String(count).padStart(3, "0")}.bin`, ""), size);
+      return true;
+    }));
+    const now = await harness.snapshotAsync();
+
+    const result = await harness.restoreAsync(plan, service);
+
+    assert.deepEqual([result.outcome, result.before, result.contentLimit], [RestoreOutcome.TooLarge, null, 1024 * 1024 * 1024]);
+    assert.ok((result.contentSize ?? 0) >= 103 * size);
+    assert.deepEqual(await harness.listAsync(), listed);
+    for (const name of (await readdir(harness.folder)).filter(u => u.startsWith("part-")))
+      await rm(path.join(harness.folder, name));
+    assert.deepEqual(await harness.snapshotAsync(), now);
+  });
+
   it("gives FolderMissing when the folder goes away before the checkpoint taken before the restore", async t => {
     const harness = await CheckpointsHarness.startAsync(t);
     const { checkpoint } = await PreparedRestore.prepareAsync(harness);
@@ -809,7 +875,7 @@ describe("RestoreRunner", { concurrency: true }, () => {
 });
 
 describe("RestoreRunner, alone", () => {
-  it("rolls back, keeping the link, when another program puts in place of a planned link one to another target with its size, modified time and file id", async t => {
+  it("rolls back, keeping the link, when another program puts in place of a planned link one to another target with its size, modified time and file id", { skip: withoutLinks }, async t => {
     const harness = await CheckpointsHarness.startAsync(t);
     await harness.writeAsync("a.txt", "a");
     const checkpoint = await harness.checkpointAsync(null);

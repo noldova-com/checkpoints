@@ -94,7 +94,7 @@ describe("ModuleActivation", { concurrency: true }, () => {
     const context = new CheckpointsContext(t, moduleFolder);
     const folder = { identity: "project-1", path: project };
     const host = await ModuleActivation.activateAsync(context, new ManualClock());
-    const captured = CaptureResult.fromJson(await context.callAsync("checkpoints.capture", { folder, label: null }));
+    const captured = CaptureResult.fromJson(await context.callAsync("checkpoints.capture", { folder, label: null, asOf: null }));
 
     await host.stopAsync();
 
@@ -167,7 +167,7 @@ describe("ModuleActivation", { concurrency: true }, () => {
     const folder = { identity: CheckpointsHarness.identity, path: harness.folder };
     await harness.writeAsync("a.txt", "alpha");
 
-    const captured = CaptureResult.fromJson(await harness.context.callAsync("checkpoints.capture", { folder, label: "Turn 1" }));
+    const captured = CaptureResult.fromJson(await harness.context.callAsync("checkpoints.capture", { folder, label: "Turn 1", asOf: "2100-01-01T00:00:00.000Z" }));
     const listed = CheckpointList.fromJson(await harness.context.callAsync("checkpoints.list", { folder }));
 
     assert.equal(captured.checkpoint?.label, "Turn 1");
@@ -229,7 +229,7 @@ describe("ModuleActivation", { concurrency: true }, () => {
     const cancel = new AbortController();
     cancel.abort(new Error("cancelled by its caller"));
     const calls: readonly (readonly [string, JsonValue])[] = [
-      ["checkpoints.capture", { folder, label: null }],
+      ["checkpoints.capture", { folder, label: null, asOf: null }],
       ["checkpoints.list", { folder }],
       ["checkpoints.compare", { folder, from: first.id, to: null }],
       ["checkpoints.read", { folder, checkpoint: first.id, path: "a.txt", against: null, limit: 1 }],
@@ -268,7 +268,7 @@ describe("ModuleActivation", { concurrency: true }, () => {
       && error.failure.code === FailureCode.InvalidParams && error.cause instanceof cause && error.failure.message === error.cause.message
       && error.message === error.cause.message;
 
-    await assert.rejects(harness.context.callAsync("checkpoints.capture", { folder: badFolder, label: null }), refused(InvalidIdentityException));
+    await assert.rejects(harness.context.callAsync("checkpoints.capture", { folder: badFolder, label: null, asOf: null }), refused(InvalidIdentityException));
     await assert.rejects(harness.context.callAsync("checkpoints.list", { folder: badFolder }), refused(InvalidIdentityException));
     await assert.rejects(harness.context.callAsync("checkpoints.compare", { folder, from: "1", to: null }), refused(InvalidCheckpointIdException));
     await assert.rejects(harness.context.callAsync("checkpoints.previewRestore", { folder, checkpoint: "1", paths: null }), refused(InvalidCheckpointIdException));
@@ -283,7 +283,7 @@ describe("ModuleActivation", { concurrency: true }, () => {
     const harness = await CheckpointsHarness.startAsync(t);
     const folder = { identity: CheckpointsHarness.identity, path: harness.folder };
 
-    await assert.rejects(harness.context.callAsync("checkpoints.capture", { folder, label: 1 }), new JsonException("Expected a string.", "CaptureRequest.label"));
+    await assert.rejects(harness.context.callAsync("checkpoints.capture", { folder, label: 1, asOf: null }), new JsonException("Expected a string.", "CaptureRequest.label"));
     await assert.rejects(harness.context.callAsync("checkpoints.list", {}), new JsonException("The field is required.", "ListRequest.folder"));
     await assert.rejects(harness.context.callAsync("checkpoints.restore", { folder, plan: null }), new JsonException("Expected a JSON object.", "RestorePlan"));
     await assert.rejects(harness.context.callAsync("checkpoints.storage", { folder }), new JsonException("The field is not part of this message, which accepts no unknown fields.", "StorageRequest.folder"));
@@ -309,7 +309,7 @@ describe("ModuleActivation", { concurrency: true }, () => {
       turnOff(harness.deactivateAsync());
     };
 
-    const running = assert.rejects(harness.context.callAsync("checkpoints.capture", { folder, label: null }), { name: "AbortError" });
+    const running = assert.rejects(harness.context.callAsync("checkpoints.capture", { folder, label: null, asOf: null }), { name: "AbortError" });
     await await turnedOff;
     const left = [harness.context.running.length, await readFile(path.join(harness.folder, "a.txt"), "utf8")];
     await running;
