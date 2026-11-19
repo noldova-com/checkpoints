@@ -121,6 +121,7 @@ Every pull request into `main` must pass "Check / Linked issue" and "Build and t
   The maintainer accepted the files below, which are over the budget because they run real Git on real folders or, for two of them, only from the load of a whole run: each is in `acceptedSlowTestFiles` in `scripts/resources.ts` as `src/noldova.checkpoints/tests/` followed by its path below, so a run doesn't name it and the time check passes for it.
   Another file over the budget joins that list only once the maintainer accepts it.
   Each time is the file's time in one whole `npm test` run on each platform; "< 1 s" is within the budget there.
+  "not measured" marks a file accepted after CI last printed its macOS (ARM64) time: no test machine runs macOS on ARM64, and CI prints no accepted file's time.
 
   | File, under `src/noldova.checkpoints/tests/` | Windows (x64) | Linux (x64) | macOS (x64) | macOS (ARM64) | Why |
   |---|---|---|---|---|---|
@@ -139,15 +140,19 @@ Every pull request into `main` must pass "Check / Linked issue" and "Build and t
   | `services/restore-rollback.test.ts` | 7.6 s | 1.6 s | 20.9 s | 3.4 s | Rolls back restores on real folders, staging the checkpoint's files through real Git. |
   | `services/object.reader.test.ts` | 5.6 s | 2.4 s | 18.9 s | 3.2 s | Reads objects, a large one among them, from real stores through cat-file. |
   | `services/restore-scope.test.ts` | 8.6 s | 2.6 s | 16.4 s | 2.3 s | Plans restores limited to listed paths, from checkpoints captured through real Git. |
+  | `services/restore-runner.aside-changed.test.ts` | 4.1 s | 1.2 s | 10.0 s | not measured | A whole restore on a real Git store whose moved-aside folder gains a file while it is walked again, in a process of its own for its `readdir` mock. |
+  | `services/restore-runner.aside-gone.test.ts` | 4.3 s | 1.5 s | 9.7 s | not measured | A whole restore on a real Git store whose moved-aside folder is gone when it is walked again, in a process of its own for its `readdir` mock. |
   | `services/side-loader.test.ts` | 4.9 s | 1.4 s | 8.8 s | 1.6 s | Reads both sides of changes from real stores and real folders. |
   | `services/restore-applier.test.ts` | < 1 s | < 1 s | 8.0 s | 1.0 s | Moves, places and removes real files and folders, flushing each journal record to disk. |
   | `services/restore-runner.retries.test.ts` | 3.9 s | < 1 s | 6.9 s | 1.6 s | A whole restore on a real Git store, in a process of its own for its mock timers. |
   | `services/tree-lister.test.ts` | 3.8 s | < 1 s | 6.8 s | 1.0 s | Lists checkpoint trees with diff-tree on real stores. |
   | `services/blob-stager.test.ts` | 2.4 s | < 1 s | 6.7 s | < 1 s | Stages a checkpoint's files from real stores through cat-file. |
+  | `services/restore-planner.deleted.test.ts` | 1.7 s | < 1 s | 4.7 s | not measured | Plans a restore of a checkpoint captured through real Git while a folder is deleted during the walk, in a process of its own for its `readdir` mock. |
   | `services/blob-batch.writer.test.ts` | 2.3 s | < 1 s | 4.4 s | < 1 s | Writes real files, executables and links from cat-file's output. |
   | `services/store-opener.test.ts` | 2.0 s | < 1 s | 4.2 s | < 1 s | Creates real bare repositories with the build's Git and writes their configuration. |
   | `services/change-describer.test.ts` | 1.5 s | < 1 s | 3.9 s | < 1 s | Describes changes by reading a real store's objects through cat-file. |
   | `resources.test.ts` | < 1 s | < 1 s | 2.9 s | < 1 s | Reads a store's configuration back through the build's Git. |
+  | `services/checkpoint-comparer.deleted.test.ts` | 1.6 s | < 1 s | 2.5 s | not measured | Compares a checkpoint captured through real Git while a folder is deleted during the walk, in a process of its own for its `readdir` mock. |
   | `services/restore-paths.test.ts` | < 1 s | < 1 s | 2.3 s | < 1 s | Places and rolls back real files, hard links and links. |
   | `services/folder-deleter.tries.test.ts` | < 1 s | < 1 s | 2.2 s | < 1 s | Removes real folders between tries, in a process of its own for its mock timers. |
   | `services/folder-walker.test.ts` | < 1 s | < 1 s | 2.1 s | < 1 s | Walks real folders with links, file modes and names the file system holds. |
