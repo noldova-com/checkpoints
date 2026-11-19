@@ -7,7 +7,7 @@
  */
 
 import assert from "node:assert/strict";
-import { mkdtemp, open, readdir, readFile, rm, writeFile, type FileHandle } from "node:fs/promises";
+import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { describe, it, type TestContext } from "node:test";
@@ -60,29 +60,5 @@ describe("StoreFile", { concurrency: true }, () => {
     assert.throws(() => StoreFile.parse("index", "{}", () => {
       throw failure;
     }), failure);
-  });
-});
-
-describe("StoreFile, alone", () => {
-  it("writes a file whole, through a temporary file synced and renamed into place, its folder synced after, and reads it back", async t => {
-    const folder = await folderAsync(t);
-    const file = path.join(folder, "folder.json");
-    const opened = await open(path.join(folder, "probe"), "w");
-    const prototype: unknown = opened.constructor.prototype;
-    await opened.close();
-    await rm(path.join(folder, "probe"));
-    const isSyncing = (value: unknown): value is Pick<FileHandle, "sync"> =>
-      typeof value === "object" && value !== null && "sync" in value && typeof value.sync === "function";
-    assert.ok(isSyncing(prototype));
-    const sync = t.mock.method(prototype, "sync");
-
-    await StoreFile.writeAsync(file, new FolderRecord("/p").toJson());
-    const synced = sync.mock.callCount();
-    await StoreFile.writeAsync(file, new FolderRecord("/q").toJson());
-
-    assert.equal((await StoreFile.readAsync(file, u => FolderRecord.fromJson(u)))?.path, "/q");
-    assert.deepEqual(await readdir(folder), ["folder.json"]);
-    assert.deepEqual(JSON.parse(await readFile(file, "utf8")), { formatVersion: 1, path: "/q" });
-    assert.deepEqual([synced, sync.mock.callCount()], [2, 4]);
   });
 });

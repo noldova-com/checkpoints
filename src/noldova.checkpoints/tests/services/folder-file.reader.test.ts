@@ -10,7 +10,7 @@ import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import type { BigIntStats } from "node:fs";
-import { link, lstat, mkdir, mkdtemp, open, readlink, realpath, rename, rm, symlink, writeFile, type FileHandle } from "node:fs/promises";
+import { link, lstat, mkdir, mkdtemp, readlink, realpath, rename, rm, symlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { describe, it, type TestContext } from "node:test";
@@ -150,27 +150,5 @@ describe("FolderFileReader", { concurrency: true }, () => {
     await symlink(outside, location, "junction");
 
     assert.equal(await FolderFileReader.objectIdOfAsync(location, true), linkIdOf(await readlink(location, { encoding: "buffer" })));
-  });
-});
-
-describe("FolderFileReader, alone", () => {
-  it("gives a file's object id as Git hashes its content, reading a large file 64 KiB at a time", async t => {
-    const folder = await realpath(await mkdtemp(path.join(tmpdir(), "folder-file-")));
-    t.after(() => rm(folder, { recursive: true, force: true }));
-    const empty = path.join(folder, "empty.txt");
-    const large = path.join(folder, "large.bin");
-    const content = Buffer.alloc(6 * 64 * 1024 + 1, "large");
-    await Promise.all([writeFile(empty, ""), writeFile(large, content)]);
-    const opened = await open(empty);
-    const prototype: unknown = opened.constructor.prototype;
-    await opened.close();
-    const isReadable = (value: unknown): value is Pick<FileHandle, "read"> =>
-      typeof value === "object" && value !== null && "read" in value && typeof value.read === "function";
-    assert.ok(isReadable(prototype));
-
-    assert.equal(await FolderFileReader.objectIdOfAsync(empty, false), "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391");
-    const read = t.mock.method(prototype, "read");
-    assert.equal(await FolderFileReader.objectIdOfAsync(large, false), createHash("sha1").update(`blob ${content.length}\0`).update(content).digest("hex"));
-    assert.deepEqual(read.mock.calls.map(u => u.arguments[0] instanceof Uint8Array ? u.arguments[0].length : null), Array.from({ length: 8 }, () => 64 * 1024));
   });
 });

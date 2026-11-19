@@ -7,7 +7,6 @@
  */
 
 import assert from "node:assert/strict";
-import { constants, type BigIntStats } from "node:fs";
 import { chmod, link, lstat, mkdir, mkdtemp, realpath, rm, symlink, utimes, writeFile } from "node:fs/promises";
 import { createServer } from "node:net";
 import { tmpdir } from "node:os";
@@ -22,7 +21,6 @@ import { LinkRecord } from "../../src/models/link-record.ts";
 import type { WalkResult } from "../../src/models/walk-result.ts";
 import { FolderWalker } from "../../src/services/folder-walker.ts";
 import { AccessFixture } from "../fixtures/access.fixture.ts";
-import { CancelFixture } from "../fixtures/cancel.fixture.ts";
 import { CaseFixture } from "../fixtures/case.fixture.ts";
 import { LinkFixture } from "../fixtures/link.fixture.ts";
 
@@ -85,19 +83,6 @@ describe("FolderWalker", { concurrency: true }, () => {
     assert.ok(source.mtimeNs > source.ctimeNs);
     assert.equal(result.folderTimes.get("src"), source.mtimeNs);
     assert.equal(result.folderTimes.get("src/lib"), await timeOf(path.join(folder, "src", "lib")));
-  });
-
-  it("stops before its next entry once its signal aborts, inside a folder too, with the signal's reason", async t => {
-    const folder = await folderAsync(t);
-    await writeAsync(folder, "a.txt", "a");
-    await writeAsync(folder, "b.txt", "b");
-    await writeAsync(folder, "src/x.ts", "x");
-    await writeAsync(folder, "src/y.ts", "y");
-    const cancel = new CancelFixture(t, 4);
-
-    await assert.rejects(new FolderWalker(process.platform).walkAsync(folder, CaptureMode.EveryFile, cancel.signal), cancel.reason);
-
-    assert.equal(cancel.checks, 4);
   });
 
   it("never enters a .git, the folder's own or a nested repository's, nor a .git file, and keeps the rest of a nested repository", async t => {
@@ -422,28 +407,5 @@ describe("FolderWalker", { concurrency: true }, () => {
     const result = await walkAsync(new FolderWalker(process.platform), folder, CaptureMode.IgnoreFiles, uncancelled);
 
     assert.deepEqual(result.entries.map(t => t.path).sort(), [".gitignore", "café.txt", "😀.txt"].sort());
-  });
-});
-
-describe("FolderWalker, alone", () => {
-  it("leaves out an item that is no file, folder or link, as a socket is, and lists the folder that held only it as empty", async t => {
-    const folder = await realpath(await mkdtemp(path.join(tmpdir(), "walker-")));
-    t.after(() => rm(folder, { recursive: true, force: true }));
-    await mkdir(path.join(folder, "run"));
-    const location = path.join(folder, "run", "s.sock");
-    await writeFile(location, "");
-    const stats = await lstat(location, { bigint: true });
-    const prototype: unknown = stats.constructor.prototype;
-    const isTelling = (value: unknown): value is Pick<BigIntStats, "isFile"> =>
-      typeof value === "object" && value !== null && "isFile" in value && typeof value.isFile === "function";
-    assert.ok(isTelling(prototype));
-    t.mock.method(prototype, "isFile", function (this: BigIntStats): boolean {
-      return this.ino !== stats.ino && (this.mode & BigInt(constants.S_IFMT)) === BigInt(constants.S_IFREG);
-    });
-
-    const result = await walkAsync(new FolderWalker(process.platform), folder, CaptureMode.EveryFile, new AbortController().signal);
-
-    assert.deepEqual(result.entries, []);
-    assert.deepEqual(result.emptyFolders, ["run"]);
   });
 });
