@@ -46,6 +46,8 @@ export class EntryReader {
       if (EntryKind.ofStats(this.platform, stats) !== entry.kind)
         return new UnreadPath(entry.path, UnreadReason.Changing, null);
       current = new WalkedEntry(entry.path, entry.location, entry.kind, stats);
+      if (current.isTooLarge)
+        return new UnreadPath(entry.path, UnreadReason.TooLarge, null);
     }
   }
 

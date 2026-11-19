@@ -189,6 +189,8 @@ export class CheckpointCapture {
     return index.entries.map(t => t.path).filter(path => {
       if (walked.has(path) || leftOut.has(path))
         return false;
+      if (walk.folderTimes.has(path) && walk.entries.some(t => t.path.startsWith(`${path}${Resources.relativePathSeparator}`) && !CheckpointCapture.isAtOrAfter(t, cutoff)))
+        return false;
       let folder = path;
       let time = walk.folderTimes.get(folder);
       while (time === undefined) {

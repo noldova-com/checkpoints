@@ -97,6 +97,41 @@ describe("FolderWalker", { concurrency: true }, () => {
     assert.equal(result.folderTimes.get("src"), (await lstat(path.join(folder, "src"), { bigint: true })).mtimeNs);
   });
 
+  it("takes a folder's time again once it has walked what the folder holds, so a later file deleted meanwhile shows in it", async t => {
+    const folder = await folderAsync(t);
+    await writeAsync(folder, "big/a.ts", "a");
+    const deleted = await writeAsync(folder, "z.txt", "z");
+    const later = new Date(Date.now() + 3_600_000);
+    const walker = new FolderWalker(process.platform, async location => {
+      if (location === path.join(folder, "big")) {
+        await rm(deleted);
+        await utimes(folder, later, later);
+      }
+      return await readdir(location, { encoding: "buffer" });
+    });
+
+    const result = await walker.walkAsync(folder, CaptureMode.EveryFile, uncancelled);
+
+    assert.deepEqual(result.entries.map(u => u.path), ["big/a.ts"]);
+    assert.deepEqual([...result.folderTimes.keys()], ["", "big"]);
+    assert.equal(result.folderTimes.get(""), (await lstat(folder, { bigint: true })).mtimeNs);
+  });
+
+  it("keeps no time for a folder deleted while it walks what the folder holds, so the folder above it decides", async t => {
+    const folder = await folderAsync(t);
+    await writeAsync(folder, "sub/inner/x.ts", "x");
+    const walker = new FolderWalker(process.platform, async location => {
+      if (location === path.join(folder, "sub", "inner"))
+        await rm(path.join(folder, "sub"), { recursive: true });
+      return await readdir(location, { encoding: "buffer" });
+    });
+
+    const result = await walker.walkAsync(folder, CaptureMode.EveryFile, uncancelled);
+
+    assert.deepEqual(result.entries, []);
+    assert.deepEqual([...result.folderTimes.keys()], [""]);
+  });
+
   it("stops before its next entry once its signal aborts, inside a folder too, with the signal's reason", async t => {
     const folder = await folderAsync(t);
     await writeAsync(folder, "a.txt", "a");

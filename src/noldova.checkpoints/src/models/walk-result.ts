@@ -79,6 +79,10 @@ export class WalkResult {
     this.folderTimeMap.set(path, time);
   }
 
+  public forgetFolderTime(path: string): void {
+    this.folderTimeMap.delete(path);
+  }
+
   public addIgnoredPath(path: string): void {
     this.ignoredPathList.push(path);
   }

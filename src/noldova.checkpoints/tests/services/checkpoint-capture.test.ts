@@ -442,6 +442,24 @@ describe("CheckpointCapture", { concurrency: true }, () => {
     assert.deepEqual(plan.steps, []);
   });
 
+  it("lists a file that grows past 10 MiB once the walk has seen it as too large, without reading it again", async t => {
+    const harness = await CheckpointsHarness.startAsync(t);
+    const grows = await harness.writeAsync("grows.bin", "small");
+    await harness.writeAsync("z.txt", "zeta");
+    let blobs = 0;
+    watchContents(harness, count => {
+      blobs = count;
+      if (count === 1)
+        truncateSync(grows, 10 * 1024 * 1024 + 1);
+    });
+
+    const checkpoint = await harness.checkpointAsync(null);
+
+    assert.deepEqual(checkpoint.unreadPaths, [new UnreadPath("grows.bin", UnreadReason.TooLarge, null)]);
+    assert.deepEqual([...(await harness.treeAsync(checkpoint)).keys()].sort(), ["checkpoint.json", "files/z.txt"]);
+    assert.equal(blobs, 2);
+  });
+
   it("takes no checkpoint when the content it would add is over 1 GiB, and gives that size and the limit", async t => {
     const harness = await CheckpointsHarness.startAsync(t);
     const size = 10 * 1024 * 1024;
@@ -576,9 +594,10 @@ describe("CheckpointCapture", { concurrency: true }, () => {
     const asOf = new Date(Date.now() + 60_000);
     await rm(path.join(harness.folder, "a"));
     await rm(path.join(harness.folder, "b"));
-    await harness.writeAsync("a/x.txt", "x");
+    const added = await harness.writeAsync("a/x.txt", "x");
     await mkdir(path.join(harness.folder, "a", "empty"));
     await mkdir(path.join(harness.folder, "b"));
+    await utimes(added, asOf, asOf);
     await utimes(path.join(harness.folder, "a"), asOf, asOf);
     await utimes(path.join(harness.folder, "b"), asOf, asOf);
 
@@ -592,6 +611,24 @@ describe("CheckpointCapture", { concurrency: true }, () => {
     assert.deepEqual([...(await earlierPathsAsync(harness, result.checkpoint))].sort(), ["a", "b"]);
     assert.deepEqual(record["emptyFolders"], []);
     assert.deepEqual(JsonFixture.objectsOf(index["entries"]).map(u => u["path"]).sort(), ["a", "b", "c.txt"]);
+  });
+
+  it("keeps a folder the person put in place of a file before the turn, by a file in it older than the turn's start, with what the turn added left out", async t => {
+    const harness = await CheckpointsHarness.startAsync(t);
+    await harness.writeAsync("notes", "the file");
+    await harness.checkpointAsync(null);
+    const asOf = new Date(Date.now() + 60_000);
+    const before = new Date(asOf.getTime() - 3_600_000);
+    await rm(path.join(harness.folder, "notes"));
+    await utimes(await harness.writeAsync("notes/a.md", "the person's"), before, before);
+    await utimes(await harness.writeAsync("notes/b.md", "the turn's"), asOf, asOf);
+    await utimes(path.join(harness.folder, "notes"), asOf, asOf);
+
+    const result = await harness.captureAsync(null, asOf);
+    assert.ok(result.checkpoint !== null);
+
+    assert.deepEqual([...(await harness.treeAsync(result.checkpoint)).keys()].sort(), ["checkpoint.json", "files/notes/a.md"]);
+    assert.deepEqual(await earlierPathsAsync(harness, result.checkpoint), []);
   });
 
   it("keeps the earlier copy of a file deleted from a folder changed at or after the turn's start, a whole deleted folder's too, and none from an older folder", async t => {
