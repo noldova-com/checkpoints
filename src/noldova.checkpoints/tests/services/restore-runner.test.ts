@@ -31,6 +31,7 @@ import { FolderWalker } from "../../src/services/folder-walker.ts";
 import { RestorePaths } from "../../src/services/restore-paths.ts";
 import { AccessFixture } from "../fixtures/access.fixture.ts";
 import { AttemptedRestore } from "../fixtures/attempted-restore.fixture.ts";
+import { CheckpointsContext } from "../fixtures/checkpoints-context.fixture.ts";
 import { CheckpointsHarness } from "../fixtures/checkpoints-harness.fixture.ts";
 import { LinkFixture } from "../fixtures/link.fixture.ts";
 import { PreparedRestore } from "../fixtures/prepared-restore.fixture.ts";
@@ -908,6 +909,7 @@ describe("RestoreRunner, alone", () => {
 
     assert.deepEqual([result.outcome, result.before?.label, result.recovered], [RestoreOutcome.Restored, "Before restore", null]);
     assert.equal(await readFile(path.join(harness.folder, "d"), "utf8"), "a file");
+    assert.deepEqual(CheckpointsContext.messagesOf(harness.context.log), []);
     await RestoreFolder.of(harness).assertCleanAsync();
   });
 
@@ -916,6 +918,7 @@ describe("RestoreRunner, alone", () => {
 
     assert.deepEqual([result.outcome, result.before?.label, result.recovered], [RestoreOutcome.Restored, "Before restore", null]);
     assert.equal(await readFile(path.join(harness.folder, "d"), "utf8"), "a file");
+    assert.deepEqual(CheckpointsContext.messagesOf(harness.context.log), []);
     await RestoreFolder.of(harness).assertCleanAsync();
   });
 
