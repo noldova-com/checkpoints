@@ -59,8 +59,6 @@ const sorted = (entries: readonly (readonly [string, string | null])[]): readonl
   [...entries].sort(([t], [u]) => Buffer.compare(Buffer.from(t), Buffer.from(u)));
 const base64 = (text: string): string => Buffer.from(text).toString("base64");
 
-const onFirstAside = (harness: CheckpointsHarness, relativePath: string, changeAsync: (location: string, aside: string) => Promise<void>): (record: JournalRecord) => Promise<void> =>
-  RestoreFolder.of(harness).onFirstAside(relativePath, changeAsync);
 const rewritingInPlace = (harness: CheckpointsHarness, relativePath: string, text: string, time: number): (record: JournalRecord) => Promise<void> =>
   RestoreFolder.of(harness).rewritingInPlace(relativePath, text, time);
 const time = RestoreFolder.time;

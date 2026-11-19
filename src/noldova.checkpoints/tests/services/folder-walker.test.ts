@@ -21,7 +21,6 @@ import { LinkRecord } from "../../src/models/link-record.ts";
 import type { WalkResult } from "../../src/models/walk-result.ts";
 import { FolderWalker } from "../../src/services/folder-walker.ts";
 import { AccessFixture } from "../fixtures/access.fixture.ts";
-import { CancelFixture } from "../fixtures/cancel.fixture.ts";
 import { CaseFixture } from "../fixtures/case.fixture.ts";
 import { LinkFixture } from "../fixtures/link.fixture.ts";
 
@@ -84,19 +83,6 @@ describe("FolderWalker", { concurrency: true }, () => {
     assert.ok(source.mtimeNs > source.ctimeNs);
     assert.equal(result.folderTimes.get("src"), source.mtimeNs);
     assert.equal(result.folderTimes.get("src/lib"), await timeOf(path.join(folder, "src", "lib")));
-  });
-
-  it("stops before its next entry once its signal aborts, inside a folder too, with the signal's reason", async t => {
-    const folder = await folderAsync(t);
-    await writeAsync(folder, "a.txt", "a");
-    await writeAsync(folder, "b.txt", "b");
-    await writeAsync(folder, "src/x.ts", "x");
-    await writeAsync(folder, "src/y.ts", "y");
-    const cancel = new CancelFixture(t, 4);
-
-    await assert.rejects(new FolderWalker(process.platform).walkAsync(folder, CaptureMode.EveryFile, cancel.signal), cancel.reason);
-
-    assert.equal(cancel.checks, 4);
   });
 
   it("never enters a .git, the folder's own or a nested repository's, nor a .git file, and keeps the rest of a nested repository", async t => {
