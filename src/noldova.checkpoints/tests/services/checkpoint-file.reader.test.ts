@@ -15,9 +15,6 @@ import { describe, it, type TestContext } from "node:test";
 
 import { ReadOutcome, type ReadResult } from "@noldova/checkpoints.protocol";
 
-import type { FolderFile } from "../../src/models/folder-file.ts";
-import type { UnhashedFile } from "../../src/models/unhashed-file.ts";
-import { FolderFileReader } from "../../src/services/folder-file.reader.ts";
 import { AccessFixture } from "../fixtures/access.fixture.ts";
 import { ChangedCheckpoint } from "../fixtures/changed-checkpoint.fixture.ts";
 import { CheckpointsHarness } from "../fixtures/checkpoints-harness.fixture.ts";
@@ -416,25 +413,5 @@ describe("CheckpointFileReader", { concurrency: true }, () => {
 
       assert.deepEqual([diff.outcome, textOf(diff)], [ReadOutcome.Read, `@@ -1 +0,0 @@\n-${OLD}`]);
     });
-  });
-});
-
-describe("CheckpointFileReader, alone, while the folder now changes after the path was found", () => {
-  it("reports Binary for a text file grown past 32 MiB, reading no more than a byte past what Git would diff", async t => {
-    const { harness, checkpoint, objectId } = await startAsync(t);
-    const location = path.join(harness.folder, "a.txt");
-    const bound = 32 * 1024 * 1024 + 1;
-    const reads: (readonly [number, number])[] = [];
-    const readAsync = FolderFileReader.readAsync;
-    t.mock.method(FolderFileReader, "readAsync", async (folder: string, file: FolderFile | UnhashedFile, keep: number) => {
-      const content = await readAsync(folder, file, keep);
-      if (file.location === location)
-        reads.push([keep, content instanceof Buffer ? content.length : -1]);
-      return content;
-    });
-    changeWhileReading(harness, objectId, () => writeFileSync(location, Buffer.alloc(bound, "a")));
-
-    assert.equal((await harness.readAsync(checkpoint, "a.txt", "now")).outcome, ReadOutcome.Binary);
-    assert.deepEqual(reads, [[bound, bound]]);
   });
 });

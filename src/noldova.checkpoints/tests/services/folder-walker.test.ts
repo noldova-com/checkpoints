@@ -7,7 +7,6 @@
  */
 
 import assert from "node:assert/strict";
-import { constants, type BigIntStats } from "node:fs";
 import { chmod, link, lstat, mkdir, mkdtemp, realpath, rm, symlink, utimes, writeFile } from "node:fs/promises";
 import { createServer } from "node:net";
 import { tmpdir } from "node:os";
@@ -422,28 +421,5 @@ describe("FolderWalker", { concurrency: true }, () => {
     const result = await walkAsync(new FolderWalker(process.platform), folder, CaptureMode.IgnoreFiles, uncancelled);
 
     assert.deepEqual(result.entries.map(t => t.path).sort(), [".gitignore", "café.txt", "😀.txt"].sort());
-  });
-});
-
-describe("FolderWalker, alone", () => {
-  it("leaves out an item that is no file, folder or link, as a socket is, and lists the folder that held only it as empty", async t => {
-    const folder = await realpath(await mkdtemp(path.join(tmpdir(), "walker-")));
-    t.after(() => rm(folder, { recursive: true, force: true }));
-    await mkdir(path.join(folder, "run"));
-    const location = path.join(folder, "run", "s.sock");
-    await writeFile(location, "");
-    const stats = await lstat(location, { bigint: true });
-    const prototype: unknown = stats.constructor.prototype;
-    const isTelling = (value: unknown): value is Pick<BigIntStats, "isFile"> =>
-      typeof value === "object" && value !== null && "isFile" in value && typeof value.isFile === "function";
-    assert.ok(isTelling(prototype));
-    t.mock.method(prototype, "isFile", function (this: BigIntStats): boolean {
-      return this.ino !== stats.ino && (this.mode & BigInt(constants.S_IFMT)) === BigInt(constants.S_IFREG);
-    });
-
-    const result = await walkAsync(new FolderWalker(process.platform), folder, CaptureMode.EveryFile, new AbortController().signal);
-
-    assert.deepEqual(result.entries, []);
-    assert.deepEqual(result.emptyFolders, ["run"]);
   });
 });

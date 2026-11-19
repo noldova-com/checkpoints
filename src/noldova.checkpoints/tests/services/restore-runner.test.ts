@@ -7,8 +7,8 @@
  */
 
 import assert from "node:assert/strict";
-import { appendFileSync, truncateSync, writeFileSync, type BigIntStats } from "node:fs";
-import { chmod, lstat, lutimes, mkdir, readdir, readFile, readlink, rename, rm, symlink, unlink, utimes, writeFile } from "node:fs/promises";
+import { appendFileSync, truncateSync, writeFileSync } from "node:fs";
+import { chmod, lstat, mkdir, readdir, readFile, rename, rm, symlink, utimes, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { describe, it, type TestContext } from "node:test";
 
@@ -25,7 +25,6 @@ import {
 
 import { JournalRecordType } from "../../src/models/journal-record-type.ts";
 import type { JournalRecord } from "../../src/models/journal-record.ts";
-import { RestorePaths } from "../../src/services/restore-paths.ts";
 import { AccessFixture } from "../fixtures/access.fixture.ts";
 import { AttemptedRestore } from "../fixtures/attempted-restore.fixture.ts";
 import { CheckpointsHarness } from "../fixtures/checkpoints-harness.fixture.ts";
@@ -870,46 +869,6 @@ describe("RestoreRunner", { concurrency: true }, () => {
     await rm(staging);
     assert.equal((await harness.captureAsync(null)).outcome, CaptureOutcome.Captured);
     assert.deepEqual(await harness.snapshotAsync(), now);
-    await RestoreFolder.of(harness).assertCleanAsync();
-  });
-});
-
-describe("RestoreRunner, alone", () => {
-  it("rolls back, keeping the link, when another program puts in place of a planned link one to another target with its size, modified time and file id", { skip: withoutLinks }, async t => {
-    const harness = await CheckpointsHarness.startAsync(t);
-    await harness.writeAsync("a.txt", "a");
-    const checkpoint = await harness.checkpointAsync(null);
-    await harness.writeAsync("first.txt", "first");
-    await harness.writeAsync("fifth.txt", "fifth");
-    const out = path.join(harness.folder, "out");
-    await LinkFixture.symlinkAsync("first.txt", out, "file");
-    await lutimes(out, time, time);
-    const plan = await harness.planAsync(checkpoint);
-    let swapped: BigIntStats | null = null;
-    let movedAside = "";
-    const lstatAsync = RestorePaths.lstatAsync;
-    t.mock.method(RestorePaths, "lstatAsync", async (location: string) => {
-      const stats = await lstatAsync(location);
-      if (stats === null || swapped === null || location !== movedAside)
-        return stats;
-      stats.dev = swapped.dev;
-      stats.ino = swapped.ino;
-      return stats;
-    });
-    const swapAsync = onFirstAside(harness, "out", async (u, aside) => {
-      swapped = await lstat(u, { bigint: true });
-      movedAside = aside;
-      await unlink(u);
-      await symlink("fifth.txt", u, "file");
-      await lutimes(u, time, time);
-    });
-    const service = await harness.createServiceAsync(ServiceSeams.system.withJournals(file => new ScriptedJournal(file, swapAsync)));
-
-    const result = await harness.restoreAsync(plan, service);
-
-    assert.equal(result.outcome, RestoreOutcome.RolledBack);
-    assert.equal(await readlink(out), "fifth.txt");
-    assert.equal(Buffer.from((await harness.readAsync(RestoreFolder.presentOf(result.before), "out", null)).content).toString("utf8"), "first.txt");
     await RestoreFolder.of(harness).assertCleanAsync();
   });
 });

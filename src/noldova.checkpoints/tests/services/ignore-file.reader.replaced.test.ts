@@ -1,0 +1,48 @@
+/**
+ * @license
+ * Copyright (c) Noldova.
+ *
+ * This source code is licensed under the license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
+import assert from "node:assert/strict";
+import { fstatSync, type BigIntStats } from "node:fs";
+import { lstat, mkdtemp, open, realpath, rm, writeFile, type FileHandle } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import path from "node:path";
+import { describe, it, type TestContext } from "node:test";
+
+import { IgnoreFileReader } from "../../src/services/ignore-file.reader.ts";
+
+const folderAsync = async (t: TestContext): Promise<string> => {
+  const folder = await realpath(await mkdtemp(path.join(tmpdir(), "ignore-")));
+  t.after(() => rm(folder, { recursive: true, force: true }));
+  return folder;
+};
+
+describe("IgnoreFileReader on a .gitignore another file replaces after it opens", () => {
+  const mockStat = async (t: TestContext, location: string, stat: (stats: BigIntStats) => Promise<BigIntStats>): Promise<void> => {
+    const opened = await open(location);
+    const prototype: unknown = opened.constructor.prototype;
+    const { ino } = await opened.stat({ bigint: true });
+    await opened.close();
+    const isStatting = (value: unknown): value is Pick<FileHandle, "stat"> =>
+      typeof value === "object" && value !== null && "stat" in value && typeof value.stat === "function";
+    assert.ok(isStatting(prototype));
+
+    t.mock.method(prototype, "stat", async function (this: FileHandle): Promise<BigIntStats> {
+      const stats = fstatSync(this.fd, { bigint: true });
+      return stats.ino === ino ? await stat(stats) : stats;
+    });
+  };
+
+  it("gives no content for a .gitignore that another file replaces after it opens", async t => {
+    const folder = await folderAsync(t);
+    const location = path.join(folder, ".gitignore");
+    await Promise.all([writeFile(location, "*\n"), writeFile(path.join(folder, "other.txt"), "*\n")]);
+    await mockStat(t, location, async () => await lstat(path.join(folder, "other.txt"), { bigint: true }));
+
+    assert.equal(await IgnoreFileReader.readAsync(location), null);
+  });
+});
