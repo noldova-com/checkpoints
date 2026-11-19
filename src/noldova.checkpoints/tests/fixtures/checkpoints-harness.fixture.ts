@@ -151,7 +151,7 @@ export class CheckpointsHarness {
     const build = await new GitBuildLocator(import.meta.dirname).locateAsync(process.platform, process.arch);
     this.clock.tick(1);
     const service = new CheckpointsHost(this.context, build, process.platform, nowhere(), nowhere(), nowhere(), nowhere(), seams.journals, seams.hasRoom,
-      seams.hardLink, seams.readFree, seams.renameFolder, seams.removeFolder, seams.statFile, seams.readNames, this.clock);
+      seams.hardLink, seams.readFree, seams.renameFolder, seams.removeFolder, seams.statFile, this.clock);
     this.stops.push(async () => await service.stopAsync());
     return service;
   }

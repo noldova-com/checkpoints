@@ -11,11 +11,11 @@ import { chmod, mkdir, readFile, readlink, rm, symlink, unlink, writeFile } from
 import path from "node:path";
 import { describe, it } from "node:test";
 
-import { Change, ChangeSide, ChangeStatus, CompareOutcome, CompareRequest, PathKind, UnreadReason } from "@noldova/checkpoints.protocol";
+import { Change, ChangeSide, ChangeStatus, CompareOutcome, PathKind, UnreadReason } from "@noldova/checkpoints.protocol";
 
 import { AccessFixture } from "../fixtures/access.fixture.ts";
 import { CheckpointsHarness } from "../fixtures/checkpoints-harness.fixture.ts";
-import { ServiceSeams } from "../fixtures/service-seams.fixture.ts";
+import { ListingFixture } from "../fixtures/listing.fixture.ts";
 
 describe("CheckpointComparer", { concurrency: true }, () => {
   const text = (kind: PathKind, size: number): ChangeSide => new ChangeSide(kind, size, true);
@@ -97,18 +97,6 @@ describe("CheckpointComparer", { concurrency: true }, () => {
     assert.deepEqual([missing.outcome, missing.changes], [CompareOutcome.FolderMissing, []]);
     assert.deepEqual([file.outcome, file.changes], [CompareOutcome.FolderMissing, []]);
     assert.deepEqual(statusesOf(between.changes), [["a.txt", "Added"]]);
-  });
-
-  it("reports a folder deleted while it is walked as missing, with no changes", async t => {
-    const harness = await CheckpointsHarness.startAsync(t);
-    await harness.writeAsync("sub/a.txt", "a");
-    await harness.writeAsync("z.txt", "z");
-    const checkpoint = await harness.checkpointAsync(null);
-    const service = await harness.createServiceAsync(ServiceSeams.system.withRemovedWhileReading(() => path.join(harness.folder, "sub"), () => harness.folder));
-
-    const result = await service.compareAsync(new CompareRequest(harness.reference, checkpoint.id, null));
-
-    assert.deepEqual([result.outcome, result.changes], [CompareOutcome.FolderMissing, []]);
   });
 
   it("reports a checkpoint missing on either side, and for a folder never captured runs no Git", async t => {
@@ -286,5 +274,19 @@ describe("CheckpointComparer", { concurrency: true }, () => {
     ]);
     assert.deepEqual([between.changes, back.changes], [[], []]);
     assert.deepEqual(statusesOf(ignoredNow.changes), [[".gitignore", "Modified"], ["nested/n.log", "Modified"]]);
+  });
+});
+
+describe("CheckpointComparer, alone", () => {
+  it("reports a folder deleted while it is walked as missing, with no changes", async t => {
+    const harness = await CheckpointsHarness.startAsync(t);
+    await harness.writeAsync("sub/a.txt", "a");
+    await harness.writeAsync("z.txt", "z");
+    const checkpoint = await harness.checkpointAsync(null);
+    ListingFixture.beforeListing(t, () => path.join(harness.folder, "sub"), async () => await rm(harness.folder, { recursive: true }));
+
+    const result = await harness.compareAsync(checkpoint, null);
+
+    assert.deepEqual([result.outcome, result.changes], [CompareOutcome.FolderMissing, []]);
   });
 });

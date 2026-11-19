@@ -20,11 +20,14 @@ import {
   RestoreOutcome,
   RestorePlan,
   UnreadPath,
-  UnreadReason
+  UnreadReason,
+  type CaptureMode,
+  type RestoreResult
 } from "@noldova/checkpoints.protocol";
 
 import { JournalRecordType } from "../../src/models/journal-record-type.ts";
 import type { JournalRecord } from "../../src/models/journal-record.ts";
+import { FolderWalker } from "../../src/services/folder-walker.ts";
 import { RestorePaths } from "../../src/services/restore-paths.ts";
 import { AccessFixture } from "../fixtures/access.fixture.ts";
 import { AttemptedRestore } from "../fixtures/attempted-restore.fixture.ts";
@@ -727,28 +730,6 @@ describe("RestoreRunner", { concurrency: true }, () => {
     assert.deepEqual(await harness.snapshotAsync(), now);
   });
 
-  it("finishes a restore whose moved-aside folder is gone when it walks the folder to compare it again", async t => {
-    const harness = await CheckpointsHarness.startAsync(t);
-    await harness.writeAsync("d", "a file");
-    const checkpoint = await harness.checkpointAsync(null);
-    await rm(path.join(harness.folder, "d"));
-    await harness.writeAsync("d/x.txt", "x");
-    const plan = await harness.planAsync(checkpoint);
-    let aside: string | null = null;
-    const service = await harness.createServiceAsync(ServiceSeams.system
-      .withJournals(file => new ScriptedJournal(file, async record => {
-        if (record.type === JournalRecordType.Aside)
-          aside = await asideOfAsync(harness, "d");
-      }))
-      .withRemovedWhileReading(() => aside, () => RestoreFolder.presentOf(aside)));
-
-    const result = await harness.restoreAsync(plan, service);
-
-    assert.deepEqual([result.outcome, result.before?.label, result.recovered], [RestoreOutcome.Restored, "Before restore", null]);
-    assert.equal(await readFile(path.join(harness.folder, "d"), "utf8"), "a file");
-    await RestoreFolder.of(harness).assertCleanAsync();
-  });
-
   it("gives FolderMissing when the folder goes away before the checkpoint taken before the restore", async t => {
     const harness = await CheckpointsHarness.startAsync(t);
     const { checkpoint } = await PreparedRestore.prepareAsync(harness);
@@ -897,6 +878,47 @@ describe("RestoreRunner", { concurrency: true }, () => {
 });
 
 describe("RestoreRunner, alone", () => {
+  const restoreAroundWalkAsync = async (t: TestContext, beforeAsync: (aside: string) => Promise<void>, afterAsync: (aside: string) => Promise<void>): Promise<readonly [CheckpointsHarness, RestoreResult]> => {
+    const harness = await CheckpointsHarness.startAsync(t);
+    await harness.writeAsync("d", "a file");
+    const checkpoint = await harness.checkpointAsync(null);
+    await rm(path.join(harness.folder, "d"));
+    await harness.writeAsync("d/x.txt", "x");
+    const plan = await harness.planAsync(checkpoint);
+    let aside: string | null = null;
+    const real = new FolderWalker(process.platform);
+    const walkRealAsync = real.walkAsync.bind(real);
+    t.mock.method(FolderWalker.prototype, "walkAsync", async (folder: string, mode: CaptureMode, signal: AbortSignal) => {
+      if (folder === aside)
+        await beforeAsync(folder);
+      const walk = await walkRealAsync(folder, mode, signal);
+      if (folder === aside)
+        await afterAsync(folder);
+      return walk;
+    });
+    const service = await harness.createServiceAsync(ServiceSeams.system.withJournals(file => new ScriptedJournal(file, async record => {
+      if (record.type === JournalRecordType.Aside)
+        aside = await asideOfAsync(harness, "d");
+    })));
+    return [harness, await harness.restoreAsync(plan, service)];
+  };
+
+  it("finishes a restore whose moved-aside folder is gone when it walks the folder to compare it again", async t => {
+    const [harness, result] = await restoreAroundWalkAsync(t, async aside => await rm(aside, { recursive: true }), async () => undefined);
+
+    assert.deepEqual([result.outcome, result.before?.label, result.recovered], [RestoreOutcome.Restored, "Before restore", null]);
+    assert.equal(await readFile(path.join(harness.folder, "d"), "utf8"), "a file");
+    await RestoreFolder.of(harness).assertCleanAsync();
+  });
+
+  it("finishes a restore whose moved-aside file is deleted after the walk that found it, before its stats are read again", async t => {
+    const [harness, result] = await restoreAroundWalkAsync(t, async () => undefined, async aside => await rm(path.join(aside, "x.txt")));
+
+    assert.deepEqual([result.outcome, result.before?.label, result.recovered], [RestoreOutcome.Restored, "Before restore", null]);
+    assert.equal(await readFile(path.join(harness.folder, "d"), "utf8"), "a file");
+    await RestoreFolder.of(harness).assertCleanAsync();
+  });
+
   it("rolls back, keeping the link, when another program puts in place of a planned link one to another target with its size, modified time and file id", { skip: withoutLinks }, async t => {
     const harness = await CheckpointsHarness.startAsync(t);
     await harness.writeAsync("a.txt", "a");

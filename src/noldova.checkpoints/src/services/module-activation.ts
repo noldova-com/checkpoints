@@ -30,7 +30,6 @@ import { MethodFailureException, type IRuntimePartContext } from "@noldova/deskt
 import { Resources } from "../resources.ts";
 import { CheckpointsHost } from "./checkpoints-host.ts";
 import type { Clock } from "./clock.ts";
-import { FolderWalker } from "./folder-walker.ts";
 import { FreeSpace } from "./free-space.ts";
 import { GitBuildLocator } from "./git-build.locator.ts";
 import { RestoreJournal } from "./restore-journal.ts";
@@ -43,7 +42,7 @@ export class ModuleActivation {
     const paused = context.declareEvent(CapturePausedEvent.event);
     const resumed = context.declareEvent(CaptureResumedEvent.event);
     const service = new CheckpointsHost(context, build, process.platform, restored, heldUp, paused, resumed, t => new RestoreJournal(t), FreeSpace.hasRoomAsync, link,
-      FreeSpace.readAsync, rename, rm, lstat, FolderWalker.readNamesAsync, clock);
+      FreeSpace.readAsync, rename, rm, lstat, clock);
     context.publishService(Resources.serviceName, service);
     context.registerMethod(CaptureRequest.method, { handleAsync: async t => (await service.captureAsync(ModuleActivation.request(() => CaptureRequest.fromJson(t.payload)), t.signal)).toJson() });
     context.registerMethod(ListRequest.method, { handleAsync: async t => (await service.listAsync(ModuleActivation.request(() => ListRequest.fromJson(t.payload)), t.signal)).toJson() });

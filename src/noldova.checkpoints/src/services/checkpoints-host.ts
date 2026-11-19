@@ -104,14 +104,13 @@ export class CheckpointsHost extends CheckpointsService {
     renameFolderAsync: (from: string, to: string) => Promise<void>,
     removeFolderAsync: (folder: string, options: RmOptions) => Promise<void>,
     statFileAsync: (file: string) => Promise<{ readonly size: number }>,
-    readNamesAsync: (folder: string) => Promise<Buffer[]>,
     clock: Clock) {
     super();
     const git = new GitRunner(context, build,
       new GitLimits(Resources.methodTimeoutMilliseconds, Resources.batchIdleMilliseconds, Resources.processIdleDelay, Resources.processStopMilliseconds), clock);
     this.git = git;
     this.log = context.log;
-    const walker = new FolderWalker(platform, readNamesAsync);
+    const walker = new FolderWalker(platform);
     const objects = new ObjectReader(git);
     const loader = new SideLoader(objects, new TreeLister(git), walker, new EntryReader(platform));
     this.lister = new CheckpointLister(git);

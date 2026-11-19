@@ -11,11 +11,11 @@ import { mkdir, readdir, readFile, rename, rm, symlink, writeFile } from "node:f
 import path from "node:path";
 import { describe, it } from "node:test";
 
-import { ChangeSide, KeepReason, KeptPath, PathKind, PreviewOutcome, PreviewRequest, RestoreAction, RestoreStep, type RestorePlan } from "@noldova/checkpoints.protocol";
+import { ChangeSide, KeepReason, KeptPath, PathKind, PreviewOutcome, RestoreAction, RestoreStep, type RestorePlan } from "@noldova/checkpoints.protocol";
 
 import { AccessFixture } from "../fixtures/access.fixture.ts";
 import { CheckpointsHarness } from "../fixtures/checkpoints-harness.fixture.ts";
-import { ServiceSeams } from "../fixtures/service-seams.fixture.ts";
+import { ListingFixture } from "../fixtures/listing.fixture.ts";
 
 describe("RestorePlanner", { concurrency: true }, () => {
   const text = (size: number): ChangeSide => new ChangeSide(PathKind.File, size, true);
@@ -239,14 +239,17 @@ describe("RestorePlanner", { concurrency: true }, () => {
     ]);
   });
 
+});
+
+describe("RestorePlanner, alone", () => {
   it("reports a folder deleted while it is walked as missing, with no plan", async t => {
     const harness = await CheckpointsHarness.startAsync(t);
     await harness.writeAsync("sub/a.txt", "a");
     await harness.writeAsync("z.txt", "z");
     const checkpoint = await harness.checkpointAsync(null);
-    const service = await harness.createServiceAsync(ServiceSeams.system.withRemovedWhileReading(() => path.join(harness.folder, "sub"), () => harness.folder));
+    ListingFixture.beforeListing(t, () => path.join(harness.folder, "sub"), async () => await rm(harness.folder, { recursive: true }));
 
-    const result = await service.previewRestoreAsync(new PreviewRequest(harness.reference, checkpoint.id, null));
+    const result = await harness.previewAsync(checkpoint);
 
     assert.deepEqual([result.outcome, result.plan], [PreviewOutcome.FolderMissing, null]);
   });

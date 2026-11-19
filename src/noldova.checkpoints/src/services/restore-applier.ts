@@ -7,7 +7,7 @@
  */
 
 import type { BigIntStats } from "node:fs";
-import { lstat, mkdir, rename, rm, rmdir, type link } from "node:fs/promises";
+import { mkdir, rename, rm, rmdir, type link } from "node:fs/promises";
 
 import { CaptureMode } from "@noldova/checkpoints.protocol";
 
@@ -84,8 +84,11 @@ export class RestoreApplier {
           continue;
         if (walk.repositoryPaths.length > 0)
           return null;
-        for (const entry of walk.entries)
-          changed.push(new WalkedEntry(RelativePath.join(step.path, entry.path), entry.location, entry.kind, await lstat(entry.location, { bigint: true })));
+        for (const entry of walk.entries) {
+          const now = await RestorePaths.lstatAsync(entry.location);
+          if (now !== null)
+            changed.push(new WalkedEntry(RelativePath.join(step.path, entry.path), entry.location, entry.kind, now));
+        }
         continue;
       }
       const kind = EntryKind.ofStats(this.platform, stats);

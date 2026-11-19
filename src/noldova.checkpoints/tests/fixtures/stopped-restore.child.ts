@@ -29,7 +29,7 @@ context.watchStart = (_command, recorded) => {
   process.stdout.write(`${StoppedRestore.recordedLine}${JSON.stringify(recorded.map(t => t.toJson()))}\n`);
 };
 const service = new CheckpointsHost(context, await new GitBuildLocator(import.meta.dirname).locateAsync(process.platform, process.arch), process.platform, nowhere(), nowhere(), nowhere(), nowhere(),
-  seams.journals, seams.hasRoom, seams.hardLink, seams.readFree, seams.renameFolder, seams.removeFolder, seams.statFile, seams.readNames, new ManualClock(restore.time));
+  seams.journals, seams.hasRoom, seams.hardLink, seams.readFree, seams.renameFolder, seams.removeFolder, seams.statFile, new ManualClock(restore.time));
 const result = await service.restoreAsync(restore.request);
 process.stdout.write(`The restore ended as ${result.outcome.value}.\n`);
 await service.stopAsync();
