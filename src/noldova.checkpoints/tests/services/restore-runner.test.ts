@@ -39,6 +39,7 @@ import { StopPoint } from "../fixtures/stop-point.fixture.ts";
 import { StoppedRestore } from "../fixtures/stopped-restore.fixture.ts";
 
 const linkType = process.platform === "win32" ? "junction" : "dir";
+const withoutLinks = await LinkFixture.withoutLinksAsync();
 const scriptAsync = async (harness: CheckpointsHarness): Promise<ScriptView> => await RestoreFolder.of(harness).scriptAsync();
 const locationOf = (harness: CheckpointsHarness, relativePath: string): string => RestoreFolder.of(harness).locationOf(relativePath);
 const asideOfAsync = async (harness: CheckpointsHarness, relativePath: string): Promise<string> => await RestoreFolder.of(harness).asideOfAsync(relativePath);
@@ -154,7 +155,7 @@ describe("RestoreRunner", { concurrency: true }, () => {
     assert.equal((await lstat(grown)).size, limit + 1);
   });
 
-  it("restores a file that is a link", async t => {
+  it("restores a file that is a link", { skip: withoutLinks }, async t => {
     const harness = await CheckpointsHarness.startAsync(t);
     await harness.writeAsync("target.txt", "target");
     await LinkFixture.symlinkAsync("target.txt", path.join(harness.folder, "link"), "file");
@@ -168,7 +169,27 @@ describe("RestoreRunner", { concurrency: true }, () => {
     assert.deepEqual(await harness.snapshotAsync(), [["link", "link:target.txt"], ["target.txt", Buffer.from("target").toString("base64")]]);
   });
 
-  it("rolls back a link it placed by a new link, by the new link's file id", async t => {
+  it("keeps a link as one it can't create, and restores the rest, when this process can't create links", { skip: withoutLinks === false ? LinkFixture.withLinks : false }, async t => {
+    const harness = await CheckpointsHarness.startAsync(t);
+    await mkdir(path.join(harness.folder, "target"));
+    await symlink(path.join(harness.folder, "target"), path.join(harness.folder, "link"), linkType);
+    await harness.writeAsync("a.txt", "alpha");
+    const checkpoint = await harness.checkpointAsync(null);
+    await rm(path.join(harness.folder, "link"));
+    await harness.writeAsync("link", "a file now");
+    await harness.writeAsync("a.txt", "alpha!");
+
+    const plan = await harness.planAsync(checkpoint);
+    const result = await harness.restoreAsync(plan);
+
+    assert.deepEqual(plan.stays, [new KeptPath("link", KeepReason.LinkUnsupported)]);
+    assert.deepEqual(plan.steps.map(u => u.path), ["a.txt"]);
+    assert.equal(result.outcome, RestoreOutcome.Restored);
+    assert.deepEqual([await readFile(path.join(harness.folder, "a.txt"), "utf8"), await readFile(path.join(harness.folder, "link"), "utf8")], ["alpha", "a file now"]);
+    await RestoreFolder.of(harness).assertCleanAsync();
+  });
+
+  it("rolls back a link it placed by a new link, by the new link's file id", { skip: withoutLinks }, async t => {
     const harness = await CheckpointsHarness.startAsync(t);
     await harness.writeAsync("target.txt", "target");
     await LinkFixture.symlinkAsync("target.txt", path.join(harness.folder, "link"), "file");
@@ -854,7 +875,7 @@ describe("RestoreRunner", { concurrency: true }, () => {
 });
 
 describe("RestoreRunner, alone", () => {
-  it("rolls back, keeping the link, when another program puts in place of a planned link one to another target with its size, modified time and file id", async t => {
+  it("rolls back, keeping the link, when another program puts in place of a planned link one to another target with its size, modified time and file id", { skip: withoutLinks }, async t => {
     const harness = await CheckpointsHarness.startAsync(t);
     await harness.writeAsync("a.txt", "a");
     const checkpoint = await harness.checkpointAsync(null);

@@ -26,6 +26,8 @@ const folderAsync = async (t: TestContext): Promise<string> => {
   return folder;
 };
 
+const withoutLinks = await LinkFixture.withoutLinksAsync();
+
 describe("IgnoreFileReader", { concurrency: true }, () => {
   it("reads a .gitignore's bytes", async t => {
     const location = path.join(await folderAsync(t), ".gitignore");
@@ -47,7 +49,7 @@ describe("IgnoreFileReader", { concurrency: true }, () => {
       [null, null, null]);
   });
 
-  it("gives no content for a .gitignore that links to a file", async t => {
+  it("gives no content for a .gitignore that links to a file", { skip: withoutLinks }, async t => {
     const folder = await folderAsync(t);
     await writeFile(path.join(folder, "target.txt"), "*\n");
     await LinkFixture.symlinkAsync(path.join(folder, "target.txt"), path.join(folder, ".gitignore"), "file");

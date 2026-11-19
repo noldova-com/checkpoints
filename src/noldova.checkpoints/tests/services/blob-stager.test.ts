@@ -21,6 +21,8 @@ import { BlobStager } from "../../src/services/blob-stager.ts";
 import { CheckpointsHarness } from "../fixtures/checkpoints-harness.fixture.ts";
 import { LinkFixture } from "../fixtures/link.fixture.ts";
 
+const withoutLinks = await LinkFixture.withoutLinksAsync();
+
 describe("BlobStager", { concurrency: true }, () => {
   const storeOf = (harness: CheckpointsHarness): FolderStore => new FolderStore(harness.context.moduleFolder, CheckpointsHarness.identity);
   const idOfAsync = async (harness: CheckpointsHarness, checkpoint: Checkpoint, relativePath: string): Promise<string> =>
@@ -90,7 +92,7 @@ describe("BlobStager", { concurrency: true }, () => {
       assert.deepEqual([(await stat(file.location)).mode & 0o100, (await stat(executable.location)).mode & 0o100], [0, 0o100]);
   });
 
-  it("links to the target the object holds, as a folder link for a folder and a file link otherwise", async t => {
+  it("links to the target the object holds, as a folder link for a folder and a file link otherwise", { skip: withoutLinks }, async t => {
     const harness = await CheckpointsHarness.startAsync(t);
     await mkdir(path.join(harness.root, "target-folder"));
     await writeFile(path.join(harness.root, "target-folder", "x.txt"), "x");
@@ -98,7 +100,6 @@ describe("BlobStager", { concurrency: true }, () => {
     const folderLink = new StagedBlob("a".repeat(40), path.join(harness.root, "folder-link"), PathKind.Link, LinkKind.Folder);
     const fileLink = new StagedBlob("b".repeat(40), path.join(harness.root, "file-link"), PathKind.Link, LinkKind.File);
     const plainLink = new StagedBlob("c".repeat(40), path.join(harness.root, "link"), PathKind.Link, null);
-    await LinkFixture.requireAsync(harness.root);
 
     await BlobStager.linkAsync(folderLink, Buffer.from("target-folder"));
     await BlobStager.linkAsync(fileLink, Buffer.from("target.txt"));

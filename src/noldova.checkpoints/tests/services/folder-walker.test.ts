@@ -25,6 +25,8 @@ import { CancelFixture } from "../fixtures/cancel.fixture.ts";
 import { CaseFixture } from "../fixtures/case.fixture.ts";
 import { LinkFixture } from "../fixtures/link.fixture.ts";
 
+const withoutLinks = await LinkFixture.withoutLinksAsync();
+
 describe("FolderWalker", { concurrency: true }, () => {
   const uncancelled: AbortSignal = new AbortController().signal;
 
@@ -255,7 +257,7 @@ describe("FolderWalker", { concurrency: true }, () => {
     assert.deepEqual(result.emptyFolders, ["real"]);
   });
 
-  it("records on Windows a link to a file that is there as a file link", async t => {
+  it("records on Windows a link to a file that is there as a file link", { skip: withoutLinks }, async t => {
     const folder = await folderAsync(t);
     await writeAsync(folder, "real.txt", "real");
     await LinkFixture.symlinkAsync(path.join(folder, "real.txt"), path.join(folder, "file-link"), "file");

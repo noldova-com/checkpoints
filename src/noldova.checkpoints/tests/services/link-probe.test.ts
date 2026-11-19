@@ -16,6 +16,8 @@ import { LinkProbe } from "../../src/services/link-probe.ts";
 import { AccessFixture } from "../fixtures/access.fixture.ts";
 import { LinkFixture } from "../fixtures/link.fixture.ts";
 
+const withoutLinks = await LinkFixture.withoutLinksAsync();
+
 describe("LinkProbe", { concurrency: true }, () => {
   const folderAsync = async (t: TestContext): Promise<string> => {
     const folder = await realpath(await mkdtemp(path.join(tmpdir(), "link-probe-")));
@@ -23,12 +25,12 @@ describe("LinkProbe", { concurrency: true }, () => {
     return folder;
   };
 
-  it("says a system that creates the link allows links, and removes the link it created in the folder given", async t => {
+  it("says a system that creates the link allows links, and removes the link it created in the folder given", { skip: withoutLinks }, async t => {
     const folder = await folderAsync(t);
 
     const allowed = await LinkProbe.canCreateLinksAsync(folder);
 
-    assert.equal(allowed, true, LinkFixture.refused);
+    assert.equal(allowed, true);
     assert.deepEqual(await readdir(folder), []);
   });
 
@@ -39,6 +41,15 @@ describe("LinkProbe", { concurrency: true }, () => {
     await AccessFixture.whileReadOnlyAsync(folder, async () => {
       allowed = await LinkProbe.canCreateLinksAsync(folder);
     });
+
+    assert.equal(allowed, false);
+    assert.deepEqual(await readdir(folder), []);
+  });
+
+  it("says a process the system lets create no links doesn't allow links, and leaves nothing", { skip: withoutLinks === false ? LinkFixture.withLinks : false }, async t => {
+    const folder = await folderAsync(t);
+
+    const allowed = await LinkProbe.canCreateLinksAsync(folder);
 
     assert.equal(allowed, false);
     assert.deepEqual(await readdir(folder), []);
