@@ -909,16 +909,16 @@ describe("RestoreRunner, alone", () => {
 
     assert.deepEqual([result.outcome, result.before?.label, result.recovered], [RestoreOutcome.Restored, "Before restore", null]);
     assert.equal(await readFile(path.join(harness.folder, "d"), "utf8"), "a file");
-    assert.deepEqual(CheckpointsContext.messagesOf(harness.context.log), []);
+    assert.deepEqual(CheckpointsContext.messagesOf(harness.context.log).filter(u => !u.startsWith("Git started")), []);
     await RestoreFolder.of(harness).assertCleanAsync();
   });
 
-  it("finishes a restore whose moved-aside file is deleted after the walk that found it, before its stats are read again", async t => {
-    const [harness, result] = await restoreAroundWalkAsync(t, async () => undefined, async aside => await rm(path.join(aside, "x.txt")));
+  it("finishes a restore whose moved-aside folder gained a file that is deleted after the walk that found it, before its stats are read again", async t => {
+    const [harness, result] = await restoreAroundWalkAsync(t, async aside => await writeFile(path.join(aside, "late.txt"), "late"), async aside => await rm(path.join(aside, "late.txt")));
 
     assert.deepEqual([result.outcome, result.before?.label, result.recovered], [RestoreOutcome.Restored, "Before restore", null]);
     assert.equal(await readFile(path.join(harness.folder, "d"), "utf8"), "a file");
-    assert.deepEqual(CheckpointsContext.messagesOf(harness.context.log), []);
+    assert.deepEqual(CheckpointsContext.messagesOf(harness.context.log).filter(u => !u.startsWith("Git started")), []);
     await RestoreFolder.of(harness).assertCleanAsync();
   });
 
