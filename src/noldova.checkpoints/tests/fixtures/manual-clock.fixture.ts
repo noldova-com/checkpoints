@@ -46,7 +46,7 @@ export class ManualClock extends Clock {
     return new ScheduledCall(() => this.remove(due));
   }
 
-  public async scheduledAsync(call: string): Promise<void> {
+  public async scheduledWithoutIoAsync(call: string): Promise<void> {
     for (let turn = 0; this.due.length === 0; turn++) {
       if (turn === ManualClock.scheduleTurns)
         throw new Error(`${call} wasn't scheduled on the clock within ${ManualClock.scheduleTurns} turns of the event loop.`);
