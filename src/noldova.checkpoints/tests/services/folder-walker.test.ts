@@ -27,17 +27,16 @@ import { CaseFixture } from "../fixtures/case.fixture.ts";
 import { LinkFixture } from "../fixtures/link.fixture.ts";
 
 const withoutLinks = await LinkFixture.withoutLinksAsync();
+const walkAsync = async (walker: FolderWalker, folder: string, mode: CaptureMode, signal: AbortSignal = new AbortController().signal): Promise<WalkResult> => {
+  const result = await walker.walkAsync(folder, mode, signal);
+  assert.ok(result !== null);
+  return result;
+};
 
 describe("FolderWalker", { concurrency: true }, () => {
   const uncancelled: AbortSignal = new AbortController().signal;
 
   const isWindows = process.platform === "win32";
-
-  const walkAsync = async (walker: FolderWalker, folder: string, mode: CaptureMode, signal: AbortSignal = uncancelled): Promise<WalkResult> => {
-    const result = await walker.walkAsync(folder, mode, signal);
-    assert.ok(result !== null);
-    return result;
-  };
 
   const folderAsync = async (t: TestContext): Promise<string> => {
     const folder = await realpath(await mkdtemp(path.join(tmpdir(), "walker-")));
