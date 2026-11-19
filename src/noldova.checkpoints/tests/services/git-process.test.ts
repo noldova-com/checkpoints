@@ -65,8 +65,7 @@ describe("GitProcess", { concurrency: true }, () => {
     const failing = running.failureAsync().then(t => {
       failure = t;
     });
-    while (clock.pending.length === 0)
-      await setImmediate();
+    await clock.scheduledAsync("fast-import's wait for its error output to close");
 
     clock.tick(4_999);
     await setImmediate();
@@ -86,8 +85,7 @@ describe("GitProcess", { concurrency: true }, () => {
     const failing = running.stoppedAsync().then(t => {
       failure = t;
     });
-    while (clock.pending.length === 0)
-      await setImmediate();
+    await clock.scheduledAsync("cat-file's wait for its error output to close");
 
     clock.tick(4_999);
     await setImmediate();

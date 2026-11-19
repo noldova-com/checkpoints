@@ -6,6 +6,8 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import { setImmediate } from "node:timers/promises";
+
 import { ScheduledCall } from "../../src/models/scheduled-call.ts";
 import { Resources } from "../../src/resources.ts";
 import { Clock } from "../../src/services/clock.ts";
@@ -13,6 +15,7 @@ import { DueCall } from "./due-call.fixture.ts";
 
 export class ManualClock extends Clock {
   public static readonly start: number = 1_800_000_000_000;
+  private static readonly scheduleTurns: number = 100;
   private readonly due: DueCall[] = [];
   private time: number;
 
@@ -41,6 +44,14 @@ export class ManualClock extends Clock {
     const due = new DueCall(this.time + milliseconds, call);
     this.due.push(due);
     return new ScheduledCall(() => this.remove(due));
+  }
+
+  public async scheduledAsync(call: string): Promise<void> {
+    for (let turn = 0; this.due.length === 0; turn++) {
+      if (turn === ManualClock.scheduleTurns)
+        throw new Error(`${call} wasn't scheduled on the clock within ${ManualClock.scheduleTurns} turns of the event loop.`);
+      await setImmediate();
+    }
   }
 
   public tick(milliseconds: number): void {
