@@ -70,10 +70,12 @@ describe("FolderWalker", { concurrency: true }, () => {
       const stats = await lstat(location, { bigint: true });
       return stats.mtimeNs > stats.ctimeNs ? stats.mtimeNs : stats.ctimeNs;
     };
+    const source = await lstat(path.join(folder, "src"), { bigint: true });
 
     assert.deepEqual([...result.folderTimes.keys()], ["", "src", "src/lib"]);
     assert.equal(result.folderTimes.get(""), await timeOf(folder));
-    assert.equal(result.folderTimes.get("src"), BigInt(later.getTime()) * 1_000_000n);
+    assert.ok(source.mtimeNs > source.ctimeNs);
+    assert.equal(result.folderTimes.get("src"), source.mtimeNs);
     assert.equal(result.folderTimes.get("src/lib"), await timeOf(path.join(folder, "src", "lib")));
   });
 

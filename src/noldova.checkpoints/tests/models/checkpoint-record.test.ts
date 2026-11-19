@@ -129,6 +129,6 @@ describe("CheckpointRecord", { concurrency: true }, () => {
   });
 
   it("refuses a record of a format version newer than the one it writes, naming it", () => {
-    assert.throws(() => CheckpointRecord.fromJson({ ...json, formatVersion: 3 }), new UnsupportedStoreFormatException("3"));
+    assert.throws(() => CheckpointRecord.fromJson({ ...json, formatVersion: 4 }), new UnsupportedStoreFormatException("4"));
   });
 });

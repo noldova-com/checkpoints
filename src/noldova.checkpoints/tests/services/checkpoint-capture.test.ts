@@ -564,6 +564,24 @@ describe("CheckpointCapture", { concurrency: true }, () => {
     assert.deepEqual([...earlier].sort(), ["gone/c.txt", "gone/deep/d.txt", "keep/a.txt"]);
   });
 
+  it("brings back no earlier copy of a file under a folder the walk can't read", { skip: AccessFixture.isRoot ? "root reads past any file mode" : false }, async t => {
+    const harness = await CheckpointsHarness.startAsync(t);
+    await harness.writeAsync("closed/x.txt", "x");
+    await harness.writeAsync("a.txt", "alpha");
+    await harness.checkpointAsync(null);
+    const asOf = new Date(Date.now() + 60_000);
+    await utimes(harness.folder, asOf, asOf);
+
+    await AccessFixture.whileDeniedAsync(path.join(harness.folder, "closed"), async () => {
+      const result = await harness.captureAsync(null, asOf);
+      assert.ok(result.checkpoint !== null);
+
+      assert.deepEqual([...(await harness.treeAsync(result.checkpoint)).keys()].sort(), ["checkpoint.json", "files/a.txt"]);
+      assert.deepEqual(result.checkpoint.unreadPaths, [new UnreadPath("closed", UnreadReason.Denied, null)]);
+      assert.deepEqual(await earlierPathsAsync(harness, result.checkpoint), []);
+    });
+  });
+
   it("brings back no earlier copy of a path the ignore files now ignore, a file or one under an ignored folder", async t => {
     const harness = await CheckpointsHarness.startAsync(t);
     await harness.writeAsync("a.log", "log");
