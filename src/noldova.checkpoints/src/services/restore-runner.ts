@@ -100,6 +100,8 @@ export class RestoreRunner {
     const captured = await this.capture.captureAsync(store, request.folder.path, Resources.beforeRestoreLabel, planned.record.checkpoint.mode, null, signal);
     if (captured.outcome === CaptureOutcome.LowDiskSpace)
       return new RestoreResult(RestoreOutcome.LowDiskSpace, null, null);
+    if (captured.outcome === CaptureOutcome.TooLarge)
+      return new RestoreResult(RestoreOutcome.TooLarge, null, null, captured.contentSize, captured.contentLimit);
     if (captured.checkpoint === null)
       return new RestoreResult(RestoreOutcome.FolderMissing, null, null);
     const before = captured.checkpoint;

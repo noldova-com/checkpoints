@@ -568,6 +568,30 @@ export declare class RestoreCheckpointsMismatchException extends ProtocolExcepti
 }
 
 /**
+ * Thrown when a restore result holds the content size and its limit other than exactly when its outcome is TooLarge.
+ */
+export declare class RestoreContentMismatchException extends ProtocolException {
+  /**
+   * The outcome the result was given.
+   */
+  public readonly outcome: RestoreOutcome;
+
+  /**
+   * Formats the exception's message from its facts.
+   *
+   * @param outcome The outcome the result was given.
+   * @example
+   * ```ts
+   * import { RestoreContentMismatchException, RestoreOutcome } from "@noldova/checkpoints.protocol";
+   *
+   * const exception = new RestoreContentMismatchException(RestoreOutcome.MovedOn);
+   * console.log(exception.message, exception.outcome);
+   * ```
+   */
+  public constructor(outcome: RestoreOutcome);
+}
+
+/**
  * Thrown when a side has a size other than exactly when it isn't a folder, or is a folder taken as text.
  */
 export declare class SideSizeMismatchException extends ProtocolException {
@@ -1348,7 +1372,8 @@ export declare class CaptureRequest {
   /**
    * The time the checkpoint stands for, such as when an agent's turn started, or `null` for the folder as the capture reads it. A file
    * whose modification or change time is at or after it, less 2 seconds for file systems that keep times to 2 seconds, isn't read, nor is
-   * one gone by the time it's read, nor one gone from a folder changed at or after it: the checkpoint keeps the earlier checkpoint's copy,
+   * one gone, rewritten or retargeted by the time it's read, nor one gone from a folder changed at or after it, nor one replaced by such a
+   * folder: the checkpoint keeps the earlier checkpoint's copy,
    * or leaves the file out when that has none. So a capture taken beside the turn, which finishes after the turn changed files, keeps
    * the folder as the turn began, but for a file changed both since the earlier checkpoint and as the turn began, which it keeps as the
    * earlier checkpoint had it.
@@ -2959,6 +2984,12 @@ export declare class RestoreOutcome {
   public static readonly RolledBack: RestoreOutcome;
 
   /**
+   * The checkpoint taken before the restore would write over 1 GiB of new and changed content, so it wasn't taken and nothing was
+   * changed; the result gives that size and the limit.
+   */
+  public static readonly TooLarge: RestoreOutcome;
+
+  /**
    * Whether the restore finished.
    */
   public readonly isRestored: boolean;
@@ -3080,6 +3111,17 @@ export declare class RestoreResult {
   public readonly before: Checkpoint | null;
 
   /**
+   * The most new and changed content a checkpoint writes, 1 GiB, when the outcome is {@link RestoreOutcome.TooLarge}, or `null`.
+   */
+  public readonly contentLimit: number | null;
+
+  /**
+   * The bytes of new and changed content the checkpoint taken before the restore would have written, when the outcome is
+   * {@link RestoreOutcome.TooLarge}, or `null`.
+   */
+  public readonly contentSize: number | null;
+
+  /**
    * Whether the restore finished.
    */
   public readonly outcome: RestoreOutcome;
@@ -3094,8 +3136,11 @@ export declare class RestoreResult {
    * @param outcome Whether the restore finished.
    * @param before The checkpoint taken before the restore, or `null`.
    * @param recovered The checkpoint that keeps what another program wrote, or `null`.
+   * @param contentSize The bytes of content to write, when the outcome is {@link RestoreOutcome.TooLarge}, or `null`, the default.
+   * @param contentLimit The content limit in bytes, when the outcome is {@link RestoreOutcome.TooLarge}, or `null`, the default.
    * @throws {ProtocolException} Thrown synchronously when the result holds a checkpoint before other than exactly when its outcome is
-   * {@link RestoreOutcome.Restored} or {@link RestoreOutcome.RolledBack}, or a recovered one when it isn't Restored.
+   * {@link RestoreOutcome.Restored} or {@link RestoreOutcome.RolledBack}, a recovered one when it isn't Restored, or the content size
+   * and its limit other than exactly when it is TooLarge, or a size isn't a whole number of bytes.
    * @example
    * ```ts
    * import { RestoreOutcome, RestoreResult } from "@noldova/checkpoints.protocol";
@@ -3104,7 +3149,7 @@ export declare class RestoreResult {
    * console.log(result.outcome.isRestored);
    * ```
    */
-  public constructor(outcome: RestoreOutcome, before: Checkpoint | null, recovered: Checkpoint | null);
+  public constructor(outcome: RestoreOutcome, before: Checkpoint | null, recovered: Checkpoint | null, contentSize?: number | null, contentLimit?: number | null);
 
   /**
    * Reads a result from its wire form.
@@ -3117,7 +3162,7 @@ export declare class RestoreResult {
    * ```ts
    * import { RestoreResult } from "@noldova/checkpoints.protocol";
    *
-   * const result = RestoreResult.fromJson({ outcome: "HeldUp", before: null, recovered: null });
+   * const result = RestoreResult.fromJson({ outcome: "HeldUp", before: null, recovered: null, contentSize: null, contentLimit: null });
    * console.log(result.before);
    * ```
    */

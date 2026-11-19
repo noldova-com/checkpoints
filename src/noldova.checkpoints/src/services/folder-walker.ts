@@ -30,13 +30,15 @@ import { RepositoryName } from "./repository-name.ts";
 
 export class FolderWalker {
   private readonly platform: string;
+  private readonly readNamesAsync: (folder: string) => Promise<Buffer[]>;
 
-  public constructor(platform: string) {
+  public constructor(platform: string, readNamesAsync: (folder: string) => Promise<Buffer[]> = t => readdir(t, Resources.bufferEncoding)) {
     this.platform = platform;
+    this.readNamesAsync = readNamesAsync;
   }
 
   public async walkAsync(folder: string, mode: CaptureMode, signal: AbortSignal): Promise<WalkResult> {
-    const names = (await readdir(folder, Resources.bufferEncoding)).sort(Buffer.compare);
+    const names = (await this.readNamesAsync(folder)).sort(Buffer.compare);
     const result = new WalkResult(mode === CaptureMode.IgnoreFiles ? new IgnoreRules(await CaseProbe.ignoresCaseAsync(folder, names, this.platform)) : null);
     const root = await stat(folder, { bigint: true });
     result.addFolder("", FolderWalker.idOf(root), FolderWalker.timeOf(root));
@@ -50,13 +52,6 @@ export class FolderWalker {
 
   private static timeOf(stats: BigIntStats): bigint {
     return stats.mtimeNs > stats.ctimeNs ? stats.mtimeNs : stats.ctimeNs;
-  }
-
-  private static async readChildAsync(location: string, leavesOut: (stats: BigIntStats) => boolean): Promise<WalkedChild | null> {
-    const stats = await lstat(location, { bigint: true });
-    if (leavesOut(stats))
-      return null;
-    return new WalkedChild(stats, stats.isDirectory() ? (await readdir(location, Resources.bufferEncoding)).sort(Buffer.compare) : null);
   }
 
   private static leavesOut(stats: BigIntStats, childPath: string, repositories: ReadonlySet<string>, result: WalkResult): boolean {
@@ -93,8 +88,18 @@ export class FolderWalker {
       rules.addFile(new IgnoreFile(folderPath, content, rules.ignoresCase));
   }
 
+  private async readChildAsync(location: string, leavesOut: (stats: BigIntStats) => boolean): Promise<WalkedChild | null> {
+    const stats = await lstat(location, { bigint: true });
+    if (leavesOut(stats))
+      return null;
+    if (!stats.isDirectory())
+      return new WalkedChild(stats, null);
+    const names = (await this.readNamesAsync(location)).sort(Buffer.compare);
+    return new WalkedChild(await lstat(location, { bigint: true }), names);
+  }
+
   private async walkChildAsync(location: string, childPath: string, repositories: ReadonlySet<string>, result: WalkResult, signal: AbortSignal): Promise<boolean> {
-    const read = await FolderWalker.readChildAsync(location, t => FolderWalker.leavesOut(t, childPath, repositories, result))
+    const read = await this.readChildAsync(location, t => FolderWalker.leavesOut(t, childPath, repositories, result))
       .catch((t: unknown) => ReadFailure.of(t));
     if (read instanceof ReadFailure)
       return result.addFailure(childPath, read);

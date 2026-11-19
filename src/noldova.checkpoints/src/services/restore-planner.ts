@@ -68,7 +68,7 @@ export class RestorePlanner {
     const scope = new RestoreScope(paths);
     const changes: PendingChange<FolderFile | SideFolder>[] = [];
     for (const change of ListingComparer.compare(now, saved).filter(t => scope.needs(t))) {
-      const reason = RestorePlanner.keepReasonOf(change, saved, walk, canLink);
+      const reason = RestorePlanner.keepReasonOf(change, saved, now, walk, canLink);
       if (reason === null)
         changes.push(change);
       else if (!stays.has(change.path))
@@ -112,9 +112,9 @@ export class RestorePlanner {
     return false;
   }
 
-  private static keepReasonOf(change: PendingChange, saved: SideListing, walk: WalkResult, canLink: boolean): KeepReason | null {
+  private static keepReasonOf(change: PendingChange, saved: SideListing, now: SideListing, walk: WalkResult, canLink: boolean): KeepReason | null {
     if (change.status === ChangeStatus.Unknown)
-      return saved.unreadReasonOf(change.path) === UnreadReason.TooLarge ? KeepReason.TooLarge : KeepReason.Unread;
+      return [saved, now].some(t => t.unreadReasonOf(change.path) === UnreadReason.TooLarge) ? KeepReason.TooLarge : KeepReason.Unread;
     if (walk.repositoryFolders.has(change.path))
       return KeepReason.RepositoryFolder;
     if (change.path.split(Resources.relativePathSeparator).some(t => RepositoryName.matches(t)))

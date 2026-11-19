@@ -7,8 +7,8 @@
  */
 
 import assert from "node:assert/strict";
-import { appendFileSync, mkdirSync, renameSync, rmSync, truncateSync, unlinkSync } from "node:fs";
-import { chmod, lstat, mkdir, readFile, readlink, rm, symlink, utimes, writeFile } from "node:fs/promises";
+import { appendFileSync, lutimesSync, mkdirSync, renameSync, rmSync, symlinkSync, truncateSync, unlinkSync, utimesSync } from "node:fs";
+import { chmod, lstat, mkdir, readFile, readlink, rm, symlink, unlink, utimes, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { describe, it } from "node:test";
 
@@ -535,6 +535,63 @@ describe("CheckpointCapture", { concurrency: true }, () => {
     assert.equal((await harness.contentAsync(result.checkpoint, "files/b.txt")).toString(), "beta");
     assert.deepEqual(result.checkpoint.unreadPaths, []);
     assert.deepEqual(earlier, ["b.txt"]);
+  });
+
+  it("keeps the earlier copy of a file the turn rewrites, or a link it retargets, while the capture reads it", async t => {
+    const harness = await CheckpointsHarness.startAsync(t);
+    for (const name of ["one", "two", "three"])
+      await mkdir(path.join(harness.folder, name));
+    const file = await harness.writeAsync("a.txt", "alpha");
+    const link = path.join(harness.folder, "out");
+    await symlink(path.join(harness.folder, "one"), link, "junction");
+    const first = await harness.checkpointAsync(null);
+    await harness.writeAsync("a.txt", "alpha!");
+    await unlink(link);
+    await symlink(path.join(harness.folder, "two"), link, "junction");
+    const asOf = new Date(Date.now() + 60_000);
+    watchContents(harness, count => {
+      if (count === 1) {
+        appendFileSync(file, " by the turn");
+        utimesSync(file, asOf, asOf);
+        unlinkSync(link);
+        symlinkSync(path.join(harness.folder, "three"), link, "junction");
+        lutimesSync(link, asOf, asOf);
+      }
+    });
+
+    const result = await harness.captureAsync(null, asOf);
+    assert.ok(result.checkpoint !== null);
+
+    assert.equal((await harness.contentAsync(result.checkpoint, "files/a.txt")).toString(), "alpha");
+    assert.deepEqual(await harness.contentAsync(result.checkpoint, "files/out"), await harness.contentAsync(first, "files/out"));
+    assert.deepEqual(await earlierPathsAsync(harness, result.checkpoint), ["a.txt", "out"]);
+  });
+
+  it("keeps the earlier copy of a file the turn replaced by a folder, and leaves out what the folder holds", async t => {
+    const harness = await CheckpointsHarness.startAsync(t);
+    await harness.writeAsync("a", "alpha");
+    await harness.writeAsync("b", "beta");
+    await harness.writeAsync("c.txt", "gamma");
+    await harness.checkpointAsync(null);
+    const asOf = new Date(Date.now() + 60_000);
+    await rm(path.join(harness.folder, "a"));
+    await rm(path.join(harness.folder, "b"));
+    await harness.writeAsync("a/x.txt", "x");
+    await mkdir(path.join(harness.folder, "a", "empty"));
+    await mkdir(path.join(harness.folder, "b"));
+    await utimes(path.join(harness.folder, "a"), asOf, asOf);
+    await utimes(path.join(harness.folder, "b"), asOf, asOf);
+
+    const result = await harness.captureAsync(null, asOf);
+    assert.ok(result.checkpoint !== null);
+    const record = JsonFixture.parse((await harness.contentAsync(result.checkpoint, "checkpoint.json")).toString());
+    const index = await harness.readStoreFileAsync("index");
+
+    assert.deepEqual([...(await harness.treeAsync(result.checkpoint)).keys()].sort(), ["checkpoint.json", "files/a", "files/b", "files/c.txt"]);
+    assert.equal((await harness.contentAsync(result.checkpoint, "files/a")).toString(), "alpha");
+    assert.deepEqual([...(await earlierPathsAsync(harness, result.checkpoint))].sort(), ["a", "b"]);
+    assert.deepEqual(record["emptyFolders"], []);
+    assert.deepEqual(JsonFixture.objectsOf(index["entries"]).map(u => u["path"]).sort(), ["a", "b", "c.txt"]);
   });
 
   it("keeps the earlier copy of a file deleted from a folder changed at or after the turn's start, a whole deleted folder's too, and none from an older folder", async t => {

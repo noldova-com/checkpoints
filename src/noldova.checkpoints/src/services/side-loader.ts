@@ -6,7 +6,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { UnreadPath, type CaptureMode } from "@noldova/checkpoints.protocol";
+import { UnreadPath, UnreadReason, type CaptureMode } from "@noldova/checkpoints.protocol";
 
 import { StoreObjectMissingException } from "../exceptions/store-object-missing.exception.ts";
 import { StoreObjectNotABlobException } from "../exceptions/store-object-not-a-blob.exception.ts";
@@ -65,6 +65,10 @@ export class SideLoader {
     const discarded = InputWriter.discarding();
     for (const entry of walk.entries) {
       signal.throwIfAborted();
+      if (entry.isTooLarge) {
+        unreadPaths.push(new UnreadPath(entry.path, UnreadReason.TooLarge, null));
+        continue;
+      }
       const known = index.findUnchanged(entry);
       const read = known === null ? await this.reader.readAsync(discarded, entry) : IndexEntry.of(entry, known.objectId);
       if (read instanceof IndexEntry)

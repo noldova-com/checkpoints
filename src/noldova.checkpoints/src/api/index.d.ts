@@ -977,7 +977,8 @@ export declare abstract class CheckpointsService {
    * @param signal Stops the call until the restore starts writing its journal; none by default.
    * @returns The outcome, with the checkpoint taken before the restore when it restored or rolled back, and, when it restored, the
    *   checkpoint labelled `Recovered after restore` that keeps what another program changed in a file the restore had moved aside;
-   *   or `MovedOn` when the folder no longer matches the plan, `LowDiskSpace`, `CheckpointMissing`, `FolderMissing` or `HeldUp`.
+   *   or `MovedOn` when the folder no longer matches the plan, `LowDiskSpace`, `TooLarge`, with the size of the new and changed files
+   *   and its limit, when the checkpoint taken before the restore would add over 1 GiB, `CheckpointMissing`, `FolderMissing` or `HeldUp`.
    * @throws {GitException} When a Git command fails before the restore changes anything.
    * @throws {StoreException} When the folder's store holds a file the module can't read.
    * @throws {Error} When the system refuses the module a step of its own before the restore changes anything, such as reading the

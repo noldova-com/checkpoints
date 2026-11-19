@@ -68,7 +68,7 @@ The runtime part publishes one service, and the same calls as `checkpoints.*` me
   `compare` answers `Compared` with its changes, or `CheckpointMissing` or `FolderMissing`; `read` answers `Read` with the bytes, the whole size and whether the bytes are cut, or `CheckpointMissing`, `FolderMissing`, `PathMissing`, `Unknown` or `Binary` ([Changes](#changes)).
 - `previewRestore` returns the restore's plan: what it writes, replaces and deletes, which of the files it writes are as the checkpoint before had them, what stays as it is and why, and the space it needs.
 - `restore` carries out a plan the person accepted, and refuses a plan the folder has moved on from.
-  It answers `Restored` with the checkpoint taken before it, and one that keeps what another program changed meanwhile, or `RolledBack` with the checkpoint taken before it, or `MovedOn`, `LowDiskSpace`, `CheckpointMissing`, `FolderMissing` or `HeldUp` ([Restoring](#restoring)).
+  It answers `Restored` with the checkpoint taken before it, and one that keeps what another program changed meanwhile, or `RolledBack` with the checkpoint taken before it, or `MovedOn`, `LowDiskSpace`, `TooLarge` with the size of the new and changed files and its 1 GiB limit, `CheckpointMissing`, `FolderMissing` or `HeldUp` ([Restoring](#restoring)).
 - `storage` lists every folder's space used, the largest first and folders of one size by identity: its identity, the path it had at its last capture, or none when its `folder.json` can't be read, and the sum of the sizes of its store's files.
   It reads outside the folders' queues, so it never waits for an operation or stops a housekeeping pass, and its sizes are a snapshot: a capture or a pass running as it reads may change them at once.
   A file or folder that goes away as it reads is left out, and so is a store a delete is moving aside; a delete waits for a read of the store that has started, since Windows refuses to rename a folder while a program lists or reads in it.
@@ -205,8 +205,9 @@ The module walks the folder itself, reading names as bytes, and never follows a 
 - The executable bit is kept on macOS and Linux; other attributes, extended attributes, times and hard links are not, and a restored file gets the restore's time.
 - A name Git can't hold, such as a Windows name with an unpaired surrogate, is listed among the paths that couldn't be read.
 - A file over 10 MiB isn't read: the checkpoint lists it as too large and keeps no content for it, and a restore of that checkpoint leaves it as it is; a link is kept whatever size it reports.
+  A preview doesn't read one in the folder now either, so a file the checkpoint holds that has since grown past 10 MiB stays as it is, as too large.
   A file of up to 10 MiB is streamed, and Git writes a file over `core.bigFileThreshold` into its store without holding it in memory; a checkpoint an earlier version took may hold larger files, and they restore like any other.
-- Tests: "leaves out a file over 10 MiB as too large, keeps one of exactly 10 MiB, and its restore preview keeps the one left out"; "takes no checkpoint when the content it would add is over 1 GiB, and gives that size and the limit"; "restores a large file a checkpoint kept before the size limit, and a file's letter case where the folder ignores case".
+- Tests: "leaves out a file over 10 MiB as too large, keeps one of exactly 10 MiB, and its restore preview keeps the one left out"; "takes no checkpoint when the content it would add is over 1 GiB, and gives that size and the limit"; "restores a large file a checkpoint kept before the size limit, and a file's letter case where the folder ignores case"; "keeps a file that grew past 10 MiB since the checkpoint, without reading it, and restores the rest".
 
 ### Following the ignore files
 
@@ -288,17 +289,19 @@ The module walks the folder itself, reading names as bytes, and never follows a 
 ### The turn's start
 
 - An app that takes a checkpoint for each turn of an agent gives the time the turn started, `asOf`, and takes the checkpoint once the turn is under way or done, in the background, so the turn never waits for it.
-  The checkpoint then keeps the folder as it was when the turn started, as far as the files' times tell.
+  The checkpoint then keeps each file the turn changed as the last checkpoint had it, as far as the files' times tell, not as it was when the turn started: a restore of it undoes the turn and, with it, any change the person made to those files after the last checkpoint and before the turn.
 - A file whose modification or change time is at or after `asOf`, less two seconds, is the turn's: the checkpoint keeps it as the checkpoint before had it, and leaves it out when that one didn't hold it.
   The two seconds cover a file system that keeps times to two seconds, such as FAT, as the index's do ([The module's index](#the-modules-index)).
-- A file the turn deletes, or keeps changing, while the capture reads it is kept the same way.
+- A file the turn deletes, rewrites or keeps changing while the capture reads it, and a link it retargets then, is kept the same way: a read that finds the file changed reads it again, and keeps the earlier copy when its time is now at or after the cutoff.
 - A file gone before the walk from a folder whose time is at or after the cutoff, or from under a folder gone with it, is kept as the checkpoint before had it; one gone from an older folder is left out, since it went before the turn.
+  A folder's time is read after its names are listed, so a file deleted between the two still counts as the turn's.
+  A file the turn replaced by a folder of the same name is decided by that folder's own time; when it is kept, the folder's contents are left out, since the checkpoint can't hold both.
   A path the walk leaves out as ignored, as a repository's or as unreadable, or one under such a folder, is never brought back.
-- `checkpoint.json` lists each path so kept as `earlierPaths`, and a restore's plan names those its steps write ([The preview](#the-preview)), so the person can see which copies are from before the turn.
+- `checkpoint.json` lists each path so kept as `earlierPaths`, and a restore's plan names those its steps write ([The preview](#the-preview)), so the person can see which copies are the last checkpoint's.
 - The times are the file system's, so the cutoff follows the clock: one stepped back between turns makes the files changed since the last turn look like the turn's, and they keep their earlier copies; one stepped forward makes the turn's files look older, and the checkpoint keeps them as the turn left them.
   A program that sets a file's times back, as an unpacker may, can likewise make the checkpoint keep that file as the turn left it.
 - A capture without `asOf`, such as the one before a restore, keeps the folder as it reads it.
-- Tests: "keeps the earlier copy of a file changed at or after the turn's start, leaves out a file new since then, and its restore preview names the earlier copies"; "counts a file changed within two seconds before the turn's start as the turn's, since a filesystem may keep times to two seconds, and reads one changed earlier"; "keeps the earlier copy of each file changed since the last turn when the clock stepped back between turns"; "keeps the earlier copy of a file the turn deletes while the capture reads, and leaves out a new one it deletes"; "keeps the earlier copy of a file deleted from a folder changed at or after the turn's start, a whole deleted folder's too, and none from an older folder"; "brings back no earlier copy of a path the ignore files now ignore, a file or one under an ignored folder"; "brings back no earlier copy of a file under a folder the walk can't read".
+- Tests: "keeps the earlier copy of a file changed at or after the turn's start, leaves out a file new since then, and its restore preview names the earlier copies"; "counts a file changed within two seconds before the turn's start as the turn's, since a filesystem may keep times to two seconds, and reads one changed earlier"; "keeps the earlier copy of each file changed since the last turn when the clock stepped back between turns"; "keeps the earlier copy of a file the turn deletes while the capture reads, and leaves out a new one it deletes"; "keeps the earlier copy of a file deleted from a folder changed at or after the turn's start, a whole deleted folder's too, and none from an older folder"; "brings back no earlier copy of a path the ignore files now ignore, a file or one under an ignored folder"; "brings back no earlier copy of a file under a folder the walk can't read"; "keeps the earlier copy of a file the turn rewrites, or a link it retargets, while the capture reads it"; "keeps the earlier copy of a file the turn replaced by a folder, and leaves out what the folder holds"; "takes a folder's time after it lists the folder, so a file deleted before the listing shows in the folder's time".
 
 ## Changes
 
@@ -342,10 +345,10 @@ A restore runs only on the person's request, through its preview.
   - each `.git`, and each name left out as one ([The `.git` left out](#the-git-left-out)), which the restore never reads, writes, replaces or deletes; a real `.GIT` on a folder that tells letter case apart stays for the same reason, since Git treats it as repository storage;
   - each folder that holds a `.git` at any depth, and each folder above one, which the restore never moves, replaces, renames or removes ([A repository's folders](#a-repositorys-folders));
   - in a checkpoint that followed the ignore files, a path ignored by the checkpoint's rules or by the folder's current ones, the folder now walked in the checkpoint's own mode, as [Changes](#changes) says;
-  - a path the checkpoint couldn't read, or left out as over 10 MiB;
+  - a path the checkpoint couldn't read, or that the checkpoint or the folder now holds over 10 MiB;
   - a link this system won't let the module create, in the checkpoint or in the folder now, since a rollback puts a moved-aside link back by creating it again.
 - The plan records each path's state now, the file id of each folder on its way from the folder's root, and the bytes the restore will write.
-- The plan's `earlierPaths` names each path a step writes that the checkpoint kept as the checkpoint before had it, so the preview can say those copies are from before the turn ([The turn's start](#the-turns-start)).
+- The plan's `earlierPaths` names each path a step writes that the checkpoint kept as the checkpoint before had it, so the preview can say those copies are the last checkpoint's, which undoes any change made to them after it ([The turn's start](#the-turns-start)).
 - A preview may list the paths the restore is limited to, `paths`, relative with "/" between names; without them it plans the whole folder.
   Each must equal the path a comparison gives exactly, letter case and Unicode normalisation included, and one holding `\` is refused on every system.
   The plan then holds only the changes at or under a listed path, and those above one that the restore needs: a change whose checkpoint side is a folder, such as a file now where the checkpoint holds a folder, but never a path the checkpoint doesn't hold, nor a file written over a folder now.
@@ -387,6 +390,7 @@ The restore writes only where the plan says, never through a link and never into
 2. Take a checkpoint of the folder now, labelled `Before restore`, in the restored checkpoint's mode.
    It is the restore's way back and the person's undo.
    When it finds a planned file or link with other content or another file id than the plan did, or couldn't read a planned path, the restore ends with `MovedOn` before it changes anything.
+   When the checkpoint would add over 1 GiB, it isn't taken, and the restore ends with `TooLarge`, with that size and the limit, before it changes anything.
 3. Write the journal, `restore.json`, with the whole script ([The journal](#the-journal)).
 4. Stage: write each new content into a folder of the restore's own at the folder's root, `.~<restore id>/`, as `<step>`, and flush each staged file to disk.
    The temporary names don't grow with the targets' names, so a target whose name is at the system's limit restores too.
@@ -467,7 +471,7 @@ The journal makes a restore finish whole or not at all.
 - A restore whose checkpoint taken before it runs out of space answers `LowDiskSpace` and changes nothing.
   Only the captures the app asks for pause and resume the folder's captures: a restore's checkpoint taken before it posts no notification and raises neither event, since the restore's own answer tells the app.
 - The store's housekeeping runs only with 2 GiB free on the store's volume beyond the size of the store's objects ([Keeping and deleting](#keeping-and-deleting)).
-- Tests: "takes no checkpoint where the store's volume lacks 2 GiB free beyond the new and changed files, and answers the space free and needed"; "stops a capture whose store's volume falls below the margin while its content streams, and leaves the store as it was"; "takes a capture whose 64 MiB step falls on its final write, checking no space there, since fast-import completes there, and keeps its objects"; "posts the low-disk-space notification for a capture without the space, replaces it at the next, and dismisses it at one taken after"; "raises the paused event at each capture without the space, and the resumed event once, at the next one taken, for that folder alone"; "refuses a restore without the free space it needs, or whose checkpoint taken before it runs out of space, and changes nothing".
+- Tests: "takes no checkpoint where the store's volume lacks 2 GiB free beyond the new and changed files, and answers the space free and needed"; "stops a capture whose store's volume falls below the margin while its content streams, and leaves the store as it was"; "takes a capture whose 64 MiB step falls on its final write, checking no space there, since fast-import completes there, and keeps its objects"; "posts the low-disk-space notification for a capture without the space, replaces it at the next, and dismisses it at one taken after"; "raises the paused event at each capture without the space, and the resumed event once, at the next one taken, for that folder alone"; "refuses a restore without the free space it needs, or whose checkpoint taken before it runs out of space, and changes nothing"; "refuses a restore whose checkpoint taken before it would add over 1 GiB, with that size and the limit, and changes nothing".
 
 ## Keeping and deleting
 

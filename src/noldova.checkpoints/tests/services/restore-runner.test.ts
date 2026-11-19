@@ -7,13 +7,15 @@
  */
 
 import assert from "node:assert/strict";
-import { appendFileSync, writeFileSync, type BigIntStats } from "node:fs";
+import { appendFileSync, truncateSync, writeFileSync, type BigIntStats } from "node:fs";
 import { chmod, lstat, lutimes, mkdir, readdir, readFile, readlink, rename, rm, symlink, unlink, utimes, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { describe, it, type TestContext } from "node:test";
 
 import {
   CaptureOutcome,
+  KeepReason,
+  KeptPath,
   PreviewOutcome,
   RestoreOutcome,
   RestorePlan,
@@ -131,6 +133,25 @@ describe("RestoreRunner", { concurrency: true }, () => {
     assert.deepEqual((await readdir(harness.folder)).sort(), ["Docs", "large.bin"]);
     assert.deepEqual(await readdir(path.join(harness.folder, "Docs")), ["Readme.md"]);
     await RestoreFolder.of(harness).assertCleanAsync();
+  });
+
+  it("keeps a file that grew past 10 MiB since the checkpoint as too large, and restores the rest", async t => {
+    const harness = await CheckpointsHarness.startAsync(t);
+    const limit = 10 * 1024 * 1024;
+    const grown = await harness.writeAsync("grown.bin", "small");
+    await harness.writeAsync("a.txt", "alpha");
+    const checkpoint = await harness.checkpointAsync(null);
+    truncateSync(grown, limit + 1);
+    await harness.writeAsync("a.txt", "alpha!");
+
+    const plan = await harness.planAsync(checkpoint);
+    const result = await harness.restoreAsync(plan);
+
+    assert.deepEqual(plan.stays, [new KeptPath("grown.bin", KeepReason.TooLarge)]);
+    assert.deepEqual(plan.steps.map(u => u.path), ["a.txt"]);
+    assert.equal(result.outcome, RestoreOutcome.Restored);
+    assert.equal(await readFile(path.join(harness.folder, "a.txt"), "utf8"), "alpha");
+    assert.equal((await lstat(grown)).size, limit + 1);
   });
 
   it("restores a file that is a link", async t => {
@@ -660,6 +681,29 @@ describe("RestoreRunner", { concurrency: true }, () => {
 
     assert.equal(result.outcome, RestoreOutcome.MovedOn);
     assert.match(await readFile(changing, "utf8"), /^written by another programz+$/);
+  });
+
+  it("refuses a restore whose checkpoint taken before it would add over 1 GiB, with that size and the limit, and changes nothing", async t => {
+    const harness = await CheckpointsHarness.startAsync(t);
+    const { checkpoint } = await PreparedRestore.prepareAsync(harness);
+    const plan = await harness.planAsync(checkpoint);
+    const listed = await harness.listAsync();
+    const size = 10 * 1024 * 1024;
+    const service = await harness.createServiceAsync(ServiceSeams.system.withHasRoom(async () => {
+      for (let count = 0; count < 103; count++)
+        truncateSync(await harness.writeAsync(`part-${String(count).padStart(3, "0")}.bin`, ""), size);
+      return true;
+    }));
+    const now = await harness.snapshotAsync();
+
+    const result = await harness.restoreAsync(plan, service);
+
+    assert.deepEqual([result.outcome, result.before, result.contentLimit], [RestoreOutcome.TooLarge, null, 1024 * 1024 * 1024]);
+    assert.ok((result.contentSize ?? 0) >= 103 * size);
+    assert.deepEqual(await harness.listAsync(), listed);
+    for (const name of (await readdir(harness.folder)).filter(u => u.startsWith("part-")))
+      await rm(path.join(harness.folder, name));
+    assert.deepEqual(await harness.snapshotAsync(), now);
   });
 
   it("gives FolderMissing when the folder goes away before the checkpoint taken before the restore", async t => {

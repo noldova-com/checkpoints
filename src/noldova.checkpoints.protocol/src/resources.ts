@@ -187,6 +187,10 @@ export class Resources {
     return `A read result holds content and a size only when its outcome is Read; the outcome is ${outcome}.`;
   }
 
+  public static formatRestoreContentMismatch(outcome: string): string {
+    return `A restore result holds the content size and its limit exactly when its outcome is TooLarge; the outcome is ${outcome}.`;
+  }
+
   public static formatRestoreCheckpointsMismatch(outcome: string): string {
     return `A restore result holds the checkpoint before exactly when its outcome is Restored or RolledBack, and a recovered one only when it is Restored; the outcome is ${outcome}.`;
   }

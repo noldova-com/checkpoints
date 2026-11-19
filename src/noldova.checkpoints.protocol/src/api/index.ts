@@ -29,6 +29,7 @@ export { ProtocolException } from "../exceptions/protocol.exception.ts";
 export { ReadCutMismatchException } from "../exceptions/read-cut-mismatch.exception.ts";
 export { ReadOutcomeMismatchException } from "../exceptions/read-outcome-mismatch.exception.ts";
 export { RestoreCheckpointsMismatchException } from "../exceptions/restore-checkpoints-mismatch.exception.ts";
+export { RestoreContentMismatchException } from "../exceptions/restore-content-mismatch.exception.ts";
 export { SideSizeMismatchException } from "../exceptions/side-size-mismatch.exception.ts";
 export { StepSidesMismatchException } from "../exceptions/step-sides-mismatch.exception.ts";
 export { UnknownCaptureModeException } from "../exceptions/unknown-capture-mode.exception.ts";

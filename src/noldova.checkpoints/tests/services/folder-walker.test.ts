@@ -8,7 +8,7 @@
 
 import assert from "node:assert/strict";
 import { constants, type BigIntStats } from "node:fs";
-import { chmod, link, lstat, mkdir, mkdtemp, realpath, rm, symlink, utimes, writeFile } from "node:fs/promises";
+import { chmod, link, lstat, mkdir, mkdtemp, readdir, realpath, rm, symlink, utimes, writeFile } from "node:fs/promises";
 import { createServer } from "node:net";
 import { tmpdir } from "node:os";
 import path from "node:path";
@@ -77,6 +77,24 @@ describe("FolderWalker", { concurrency: true }, () => {
     assert.ok(source.mtimeNs > source.ctimeNs);
     assert.equal(result.folderTimes.get("src"), source.mtimeNs);
     assert.equal(result.folderTimes.get("src/lib"), await timeOf(path.join(folder, "src", "lib")));
+  });
+
+  it("takes a folder's time after it lists the folder, so a file deleted before the listing shows in the folder's time", async t => {
+    const folder = await folderAsync(t);
+    const deleted = await writeAsync(folder, "src/x.ts", "x");
+    const later = new Date(Date.now() + 3_600_000);
+    const walker = new FolderWalker(process.platform, async location => {
+      if (location === path.join(folder, "src")) {
+        await rm(deleted);
+        await utimes(location, later, later);
+      }
+      return await readdir(location, { encoding: "buffer" });
+    });
+
+    const result = await walker.walkAsync(folder, CaptureMode.EveryFile, uncancelled);
+
+    assert.deepEqual(result.entries, []);
+    assert.equal(result.folderTimes.get("src"), (await lstat(path.join(folder, "src"), { bigint: true })).mtimeNs);
   });
 
   it("stops before its next entry once its signal aborts, inside a folder too, with the signal's reason", async t => {
