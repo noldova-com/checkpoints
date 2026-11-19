@@ -140,17 +140,27 @@ Every pull request into `main` must pass "Check / Linked issue" and "Build and t
   | `services/restore-rollback.test.ts` | 7.6 s | 1.6 s | 20.9 s | 3.4 s | Rolls back restores on real folders, staging the checkpoint's files through real Git. |
   | `services/object.reader.test.ts` | 5.6 s | 2.4 s | 18.9 s | 3.2 s | Reads objects, a large one among them, from real stores through cat-file. |
   | `services/restore-scope.test.ts` | 8.6 s | 2.6 s | 16.4 s | 2.3 s | Plans restores limited to listed paths, from checkpoints captured through real Git. |
+  | `services/checkpoints-host.cancel-journal.test.ts` | 5.6 s | 1.5 s | 10.5 s | not measured | Cancels restores through the whole service on the build's real Git, before and after their journal, in a process of its own for the cancel fixture's spies. |
   | `services/restore-runner.aside-changed.test.ts` | 4.1 s | 1.2 s | 10.0 s | not measured | A whole restore on a real Git store whose moved-aside folder gains a file while it is walked again, in a process of its own for its `readdir` mock. |
   | `services/restore-runner.aside-gone.test.ts` | 4.3 s | 1.5 s | 9.7 s | not measured | A whole restore on a real Git store whose moved-aside folder is gone when it is walked again, in a process of its own for its `readdir` mock. |
+  | `services/checkpoints-host.cancel-walk.test.ts` | 5.5 s | 1.8 s | 9.0 s | not measured | Cancels compares, previews and restores through the whole service on the build's real Git mid-walk, in a process of its own for the cancel fixture's spies. |
   | `services/side-loader.test.ts` | 4.9 s | 1.4 s | 8.8 s | 1.6 s | Reads both sides of changes from real stores and real folders. |
   | `services/restore-applier.test.ts` | < 1 s | < 1 s | 8.0 s | 1.0 s | Moves, places and removes real files and folders, flushing each journal record to disk. |
   | `services/restore-runner.retries.test.ts` | 3.9 s | < 1 s | 6.9 s | 1.6 s | A whole restore on a real Git store, in a process of its own for its mock timers. |
   | `services/tree-lister.test.ts` | 3.8 s | < 1 s | 6.8 s | 1.0 s | Lists checkpoint trees with diff-tree on real stores. |
   | `services/blob-stager.test.ts` | 2.4 s | < 1 s | 6.7 s | < 1 s | Stages a checkpoint's files from real stores through cat-file. |
+  | `services/checkpoints-host.cancel-git.test.ts` | 4.5 s | 1.2 s | 6.5 s | not measured | Cancels lists, compares, reads and previews through the whole service while the build's real Git runs, in a process of its own for the cancel fixture's spies. |
+  | `services/checkpoints-host.cancel-before.test.ts` | 4.0 s | 1.8 s | 6.2 s | not measured | Cancels a restore through the whole service on the build's real Git once its checkpoint before is taken, in a process of its own for the cancel fixture's spies. |
+  | `services/store-housekeeping.cancel.test.ts` | 4.9 s | 1.3 s | 5.9 s | not measured | Cancels Git's housekeeping during its repack on a real store filled through real captures, in a process of its own for the cancel fixture's spies. |
+  | `services/checkpoints-host.cancel-capture.test.ts` | 4.6 s | 1.6 s | 5.9 s | not measured | Cancels captures through the whole service on the build's real Git mid-walk and while content streams, in a process of its own for the cancel fixture's spies. |
+  | `services/checkpoints-host.cancel-reads.test.ts` | 2.3 s | < 1 s | 5.2 s | not measured | Cancels compares and previews through the whole service on the build's real Git between two file reads, in a process of its own for the cancel fixture's spies. |
+  | `services/checkpoints-host.cancel-describe.test.ts` | 2.3 s | < 1 s | 5.0 s | not measured | Cancels a compare through the whole service on the build's real Git while it describes its changes, in a process of its own for the cancel fixture's spies. |
   | `services/restore-planner.deleted.test.ts` | 1.7 s | < 1 s | 4.7 s | not measured | Plans a restore of a checkpoint captured through real Git while a folder is deleted during the walk, in a process of its own for its `readdir` mock. |
+  | `services/restore-runner.link-swapped.test.ts` | 3.0 s | 1.8 s | 4.5 s | not measured | A whole restore on a real Git store with a planned link swapped under it, in a process of its own for its `RestorePaths.lstatAsync` mock. |
   | `services/blob-batch.writer.test.ts` | 2.3 s | < 1 s | 4.4 s | < 1 s | Writes real files, executables and links from cat-file's output. |
   | `services/store-opener.test.ts` | 2.0 s | < 1 s | 4.2 s | < 1 s | Creates real bare repositories with the build's Git and writes their configuration. |
   | `services/change-describer.test.ts` | 1.5 s | < 1 s | 3.9 s | < 1 s | Describes changes by reading a real store's objects through cat-file. |
+  | `services/checkpoint-file.reader.grown.test.ts` | 3.4 s | 1.3 s | 3.3 s | not measured | Reads a real checkpoint's text file grown past 32 MiB through real Git, in a process of its own for its `FolderFileReader.readAsync` spy. |
   | `resources.test.ts` | < 1 s | < 1 s | 2.9 s | < 1 s | Reads a store's configuration back through the build's Git. |
   | `services/checkpoint-comparer.deleted.test.ts` | 1.6 s | < 1 s | 2.5 s | not measured | Compares a checkpoint captured through real Git while a folder is deleted during the walk, in a process of its own for its `readdir` mock. |
   | `services/restore-paths.test.ts` | < 1 s | < 1 s | 2.3 s | < 1 s | Places and rolls back real files, hard links and links. |
