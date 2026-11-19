@@ -727,6 +727,28 @@ describe("RestoreRunner", { concurrency: true }, () => {
     assert.deepEqual(await harness.snapshotAsync(), now);
   });
 
+  it("finishes a restore whose moved-aside folder is gone when it walks the folder to compare it again", async t => {
+    const harness = await CheckpointsHarness.startAsync(t);
+    await harness.writeAsync("d", "a file");
+    const checkpoint = await harness.checkpointAsync(null);
+    await rm(path.join(harness.folder, "d"));
+    await harness.writeAsync("d/x.txt", "x");
+    const plan = await harness.planAsync(checkpoint);
+    let aside: string | null = null;
+    const service = await harness.createServiceAsync(ServiceSeams.system
+      .withJournals(file => new ScriptedJournal(file, async record => {
+        if (record.type === JournalRecordType.Aside)
+          aside = await asideOfAsync(harness, "d");
+      }))
+      .withRemovedWhileReading(() => aside, () => RestoreFolder.presentOf(aside)));
+
+    const result = await harness.restoreAsync(plan, service);
+
+    assert.deepEqual([result.outcome, result.before?.label, result.recovered], [RestoreOutcome.Restored, "Before restore", null]);
+    assert.equal(await readFile(path.join(harness.folder, "d"), "utf8"), "a file");
+    await RestoreFolder.of(harness).assertCleanAsync();
+  });
+
   it("gives FolderMissing when the folder goes away before the checkpoint taken before the restore", async t => {
     const harness = await CheckpointsHarness.startAsync(t);
     const { checkpoint } = await PreparedRestore.prepareAsync(harness);

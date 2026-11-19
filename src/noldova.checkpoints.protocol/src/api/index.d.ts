@@ -1033,7 +1033,7 @@ export declare class CaptureOutcome {
   public static readonly Captured: CaptureOutcome;
 
   /**
-   * The folder's path is missing, so no checkpoint was taken; a missing folder is never captured as empty.
+   * The folder's path is missing, or the folder was deleted or renamed while it was walked, so no checkpoint was taken; a missing folder is never captured as empty.
    */
   public static readonly FolderMissing: CaptureOutcome;
 
@@ -1909,7 +1909,7 @@ export declare class CompareOutcome {
   public static readonly Compared: CompareOutcome;
 
   /**
-   * The comparison was with the folder now, and the folder's path is missing; a missing folder is never compared as empty.
+   * The comparison was with the folder now, and the folder's path is missing, or the folder was deleted or renamed while it was walked; a missing folder is never compared as empty.
    */
   public static readonly FolderMissing: CompareOutcome;
 
@@ -2755,7 +2755,7 @@ export declare class PreviewOutcome {
   public static readonly CheckpointMissing: PreviewOutcome;
 
   /**
-   * The folder's path is missing.
+   * The folder's path is missing, or the folder was deleted or renamed while it was walked.
    */
   public static readonly FolderMissing: PreviewOutcome;
 
@@ -2963,7 +2963,7 @@ export declare class RestoreOutcome {
   public static readonly CheckpointMissing: RestoreOutcome;
 
   /**
-   * The folder's path is missing.
+   * The folder's path is missing, or the folder was deleted or renamed while it was walked; nothing was restored.
    */
   public static readonly FolderMissing: RestoreOutcome;
 

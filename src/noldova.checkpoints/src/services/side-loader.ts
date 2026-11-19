@@ -53,12 +53,14 @@ export class SideLoader {
     return new LoadedCheckpoint(record, new SideListing(tree.files, record.emptyFolders, record.checkpoint.unreadPaths, await this.readRulesAsync(store, record, tree.rules, signal)));
   }
 
-  public async loadFolderAsync(store: FolderStore, folder: string, mode: CaptureMode, signal: AbortSignal): Promise<SideListing> {
-    return (await this.loadFolderWalkAsync(store, folder, mode, signal)).listing;
+  public async loadFolderAsync(store: FolderStore, folder: string, mode: CaptureMode, signal: AbortSignal): Promise<SideListing | null> {
+    return (await this.loadFolderWalkAsync(store, folder, mode, signal))?.listing ?? null;
   }
 
-  public async loadFolderWalkAsync(store: FolderStore, folder: string, mode: CaptureMode, signal: AbortSignal): Promise<WalkedListing> {
+  public async loadFolderWalkAsync(store: FolderStore, folder: string, mode: CaptureMode, signal: AbortSignal): Promise<WalkedListing | null> {
     const walk = await this.walker.walkAsync(folder, mode, signal);
+    if (walk === null)
+      return null;
     const index = await StoreFile.readAsync(store.indexFile, t => FolderIndex.fromJson(t)) ?? FolderIndex.Empty;
     const files = new Map<string, FolderFile>();
     const unreadPaths: UnreadPath[] = [...walk.unreadPaths];

@@ -74,6 +74,8 @@ export class CheckpointCapture {
     const start = this.clock.fileTime();
     await this.opener.openAsync(store, signal);
     const walk = await this.walker.walkAsync(folder, mode, signal);
+    if (walk === null)
+      return new CaptureResult(CaptureOutcome.FolderMissing, null, null, null);
     const index = await StoreFile.readAsync(store.indexFile, t => FolderIndex.fromJson(t)) ?? FolderIndex.Empty;
     const parent = await this.lister.findNewestAsync(store, signal);
     const cutoff = asOf === null ? null : BigInt(asOf.getTime()) * Resources.nanosecondsPerMillisecond - Resources.racyWindowNanoseconds;

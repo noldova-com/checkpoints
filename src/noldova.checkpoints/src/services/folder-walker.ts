@@ -23,6 +23,7 @@ import { WalkedEntry } from "../models/walked-entry.ts";
 import { WalkResult } from "../models/walk-result.ts";
 import { Resources } from "../resources.ts";
 import { CaseProbe } from "./case-probe.ts";
+import { Failures } from "./failures.ts";
 import { IgnoreFileReader } from "./ignore-file.reader.ts";
 import { NameDecoder } from "./name-decoder.ts";
 import { RelativePath } from "./relative-path.ts";
@@ -32,12 +33,20 @@ export class FolderWalker {
   private readonly platform: string;
   private readonly readNamesAsync: (folder: string) => Promise<Buffer[]>;
 
-  public constructor(platform: string, readNamesAsync: (folder: string) => Promise<Buffer[]> = t => readdir(t, Resources.bufferEncoding)) {
+  public constructor(platform: string, readNamesAsync: (folder: string) => Promise<Buffer[]> = FolderWalker.readNamesAsync) {
     this.platform = platform;
     this.readNamesAsync = readNamesAsync;
   }
 
-  public async walkAsync(folder: string, mode: CaptureMode, signal: AbortSignal): Promise<WalkResult> {
+  public static async readNamesAsync(folder: string): Promise<Buffer[]> {
+    return await readdir(folder, Resources.bufferEncoding);
+  }
+
+  public async walkAsync(folder: string, mode: CaptureMode, signal: AbortSignal): Promise<WalkResult | null> {
+    return await Failures.recoverAsync(this.walkFolderAsync(folder, mode, signal), t => Failures.isAbsent(t), null);
+  }
+
+  private async walkFolderAsync(folder: string, mode: CaptureMode, signal: AbortSignal): Promise<WalkResult> {
     const names = (await this.readNamesAsync(folder)).sort(Buffer.compare);
     const result = new WalkResult(mode === CaptureMode.IgnoreFiles ? new IgnoreRules(await CaseProbe.ignoresCaseAsync(folder, names, this.platform)) : null);
     const root = await stat(folder, { bigint: true });

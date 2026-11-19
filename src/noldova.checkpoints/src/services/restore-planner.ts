@@ -62,7 +62,10 @@ export class RestorePlanner {
       return NoPlan.FolderMissing;
 
     const { record, listing: saved } = loaded;
-    const { listing: now, walk } = await this.loader.loadFolderWalkAsync(store, folder.path, record.checkpoint.mode, signal);
+    const walked = await this.loader.loadFolderWalkAsync(store, folder.path, record.checkpoint.mode, signal);
+    if (walked === null)
+      return NoPlan.FolderMissing;
+    const { listing: now, walk } = walked;
     const stays = RestorePlanner.findStays(now, saved, walk);
     const canLink = await LinkProbe.canCreateLinksAsync(store.folder);
     const scope = new RestoreScope(paths);

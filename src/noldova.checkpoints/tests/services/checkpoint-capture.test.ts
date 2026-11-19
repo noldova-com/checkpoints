@@ -44,6 +44,18 @@ describe("CheckpointCapture", { concurrency: true }, () => {
     assert.deepEqual(harness.context.requests, []);
   });
 
+  it("reports a folder deleted while it is walked as missing, and takes no checkpoint", async t => {
+    const harness = await CheckpointsHarness.startAsync(t);
+    await harness.writeAsync("sub/a.txt", "a");
+    await harness.writeAsync("z.txt", "z");
+    const service = await harness.createServiceAsync(ServiceSeams.system.withRemovedWhileReading(() => path.join(harness.folder, "sub"), () => harness.folder));
+
+    const result = await service.captureAsync(new CaptureRequest(harness.reference, null));
+
+    assert.deepEqual([result.outcome, result.checkpoint], [CaptureOutcome.FolderMissing, null]);
+    assert.deepEqual(await harness.listAsync(), []);
+  });
+
   it("keeps every file under files/ but each .git, with the checkpoint and its record beside them", async t => {
     const harness = await CheckpointsHarness.startAsync(t);
     await harness.writeAsync("a.txt", "alpha");

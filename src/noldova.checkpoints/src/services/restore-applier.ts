@@ -80,6 +80,8 @@ export class RestoreApplier {
         continue;
       if (RestorePaths.isFolder(stats)) {
         const walk = await this.walker.walkAsync(location, CaptureMode.EveryFile, Resources.neverCancelled);
+        if (walk === null)
+          continue;
         if (walk.repositoryPaths.length > 0)
           return null;
         for (const entry of walk.entries)
