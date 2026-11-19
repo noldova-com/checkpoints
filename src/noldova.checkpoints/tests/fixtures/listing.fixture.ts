@@ -12,13 +12,14 @@ import path from "node:path";
 import type { TestContext } from "node:test";
 
 export class ListingFixture {
-  public static beforeListing(t: TestContext, folder: () => string | null, actAsync: () => Promise<void>): void {
+  public static beforeListing(t: TestContext, ...moments: readonly (readonly [() => string | null, (folder: string) => Promise<void>])[]): void {
     const readdir = promises.readdir;
-    let acted = false;
+    const pending = [...moments];
     const listing = t.mock.method(promises, "readdir", async (...args: Parameters<typeof readdir>) => {
-      if (!acted && path.resolve(String(args[0])) === folder()) {
-        acted = true;
-        await actAsync();
+      const folder = path.resolve(String(args[0]));
+      for (const moment of pending.filter(([u]) => u() === folder)) {
+        pending.splice(pending.indexOf(moment), 1);
+        await moment[1](folder);
       }
       return await readdir(...args);
     });

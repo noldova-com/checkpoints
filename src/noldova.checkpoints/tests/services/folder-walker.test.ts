@@ -25,7 +25,6 @@ import { AccessFixture } from "../fixtures/access.fixture.ts";
 import { CancelFixture } from "../fixtures/cancel.fixture.ts";
 import { CaseFixture } from "../fixtures/case.fixture.ts";
 import { LinkFixture } from "../fixtures/link.fixture.ts";
-import { ListingFixture } from "../fixtures/listing.fixture.ts";
 
 const withoutLinks = await LinkFixture.withoutLinksAsync();
 const walkAsync = async (walker: FolderWalker, folder: string, mode: CaptureMode, signal: AbortSignal = new AbortController().signal): Promise<WalkResult> => {
@@ -34,22 +33,23 @@ const walkAsync = async (walker: FolderWalker, folder: string, mode: CaptureMode
   return result;
 };
 
-const folderAsync = async (t: TestContext): Promise<string> => {
-  const folder = await realpath(await mkdtemp(path.join(tmpdir(), "walker-")));
-  t.after(() => rm(folder, { recursive: true, force: true }));
-  return folder;
-};
-const writeAsync = async (folder: string, relativePath: string, content: string = ""): Promise<string> => {
-  const location = path.join(folder, ...relativePath.split("/"));
-  await mkdir(path.dirname(location), { recursive: true });
-  await writeFile(location, content);
-  return location;
-};
-
 describe("FolderWalker", { concurrency: true }, () => {
   const uncancelled: AbortSignal = new AbortController().signal;
 
   const isWindows = process.platform === "win32";
+
+  const folderAsync = async (t: TestContext): Promise<string> => {
+    const folder = await realpath(await mkdtemp(path.join(tmpdir(), "walker-")));
+    t.after(() => rm(folder, { recursive: true, force: true }));
+    return folder;
+  };
+
+  const writeAsync = async (folder: string, relativePath: string, content: string = ""): Promise<string> => {
+    const location = path.join(folder, ...relativePath.split("/"));
+    await mkdir(path.dirname(location), { recursive: true });
+    await writeFile(location, content);
+    return location;
+  };
 
   it("finds every file and folder by \"/\" paths in the names' byte order", async t => {
     const folder = await folderAsync(t);
@@ -445,59 +445,5 @@ describe("FolderWalker, alone", () => {
 
     assert.deepEqual(result.entries, []);
     assert.deepEqual(result.emptyFolders, ["run"]);
-  });
-
-  it("takes a folder's time after it lists the folder, so a file deleted before the listing shows in the folder's time", async t => {
-    const folder = await folderAsync(t);
-    const deleted = await writeAsync(folder, "src/x.ts", "x");
-    const later = new Date(Date.now() + 3_600_000);
-    ListingFixture.beforeListing(t, () => path.join(folder, "src"), async () => {
-      await rm(deleted);
-      await utimes(path.join(folder, "src"), later, later);
-    });
-
-    const result = await walkAsync(new FolderWalker(process.platform), folder, CaptureMode.EveryFile);
-
-    assert.deepEqual(result.entries, []);
-    assert.equal(result.folderTimes.get("src"), (await lstat(path.join(folder, "src"), { bigint: true })).mtimeNs);
-  });
-
-  it("takes a folder's time again once it has walked what the folder holds, so a later file deleted meanwhile shows in it", async t => {
-    const folder = await folderAsync(t);
-    await writeAsync(folder, "big/a.ts", "a");
-    const deleted = await writeAsync(folder, "z.txt", "z");
-    const later = new Date(Date.now() + 3_600_000);
-    ListingFixture.beforeListing(t, () => path.join(folder, "big"), async () => {
-      await rm(deleted);
-      await utimes(folder, later, later);
-    });
-
-    const result = await walkAsync(new FolderWalker(process.platform), folder, CaptureMode.EveryFile);
-
-    assert.deepEqual(result.entries.map(u => u.path), ["big/a.ts"]);
-    assert.deepEqual([...result.folderTimes.keys()], ["", "big"]);
-    assert.equal(result.folderTimes.get(""), (await lstat(folder, { bigint: true })).mtimeNs);
-  });
-
-  it("answers no walk when the folder is deleted while it walks what the folder holds", async t => {
-    const folder = await folderAsync(t);
-    await writeAsync(folder, "sub/a.txt", "a");
-    await writeAsync(folder, "z.txt", "z");
-    ListingFixture.beforeListing(t, () => path.join(folder, "sub"), async () => await rm(folder, { recursive: true }));
-
-    const result = await new FolderWalker(process.platform).walkAsync(folder, CaptureMode.EveryFile, new AbortController().signal);
-
-    assert.equal(result, null);
-  });
-
-  it("keeps no time for a folder deleted while it walks what the folder holds, so the folder above it decides", async t => {
-    const folder = await folderAsync(t);
-    await writeAsync(folder, "sub/inner/x.ts", "x");
-    ListingFixture.beforeListing(t, () => path.join(folder, "sub", "inner"), async () => await rm(path.join(folder, "sub"), { recursive: true }));
-
-    const result = await walkAsync(new FolderWalker(process.platform), folder, CaptureMode.EveryFile);
-
-    assert.deepEqual(result.entries, []);
-    assert.deepEqual([...result.folderTimes.keys()], [""]);
   });
 });

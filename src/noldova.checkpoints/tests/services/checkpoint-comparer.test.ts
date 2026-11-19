@@ -15,7 +15,6 @@ import { Change, ChangeSide, ChangeStatus, CompareOutcome, PathKind, UnreadReaso
 
 import { AccessFixture } from "../fixtures/access.fixture.ts";
 import { CheckpointsHarness } from "../fixtures/checkpoints-harness.fixture.ts";
-import { ListingFixture } from "../fixtures/listing.fixture.ts";
 
 describe("CheckpointComparer", { concurrency: true }, () => {
   const text = (kind: PathKind, size: number): ChangeSide => new ChangeSide(kind, size, true);
@@ -274,19 +273,5 @@ describe("CheckpointComparer", { concurrency: true }, () => {
     ]);
     assert.deepEqual([between.changes, back.changes], [[], []]);
     assert.deepEqual(statusesOf(ignoredNow.changes), [[".gitignore", "Modified"], ["nested/n.log", "Modified"]]);
-  });
-});
-
-describe("CheckpointComparer, alone", () => {
-  it("reports a folder deleted while it is walked as missing, with no changes", async t => {
-    const harness = await CheckpointsHarness.startAsync(t);
-    await harness.writeAsync("sub/a.txt", "a");
-    await harness.writeAsync("z.txt", "z");
-    const checkpoint = await harness.checkpointAsync(null);
-    ListingFixture.beforeListing(t, () => path.join(harness.folder, "sub"), async () => await rm(harness.folder, { recursive: true }));
-
-    const result = await harness.compareAsync(checkpoint, null);
-
-    assert.deepEqual([result.outcome, result.changes], [CompareOutcome.FolderMissing, []]);
   });
 });

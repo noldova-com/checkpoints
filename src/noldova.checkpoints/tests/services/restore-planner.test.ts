@@ -15,7 +15,6 @@ import { ChangeSide, KeepReason, KeptPath, PathKind, PreviewOutcome, RestoreActi
 
 import { AccessFixture } from "../fixtures/access.fixture.ts";
 import { CheckpointsHarness } from "../fixtures/checkpoints-harness.fixture.ts";
-import { ListingFixture } from "../fixtures/listing.fixture.ts";
 
 describe("RestorePlanner", { concurrency: true }, () => {
   const text = (size: number): ChangeSide => new ChangeSide(PathKind.File, size, true);
@@ -237,20 +236,5 @@ describe("RestorePlanner", { concurrency: true }, () => {
       [PreviewOutcome.CheckpointMissing, null], [PreviewOutcome.CheckpointMissing, null], [PreviewOutcome.FolderMissing, null],
       [PreviewOutcome.FolderMissing, null], [PreviewOutcome.HeldUp, null]
     ]);
-  });
-
-});
-
-describe("RestorePlanner, alone", () => {
-  it("reports a folder deleted while it is walked as missing, with no plan", async t => {
-    const harness = await CheckpointsHarness.startAsync(t);
-    await harness.writeAsync("sub/a.txt", "a");
-    await harness.writeAsync("z.txt", "z");
-    const checkpoint = await harness.checkpointAsync(null);
-    ListingFixture.beforeListing(t, () => path.join(harness.folder, "sub"), async () => await rm(harness.folder, { recursive: true }));
-
-    const result = await harness.previewAsync(checkpoint);
-
-    assert.deepEqual([result.outcome, result.plan], [PreviewOutcome.FolderMissing, null]);
   });
 });

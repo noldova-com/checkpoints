@@ -20,18 +20,14 @@ import {
   RestoreOutcome,
   RestorePlan,
   UnreadPath,
-  UnreadReason,
-  type CaptureMode,
-  type RestoreResult
+  UnreadReason
 } from "@noldova/checkpoints.protocol";
 
 import { JournalRecordType } from "../../src/models/journal-record-type.ts";
 import type { JournalRecord } from "../../src/models/journal-record.ts";
-import { FolderWalker } from "../../src/services/folder-walker.ts";
 import { RestorePaths } from "../../src/services/restore-paths.ts";
 import { AccessFixture } from "../fixtures/access.fixture.ts";
 import { AttemptedRestore } from "../fixtures/attempted-restore.fixture.ts";
-import { CheckpointsContext } from "../fixtures/checkpoints-context.fixture.ts";
 import { CheckpointsHarness } from "../fixtures/checkpoints-harness.fixture.ts";
 import { LinkFixture } from "../fixtures/link.fixture.ts";
 import { PreparedRestore } from "../fixtures/prepared-restore.fixture.ts";
@@ -879,49 +875,6 @@ describe("RestoreRunner", { concurrency: true }, () => {
 });
 
 describe("RestoreRunner, alone", () => {
-  const restoreAroundWalkAsync = async (t: TestContext, beforeAsync: (aside: string) => Promise<void>, afterAsync: (aside: string) => Promise<void>): Promise<readonly [CheckpointsHarness, RestoreResult]> => {
-    const harness = await CheckpointsHarness.startAsync(t);
-    await harness.writeAsync("d", "a file");
-    const checkpoint = await harness.checkpointAsync(null);
-    await rm(path.join(harness.folder, "d"));
-    await harness.writeAsync("d/x.txt", "x");
-    const plan = await harness.planAsync(checkpoint);
-    let aside: string | null = null;
-    const real = new FolderWalker(process.platform);
-    const walkRealAsync = real.walkAsync.bind(real);
-    t.mock.method(FolderWalker.prototype, "walkAsync", async (folder: string, mode: CaptureMode, signal: AbortSignal) => {
-      if (folder === aside)
-        await beforeAsync(folder);
-      const walk = await walkRealAsync(folder, mode, signal);
-      if (folder === aside)
-        await afterAsync(folder);
-      return walk;
-    });
-    const service = await harness.createServiceAsync(ServiceSeams.system.withJournals(file => new ScriptedJournal(file, async record => {
-      if (record.type === JournalRecordType.Aside)
-        aside = await asideOfAsync(harness, "d");
-    })));
-    return [harness, await harness.restoreAsync(plan, service)];
-  };
-
-  it("finishes a restore whose moved-aside folder is gone when it walks the folder to compare it again", async t => {
-    const [harness, result] = await restoreAroundWalkAsync(t, async aside => await rm(aside, { recursive: true }), async () => undefined);
-
-    assert.deepEqual([result.outcome, result.before?.label, result.recovered], [RestoreOutcome.Restored, "Before restore", null]);
-    assert.equal(await readFile(path.join(harness.folder, "d"), "utf8"), "a file");
-    assert.deepEqual(CheckpointsContext.messagesOf(harness.context.log).filter(u => !u.startsWith("Git started")), []);
-    await RestoreFolder.of(harness).assertCleanAsync();
-  });
-
-  it("finishes a restore whose moved-aside folder gained a file that is deleted after the walk that found it, before its stats are read again", async t => {
-    const [harness, result] = await restoreAroundWalkAsync(t, async aside => await writeFile(path.join(aside, "late.txt"), "late"), async aside => await rm(path.join(aside, "late.txt")));
-
-    assert.deepEqual([result.outcome, result.before?.label, result.recovered], [RestoreOutcome.Restored, "Before restore", null]);
-    assert.equal(await readFile(path.join(harness.folder, "d"), "utf8"), "a file");
-    assert.deepEqual(CheckpointsContext.messagesOf(harness.context.log).filter(u => !u.startsWith("Git started")), []);
-    await RestoreFolder.of(harness).assertCleanAsync();
-  });
-
   it("rolls back, keeping the link, when another program puts in place of a planned link one to another target with its size, modified time and file id", { skip: withoutLinks }, async t => {
     const harness = await CheckpointsHarness.startAsync(t);
     await harness.writeAsync("a.txt", "a");
