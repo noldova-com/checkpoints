@@ -6,6 +6,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import assert from "node:assert/strict";
 import { promises } from "node:fs";
 import { syncBuiltinESMExports } from "node:module";
 import path from "node:path";
@@ -27,6 +28,7 @@ export class ListingFixture {
     t.after(() => {
       listing.mock.restore();
       syncBuiltinESMExports();
+      assert.equal(pending.length, 0, "a listing the test changes never came");
     });
   }
 }
