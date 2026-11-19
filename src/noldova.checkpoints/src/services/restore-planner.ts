@@ -16,6 +16,7 @@ import {
   RestoreAction,
   RestorePlan,
   RestoreStep,
+  UnreadReason,
   type Change,
   type FolderReference
 } from "@noldova/checkpoints.protocol";
@@ -67,7 +68,7 @@ export class RestorePlanner {
     const scope = new RestoreScope(paths);
     const changes: PendingChange<FolderFile | SideFolder>[] = [];
     for (const change of ListingComparer.compare(now, saved).filter(t => scope.needs(t))) {
-      const reason = RestorePlanner.keepReasonOf(change, walk, canLink);
+      const reason = RestorePlanner.keepReasonOf(change, saved, walk, canLink);
       if (reason === null)
         changes.push(change);
       else if (!stays.has(change.path))
@@ -77,7 +78,9 @@ export class RestorePlanner {
     const steps = (await this.describer.describeAsync(store, folder.path, planned, signal)).map(t => RestorePlanner.stepOf(t));
     const kept = [...stays].filter(([t]) => !RestorePlanner.isUnderStay(t, stays) && scope.reports(t)).map(([t, u]) => new KeptPath(t, u));
     kept.sort((t, u) => Buffer.compare(Buffer.from(t.path), Buffer.from(u.path)));
-    const plan = new RestorePlan(checkpoint, steps, kept, RestorePlanner.bytesToWrite(steps), RestorePlanner.spaceNeeded(steps), PlanState.digestOf(planned, walk), paths);
+    const earlier = new Set(record.earlierPaths);
+    const plan = new RestorePlan(checkpoint, steps, kept, RestorePlanner.bytesToWrite(steps), RestorePlanner.spaceNeeded(steps), PlanState.digestOf(planned, walk), paths,
+      steps.filter(t => earlier.has(t.path)).map(t => t.path));
     return new PlannedRestore(plan, record, planned, saved, walk);
   }
 
@@ -109,9 +112,9 @@ export class RestorePlanner {
     return false;
   }
 
-  private static keepReasonOf(change: PendingChange, walk: WalkResult, canLink: boolean): KeepReason | null {
+  private static keepReasonOf(change: PendingChange, saved: SideListing, walk: WalkResult, canLink: boolean): KeepReason | null {
     if (change.status === ChangeStatus.Unknown)
-      return KeepReason.Unread;
+      return saved.unreadReasonOf(change.path) === UnreadReason.TooLarge ? KeepReason.TooLarge : KeepReason.Unread;
     if (walk.repositoryFolders.has(change.path))
       return KeepReason.RepositoryFolder;
     if (change.path.split(Resources.relativePathSeparator).some(t => RepositoryName.matches(t)))

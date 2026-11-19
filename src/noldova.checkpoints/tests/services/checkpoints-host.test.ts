@@ -334,7 +334,8 @@ describe("CheckpointsHost's housekeeping", { concurrency: true }, () => {
     const harness = await CheckpointsHarness.startAsync(t);
     const service = harness.service;
     await harness.writeAsync("a.txt", "a.txt");
-    await harness.writeAsync("large.bin", randomBytes(64 * 1024 * 1024));
+    for (let count = 0; count < 7; count++)
+      await harness.writeAsync(`large-${count}.bin`, randomBytes(10 * 1024 * 1024));
     const { promise: listed, resolve, reject } = Promise.withResolvers<readonly Checkpoint[]>();
     harness.context.watchStart = command => {
       if (command !== "repack")

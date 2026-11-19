@@ -97,7 +97,7 @@ export class RestoreRunner {
     if (!await this.hasRoomAsync(request.folder.path, store.folder, planned.plan.bytesToWrite, planned.plan.spaceNeeded - planned.plan.bytesToWrite))
       return new RestoreResult(RestoreOutcome.LowDiskSpace, null, null);
 
-    const captured = await this.capture.captureAsync(store, request.folder.path, Resources.beforeRestoreLabel, planned.record.checkpoint.mode, signal);
+    const captured = await this.capture.captureAsync(store, request.folder.path, Resources.beforeRestoreLabel, planned.record.checkpoint.mode, null, signal);
     if (captured.outcome === CaptureOutcome.LowDiskSpace)
       return new RestoreResult(RestoreOutcome.LowDiskSpace, null, null);
     if (captured.checkpoint === null)

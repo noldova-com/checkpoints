@@ -113,12 +113,13 @@ describe("RestoreRunner", { concurrency: true }, () => {
     await RestoreFolder.of(harness).assertCleanAsync();
   });
 
-  it("restores a large file and a file's letter case where the folder ignores case", async t => {
+  it("restores a large file a checkpoint kept before the size limit, and a file's letter case where the folder ignores case", async t => {
     const harness = await CheckpointsHarness.startAsync(t);
     const large = Buffer.alloc(40 * 1024 * 1024, 7);
-    await harness.writeAsync("large.bin", large);
+    await harness.writeAsync("large.bin", "large");
     await harness.writeAsync("Docs/Readme.md", "readme");
     const checkpoint = await harness.checkpointAsync(null);
+    await harness.replaceFileAsync(checkpoint, "large.bin", large);
     await harness.writeAsync("large.bin", "small now");
     await rename(path.join(harness.folder, "Docs", "Readme.md"), path.join(harness.folder, "Docs", "README.md"));
     await rename(path.join(harness.folder, "Docs"), path.join(harness.folder, "docs"));

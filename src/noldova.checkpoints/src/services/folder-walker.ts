@@ -38,13 +38,18 @@ export class FolderWalker {
   public async walkAsync(folder: string, mode: CaptureMode, signal: AbortSignal): Promise<WalkResult> {
     const names = (await readdir(folder, Resources.bufferEncoding)).sort(Buffer.compare);
     const result = new WalkResult(mode === CaptureMode.IgnoreFiles ? new IgnoreRules(await CaseProbe.ignoresCaseAsync(folder, names, this.platform)) : null);
-    result.addFolderId("", FolderWalker.idOf(await stat(folder, { bigint: true })));
+    const root = await stat(folder, { bigint: true });
+    result.addFolder("", FolderWalker.idOf(root), FolderWalker.timeOf(root));
     await this.walkNamesAsync(folder, "", names, result, signal);
     return result;
   }
 
   private static idOf(stats: BigIntStats): string {
     return Resources.formatFileId(stats.dev, stats.ino);
+  }
+
+  private static timeOf(stats: BigIntStats): bigint {
+    return stats.mtimeNs > stats.ctimeNs ? stats.mtimeNs : stats.ctimeNs;
   }
 
   private static async readChildAsync(location: string, leavesOut: (stats: BigIntStats) => boolean): Promise<WalkedChild | null> {
@@ -98,7 +103,7 @@ export class FolderWalker {
 
     const { stats, names } = read;
     if (names !== null) {
-      result.addFolderId(childPath, FolderWalker.idOf(stats));
+      result.addFolder(childPath, FolderWalker.idOf(stats), FolderWalker.timeOf(stats));
       if (!await this.walkNamesAsync(location, childPath, names, result, signal))
         result.addEmptyFolder(childPath);
       return true;

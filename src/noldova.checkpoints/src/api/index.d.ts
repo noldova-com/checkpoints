@@ -812,12 +812,15 @@ export declare abstract class CheckpointsService {
    * checkpoint's `mode` says which. It needs, on the store's volume, 2 GiB free beyond the size of the new and changed files it
    * adds, before it streams and while it does; one without the space takes no checkpoint, posts the folder's
    * `checkpoints.lowDiskSpace` notification and raises `checkpoints.capturePaused`, and the folder's next capture that is taken
-   * dismisses the notification and raises `checkpoints.captureResumed`.
+   * dismisses the notification and raises `checkpoints.captureResumed`. It leaves out each file over 10 MiB, listing it as
+   * `TooLarge`, and takes no checkpoint when the new and changed files come to over 1 GiB. With the request's `asOf`, it keeps each
+   * file changed at or after that time, less two seconds, as the folder's last checkpoint had it, and leaves out one that checkpoint
+   * didn't hold, so an app can take a turn's checkpoint after the turn has started, without holding the turn.
    *
-   * @param request The folder and the label to attach.
+   * @param request The folder, the label to attach and the time the turn started, if any.
    * @param signal Stops the call; none by default.
-   * @returns The checkpoint taken; or the outcome `LowDiskSpace`, with the space free and the space needed in bytes, `FolderMissing`
-   *   when the folder's path is missing, or `HeldUp` while an interrupted restore of the folder can't finish.
+   * @returns The checkpoint taken; or the outcome `LowDiskSpace`, with the space free and the space needed in bytes, `TooLarge`,
+   *   with the size of the new and changed files and its limit, `FolderMissing` when the folder's path is missing, or `HeldUp` while an interrupted restore of the folder can't finish.
    * @throws {GitException} When a Git command fails; no checkpoint is left.
    * @throws {StoreException} When the folder's store holds a file the module can't read.
    * @throws {Error} When the system refuses the module a step of its own, such as reading the folder itself (EACCES), writing its

@@ -9,7 +9,6 @@
 import type { JsonObject } from "@noldova/context.json";
 
 import { InvalidDateException } from "../exceptions/invalid-date.exception.ts";
-import { InvalidTimeException } from "../exceptions/invalid-time.exception.ts";
 import { LabelTooLongException } from "../exceptions/label-too-long.exception.ts";
 import { Resources } from "../resources.ts";
 import { CheckpointId } from "../services/checkpoint-id.ts";
@@ -43,12 +42,9 @@ export class Checkpoint {
 
   public static fromJson(value: unknown): Checkpoint {
     const reader = WireForm.read(value, Resources.checkpointModel, Checkpoint.FIELDS);
-    const time = reader.readString(Resources.timeField);
-    if (!Resources.timePattern.test(time) || Number.isNaN(Date.parse(time)) || new Date(time).toISOString() !== time)
-      throw new InvalidTimeException(time);
     return new Checkpoint(
       reader.readString(Resources.idField),
-      new Date(time),
+      WireForm.readTime(reader, Resources.timeField),
       CaptureMode.fromJson(reader.readValue(Resources.modeField)),
       reader.readNullableString(Resources.labelField),
       WireForm.readArray(reader, Resources.unreadPathsField).map(t => UnreadPath.fromJson(t)));

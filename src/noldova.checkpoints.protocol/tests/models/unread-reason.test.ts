@@ -13,7 +13,7 @@ import { UnknownUnreadReasonException, UnreadReason } from "@noldova/checkpoints
 
 describe("UnreadReason", { concurrency: true }, () => {
   it("writes and reads each reason by its name", () => {
-    for (const [reason, name] of [[UnreadReason.Changing, "Changing"], [UnreadReason.Denied, "Denied"], [UnreadReason.InvalidName, "InvalidName"], [UnreadReason.Unreadable, "Unreadable"]] as const) {
+    for (const [reason, name] of [[UnreadReason.Changing, "Changing"], [UnreadReason.Denied, "Denied"], [UnreadReason.InvalidName, "InvalidName"], [UnreadReason.TooLarge, "TooLarge"], [UnreadReason.Unreadable, "Unreadable"]] as const) {
       assert.equal(reason.toJson(), name);
       assert.equal(UnreadReason.fromJson(name), reason);
     }

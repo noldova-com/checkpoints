@@ -336,8 +336,9 @@ describe("CheckpointFileReader", { concurrency: true }, () => {
 
   it("reports a checkpoint's side over 32 MiB as Binary by its size alone, never reading its content", async t => {
     const harness = await CheckpointsHarness.startAsync(t);
-    await harness.writeAsync("large.txt", Buffer.alloc(33 * 1024 * 1024, "a"));
+    await harness.writeAsync("large.txt", "a");
     const first = await harness.checkpointAsync(null);
+    await harness.replaceFileAsync(first, "large.txt", Buffer.alloc(33 * 1024 * 1024, "a"));
     await harness.writeAsync("large.txt", "small\n");
     const second = await harness.checkpointAsync(null);
     const large = (await harness.treeAsync(first)).get("files/large.txt")?.objectId;

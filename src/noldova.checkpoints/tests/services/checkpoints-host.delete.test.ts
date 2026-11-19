@@ -286,7 +286,8 @@ describe("CheckpointsHost's delete during housekeeping", { concurrency: true }, 
     const harness = await CheckpointsHarness.startAsync(t);
     const service = harness.service;
     await harness.writeAsync("a.txt", "alpha");
-    await harness.writeAsync("large.bin", randomBytes(64 * 1024 * 1024));
+    for (let count = 0; count < 7; count++)
+      await harness.writeAsync(`large-${count}.bin`, randomBytes(10 * 1024 * 1024));
     const { promise: deleted, resolve, reject } = Promise.withResolvers<DeleteFolderResult>();
     harness.context.watchStart = command => {
       if (command !== "repack")

@@ -8,6 +8,7 @@
 
 import { JsonException, JsonReader, type JsonValue } from "@noldova/context.json";
 
+import { InvalidTimeException } from "../exceptions/invalid-time.exception.ts";
 import { Resources } from "../resources.ts";
 
 export class WireForm {
@@ -30,6 +31,17 @@ export class WireForm {
 
   public static readNullableNumber(reader: JsonReader, field: string): number | null {
     return reader.readValue(field) === null ? null : reader.readNumber(field);
+  }
+
+  public static readNullableTime(reader: JsonReader, field: string): Date | null {
+    return reader.readValue(field) === null ? null : WireForm.readTime(reader, field);
+  }
+
+  public static readTime(reader: JsonReader, field: string): Date {
+    const time = reader.readString(field);
+    if (!Resources.timePattern.test(time) || Number.isNaN(Date.parse(time)) || new Date(time).toISOString() !== time)
+      throw new InvalidTimeException(time);
+    return new Date(time);
   }
 
   public static readNullableStringArray(reader: JsonReader, field: string): readonly string[] | null {

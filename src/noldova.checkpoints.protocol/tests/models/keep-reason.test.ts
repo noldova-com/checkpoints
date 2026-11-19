@@ -13,8 +13,8 @@ import { KeepReason, UnknownKeepReasonException } from "@noldova/checkpoints.pro
 
 describe("KeepReason", { concurrency: true }, () => {
   it("writes and reads each reason by its name", () => {
-    const reasons = [KeepReason.Repository, KeepReason.RepositoryFolder, KeepReason.Ignored, KeepReason.Unread, KeepReason.LinkUnsupported];
-    assert.deepEqual(reasons.map(t => t.toJson()), ["Repository", "RepositoryFolder", "Ignored", "Unread", "LinkUnsupported"]);
+    const reasons = [KeepReason.Repository, KeepReason.RepositoryFolder, KeepReason.Ignored, KeepReason.Unread, KeepReason.LinkUnsupported, KeepReason.TooLarge];
+    assert.deepEqual(reasons.map(t => t.toJson()), ["Repository", "RepositoryFolder", "Ignored", "Unread", "LinkUnsupported", "TooLarge"]);
     for (const reason of reasons)
       assert.equal(KeepReason.fromJson(reason.toJson()), reason);
   });

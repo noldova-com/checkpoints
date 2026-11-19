@@ -67,7 +67,7 @@ export class Resources {
   public static readonly changingCodes: readonly string[] = ["ELOOP"];
   public static readonly checkpointField: string = "checkpoint";
   public static readonly checkpointFile: string = "checkpoint.json";
-  public static readonly checkpointFormatVersion: number = 2;
+  public static readonly checkpointFormatVersion: number = 3;
   public static readonly checkpointIdCounterBits: bigint = 12n;
   public static readonly checkpointIdCounterMask: bigint = 0xfffn;
   public static readonly checkpointIdRandomBytes: number = 8;
@@ -95,6 +95,7 @@ export class Resources {
   public static readonly diffTreeArguments: readonly string[] = ["-r", "-z", "--no-renames"];
   public static readonly diffTreeCommand: string = "diff-tree";
   public static readonly emptyFile: string = "empty";
+  public static readonly earlierPathsField: string = "earlierPaths";
   public static readonly emptyFoldersField: string = "emptyFolders";
   public static readonly emptyTreeId: string = "4b825dc642cb6eb9a060e54bf8d69288fbee4904";
   public static readonly entriesField: string = "entries";
@@ -210,6 +211,8 @@ export class Resources {
   public static readonly macPlatform: string = "darwin";
   public static readonly madeRecord: string = "Made";
   public static readonly maximumIgnoreFileSize: number = 100 * 1024 * 1024;
+  public static readonly maximumCaptureContent: number = 1024 * 1024 * 1024;
+  public static readonly maximumFileSize: number = 10 * 1024 * 1024;
   public static readonly maximumReadAttempts: number = 3;
   public static readonly methodTimeoutMilliseconds: number = 60_000;
   public static readonly millisecondsPerSecond: number = 1000;
@@ -320,6 +323,7 @@ export class Resources {
   public static readonly utf8Encoding: BufferEncoding = "utf8";
   public static readonly uuidVariantBits: number = 0x80;
   public static readonly uuidVariantMask: number = 0x3f;
+  public static readonly version2CheckpointFormat: number = 2;
   public static readonly wildcardBackslash: number = 0x5c;
   public static readonly wildcardBang: number = 0x21;
   public static readonly wildcardCaret: number = 0x5e;

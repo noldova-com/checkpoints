@@ -7,10 +7,12 @@
  */
 
 export { CaptureCheckpointMismatchException } from "../exceptions/capture-checkpoint-mismatch.exception.ts";
+export { CaptureContentMismatchException } from "../exceptions/capture-content-mismatch.exception.ts";
 export { CaptureSpaceMismatchException } from "../exceptions/capture-space-mismatch.exception.ts";
 export { ChangeSidesMismatchException } from "../exceptions/change-sides-mismatch.exception.ts";
 export { CompareChangesMismatchException } from "../exceptions/compare-changes-mismatch.exception.ts";
 export { ContentTooLongException } from "../exceptions/content-too-long.exception.ts";
+export { EarlierPathsMismatchException } from "../exceptions/earlier-paths-mismatch.exception.ts";
 export { InvalidBase64Exception } from "../exceptions/invalid-base64.exception.ts";
 export { InvalidCheckpointIdException } from "../exceptions/invalid-checkpoint-id.exception.ts";
 export { InvalidDateException } from "../exceptions/invalid-date.exception.ts";

@@ -18,6 +18,7 @@ export class WalkResult {
   private readonly emptyFolderList: string[] = [];
   private readonly entryList: WalkedEntry[] = [];
   private readonly folderIdMap: Map<string, string> = new Map();
+  private readonly folderTimeMap: Map<string, bigint> = new Map();
   private readonly ignoredPathList: string[] = [];
   private readonly linkList: LinkRecord[] = [];
   private readonly repositoryFolderSet: Set<string> = new Set();
@@ -39,6 +40,10 @@ export class WalkResult {
 
   public get folderIds(): ReadonlyMap<string, string> {
     return this.folderIdMap;
+  }
+
+  public get folderTimes(): ReadonlyMap<string, bigint> {
+    return this.folderTimeMap;
   }
 
   public get ignoredPaths(): readonly string[] {
@@ -69,8 +74,9 @@ export class WalkResult {
     this.entryList.push(entry);
   }
 
-  public addFolderId(path: string, fileId: string): void {
+  public addFolder(path: string, fileId: string, time: bigint): void {
     this.folderIdMap.set(path, fileId);
+    this.folderTimeMap.set(path, time);
   }
 
   public addIgnoredPath(path: string): void {

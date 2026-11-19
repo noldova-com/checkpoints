@@ -13,7 +13,8 @@ export class CaptureOutcome {
   public static readonly FolderMissing: CaptureOutcome = new CaptureOutcome("FolderMissing", false);
   public static readonly HeldUp: CaptureOutcome = new CaptureOutcome("HeldUp", false);
   public static readonly LowDiskSpace: CaptureOutcome = new CaptureOutcome("LowDiskSpace", false);
-  private static readonly ALL: readonly CaptureOutcome[] = [CaptureOutcome.Captured, CaptureOutcome.FolderMissing, CaptureOutcome.HeldUp, CaptureOutcome.LowDiskSpace];
+  public static readonly TooLarge: CaptureOutcome = new CaptureOutcome("TooLarge", false);
+  private static readonly ALL: readonly CaptureOutcome[] = [CaptureOutcome.Captured, CaptureOutcome.FolderMissing, CaptureOutcome.HeldUp, CaptureOutcome.LowDiskSpace, CaptureOutcome.TooLarge];
   public readonly isCaptured: boolean;
   public readonly value: string;
 

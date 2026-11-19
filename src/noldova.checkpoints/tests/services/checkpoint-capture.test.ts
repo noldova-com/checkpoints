@@ -8,11 +8,11 @@
 
 import assert from "node:assert/strict";
 import { appendFileSync, mkdirSync, renameSync, rmSync, truncateSync, unlinkSync } from "node:fs";
-import { chmod, lstat, mkdir, readFile, readlink, rm, symlink, writeFile } from "node:fs/promises";
+import { chmod, lstat, mkdir, readFile, readlink, rm, symlink, utimes, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { describe, it } from "node:test";
 
-import { CaptureMode, CaptureOutcome, CaptureRequest, UnreadPath, UnreadReason, type CaptureResult } from "@noldova/checkpoints.protocol";
+import { CaptureMode, CaptureOutcome, CaptureRequest, KeepReason, KeptPath, UnreadPath, UnreadReason, type CaptureResult, type Checkpoint } from "@noldova/checkpoints.protocol";
 
 import { GitExitedException } from "../../src/api/index.ts";
 import { AccessFixture } from "../fixtures/access.fixture.ts";
@@ -29,6 +29,9 @@ describe("CheckpointCapture", { concurrency: true }, () => {
         action(++count);
     };
   };
+
+  const earlierPathsAsync = async (harness: CheckpointsHarness, checkpoint: Checkpoint): Promise<readonly unknown[]> =>
+    JsonFixture.listOf(JsonFixture.parse((await harness.contentAsync(checkpoint, "checkpoint.json")).toString())["earlierPaths"]);
 
   it("reports a folder whose path is missing, or isn't a folder, and keeps no store for it", async t => {
     const harness = await CheckpointsHarness.startAsync(t);
@@ -59,7 +62,7 @@ describe("CheckpointCapture", { concurrency: true }, () => {
     assert.equal((await harness.contentAsync(checkpoint, "files/.git~")).toString(), "kept");
     assert.equal(tree.get("files/a.txt")?.mode, "100644");
     assert.deepEqual(JSON.parse((await harness.contentAsync(checkpoint, "checkpoint.json")).toString()), {
-      formatVersion: 2, checkpoint: checkpoint.toJson(), emptyFolders: ["logs"], links: [], ignoreRules: null
+      formatVersion: 3, checkpoint: checkpoint.toJson(), emptyFolders: ["logs"], links: [], ignoreRules: null, earlierPaths: []
     });
     assert.equal(checkpoint.label, "Turn 3");
     assert.equal(checkpoint.mode, CaptureMode.EveryFile);
@@ -320,7 +323,8 @@ describe("CheckpointCapture", { concurrency: true }, () => {
   it("stops a capture whose store's volume falls below the margin while its content streams, and leaves the store as it was", async t => {
     const harness = await CheckpointsHarness.startAsync(t);
     const margin = 2 * 1024 * 1024 * 1024;
-    const large = 65 * 1024 * 1024;
+    const part = 10 * 1024 * 1024;
+    const large = 7 * part;
     let reads = 0;
     const service = await harness.createServiceAsync(ServiceSeams.system.withReadFree(async () => ++reads === 3 ? margin : margin + large + 1024));
     await harness.writeAsync("a.txt", "alpha");
@@ -331,7 +335,8 @@ describe("CheckpointCapture", { concurrency: true }, () => {
       (await harness.snapshotAsync(harness.store)).filter(([u]) => !u.startsWith("git/objects/pack/tmp_pack_"));
     const store = await settledAsync();
     await harness.writeAsync("b.txt", "beta");
-    await harness.writeAsync("large.bin", Buffer.alloc(large, 7));
+    for (let count = 0; count < 7; count++)
+      await harness.writeAsync(`large-${count}.bin`, Buffer.alloc(part, count));
 
     const result = await service.captureAsync(new CaptureRequest(harness.reference, null));
 
@@ -353,26 +358,32 @@ describe("CheckpointCapture", { concurrency: true }, () => {
       };
       return () => sent;
     };
+    const part = 10 * 1024 * 1024;
+    const writePartsAsync = async (harness: CheckpointsHarness, last: number): Promise<void> => {
+      for (let count = 0; count < 6; count++)
+        await harness.writeAsync(`part-${count}.bin`, Buffer.alloc(part, count));
+      await harness.writeAsync("part-6.bin", Buffer.alloc(last, 6));
+    };
     const probe = await CheckpointsHarness.startAsync(t);
     const probeSent = countSent(probe);
     const probeService = await probe.createServiceAsync(ServiceSeams.system.withReadFree(async () => margin + interval * 2));
-    const probeSize = interval - 4096;
-    await probe.writeAsync("large.bin", Buffer.alloc(probeSize, 7));
+    const probeLast = interval - 4096 - 6 * part;
+    await writePartsAsync(probe, probeLast);
     assert.equal((await probeService.captureAsync(new CaptureRequest(probe.reference, null))).outcome, CaptureOutcome.Captured);
-    const size = probeSize + interval - probeSent();
+    const last = probeLast + interval - probeSent();
     const harness = await CheckpointsHarness.startAsync(t);
     const sent = countSent(harness);
     let reads = 0;
     const service = await harness.createServiceAsync(ServiceSeams.system.withReadFree(async () => ++reads === 1 ? margin + interval * 2 : margin - 1));
-    await harness.writeAsync("large.bin", Buffer.alloc(size, 7));
+    await writePartsAsync(harness, last);
 
     const result = await service.captureAsync(new CaptureRequest(harness.reference, null));
 
     assert.equal(sent(), interval);
     assert.deepEqual([result.outcome, reads], [CaptureOutcome.Captured, 1]);
     assert.ok(result.checkpoint !== null);
-    const object = (await harness.treeAsync(result.checkpoint)).get("files/large.bin")?.objectId ?? "";
-    assert.equal((await harness.gitAsync(["cat-file", "-s", object])).toString("utf8").trim(), String(size));
+    const object = (await harness.treeAsync(result.checkpoint)).get("files/part-6.bin")?.objectId ?? "";
+    assert.equal((await harness.gitAsync(["cat-file", "-s", object])).toString("utf8").trim(), String(last));
   });
 
   it("follows the ignore files while the setting is on: keeps what they don't ignore, each .gitignore under rules/, and how it matched", async t => {
@@ -411,5 +422,164 @@ describe("CheckpointCapture", { concurrency: true }, () => {
 
     assert.deepEqual([...(await harness.treeAsync(checkpoint)).keys()].sort(), ["checkpoint.json", "files/a.txt", "rules/.gitignore"]);
     assert.equal((await harness.contentAsync(checkpoint, "rules/.gitignore")).toString(), ".gitignore\n");
+  });
+
+  it("leaves out a file over 10 MiB as too large, keeps one of exactly 10 MiB, and its restore preview keeps the one left out", async t => {
+    const harness = await CheckpointsHarness.startAsync(t);
+    const limit = 10 * 1024 * 1024;
+    truncateSync(await harness.writeAsync("big.bin", ""), limit + 1);
+    truncateSync(await harness.writeAsync("edge.bin", ""), limit);
+    await harness.writeAsync("a.txt", "alpha");
+
+    const checkpoint = await harness.checkpointAsync(null);
+    const index = await harness.readStoreFileAsync("index");
+    const plan = await harness.planAsync(checkpoint);
+
+    assert.deepEqual(checkpoint.unreadPaths, [new UnreadPath("big.bin", UnreadReason.TooLarge, null)]);
+    assert.deepEqual([...(await harness.treeAsync(checkpoint)).keys()].sort(), ["checkpoint.json", "files/a.txt", "files/edge.bin"]);
+    assert.deepEqual(JsonFixture.objectsOf(index["entries"]).map(u => u["path"]), ["a.txt", "edge.bin"]);
+    assert.deepEqual(plan.stays, [new KeptPath("big.bin", KeepReason.TooLarge)]);
+    assert.deepEqual(plan.steps, []);
+  });
+
+  it("takes no checkpoint when the content it would add is over 1 GiB, and gives that size and the limit", async t => {
+    const harness = await CheckpointsHarness.startAsync(t);
+    const size = 10 * 1024 * 1024;
+    for (let count = 0; count < 103; count++)
+      truncateSync(await harness.writeAsync(`part-${String(count).padStart(3, "0")}.bin`, ""), size);
+
+    const result = await harness.captureAsync(null);
+
+    assert.deepEqual([result.outcome, result.checkpoint, result.spaceFree, result.spaceNeeded, result.contentSize, result.contentLimit],
+      [CaptureOutcome.TooLarge, null, null, null, 103 * size, 1024 * 1024 * 1024]);
+    assert.deepEqual(await harness.listAsync(), []);
+  });
+
+  it("keeps the earlier copy of a file changed at or after the turn's start, leaves out a file new since then, and its restore preview names the earlier copies", async t => {
+    const harness = await CheckpointsHarness.startAsync(t);
+    await harness.writeAsync("a.txt", "alpha");
+    await harness.writeAsync("b.txt", "beta");
+    await harness.checkpointAsync(null);
+    const asOf = new Date(Date.now() + 60_000);
+    await utimes(await harness.writeAsync("a.txt", "alpha!"), asOf, asOf);
+    await utimes(await harness.writeAsync("c.txt", "gamma"), asOf, asOf);
+    await harness.writeAsync("b.txt", "beta!");
+
+    const result = await harness.captureAsync(null, asOf);
+    assert.ok(result.checkpoint !== null);
+    const earlier = await earlierPathsAsync(harness, result.checkpoint);
+    const plan = await harness.planAsync(result.checkpoint);
+
+    assert.deepEqual([...(await harness.treeAsync(result.checkpoint)).keys()].sort(), ["checkpoint.json", "files/a.txt", "files/b.txt"]);
+    assert.equal((await harness.contentAsync(result.checkpoint, "files/a.txt")).toString(), "alpha");
+    assert.equal((await harness.contentAsync(result.checkpoint, "files/b.txt")).toString(), "beta!");
+    assert.deepEqual(result.checkpoint.unreadPaths, []);
+    assert.deepEqual(earlier, ["a.txt"]);
+    assert.deepEqual(plan.steps.map(u => u.path).sort(), ["a.txt", "c.txt"]);
+    assert.deepEqual(plan.earlierPaths, ["a.txt"]);
+  });
+
+  it("counts a file changed within two seconds before the turn's start as the turn's, since a filesystem may keep times to two seconds, and reads one changed earlier", async t => {
+    const harness = await CheckpointsHarness.startAsync(t);
+    await harness.writeAsync("near.txt", "near");
+    await harness.writeAsync("far.txt", "far");
+    await harness.checkpointAsync(null);
+    const asOf = new Date(Date.now() + 60_000);
+    const near = new Date(asOf.getTime() - 1_500);
+    const far = new Date(asOf.getTime() - 2_500);
+    await utimes(await harness.writeAsync("near.txt", "near!"), near, near);
+    await utimes(await harness.writeAsync("far.txt", "far!"), far, far);
+
+    const result = await harness.captureAsync(null, asOf);
+    assert.ok(result.checkpoint !== null);
+
+    assert.equal((await harness.contentAsync(result.checkpoint, "files/near.txt")).toString(), "near");
+    assert.equal((await harness.contentAsync(result.checkpoint, "files/far.txt")).toString(), "far!");
+  });
+
+  it("keeps the earlier copy of each file changed since the last turn when the clock stepped back between turns", async t => {
+    const harness = await CheckpointsHarness.startAsync(t);
+    await harness.writeAsync("a.txt", "alpha");
+    await harness.checkpointAsync(null);
+    await harness.writeAsync("a.txt", "alpha!");
+    await harness.writeAsync("b.txt", "beta");
+
+    const result = await harness.captureAsync(null, new Date(Date.now() - 3_600_000));
+    assert.ok(result.checkpoint !== null);
+
+    assert.deepEqual([...(await harness.treeAsync(result.checkpoint)).keys()].sort(), ["checkpoint.json", "files/a.txt"]);
+    assert.equal((await harness.contentAsync(result.checkpoint, "files/a.txt")).toString(), "alpha");
+  });
+
+  it("keeps the earlier copy of a file the turn deletes while the capture reads, and leaves out a new one it deletes", async t => {
+    const harness = await CheckpointsHarness.startAsync(t);
+    await harness.writeAsync("a.txt", "alpha");
+    await harness.writeAsync("b.txt", "beta");
+    await harness.checkpointAsync(null);
+    await harness.writeAsync("a.txt", "alpha!");
+    await harness.writeAsync("b.txt", "beta!");
+    await harness.writeAsync("n.txt", "new");
+    watchContents(harness, count => {
+      if (count === 1) {
+        unlinkSync(path.join(harness.folder, "b.txt"));
+        unlinkSync(path.join(harness.folder, "n.txt"));
+      }
+    });
+
+    const result = await harness.captureAsync(null, new Date(Date.now() + 60_000));
+    assert.ok(result.checkpoint !== null);
+    const earlier = await earlierPathsAsync(harness, result.checkpoint);
+
+    assert.deepEqual([...(await harness.treeAsync(result.checkpoint)).keys()].sort(), ["checkpoint.json", "files/a.txt", "files/b.txt"]);
+    assert.equal((await harness.contentAsync(result.checkpoint, "files/a.txt")).toString(), "alpha!");
+    assert.equal((await harness.contentAsync(result.checkpoint, "files/b.txt")).toString(), "beta");
+    assert.deepEqual(result.checkpoint.unreadPaths, []);
+    assert.deepEqual(earlier, ["b.txt"]);
+  });
+
+  it("keeps the earlier copy of a file deleted from a folder changed at or after the turn's start, a whole deleted folder's too, and none from an older folder", async t => {
+    const harness = await CheckpointsHarness.startAsync(t);
+    await harness.writeAsync("keep/a.txt", "alpha");
+    await harness.writeAsync("keep/stays.txt", "stays");
+    await harness.writeAsync("old/b.txt", "beta");
+    await harness.writeAsync("old/stays.txt", "stays");
+    await harness.writeAsync("gone/c.txt", "gamma");
+    await harness.writeAsync("gone/deep/d.txt", "delta");
+    await harness.checkpointAsync(null);
+    const asOf = new Date(Date.now() + 60_000);
+    const before = new Date(asOf.getTime() - 3_600_000);
+    await rm(path.join(harness.folder, "keep", "a.txt"));
+    await rm(path.join(harness.folder, "old", "b.txt"));
+    await rm(path.join(harness.folder, "gone"), { recursive: true });
+    await utimes(path.join(harness.folder, "keep"), asOf, asOf);
+    await utimes(path.join(harness.folder, "old"), before, before);
+    await utimes(harness.folder, asOf, asOf);
+
+    const result = await harness.captureAsync(null, asOf);
+    assert.ok(result.checkpoint !== null);
+    const earlier = await earlierPathsAsync(harness, result.checkpoint);
+
+    assert.deepEqual([...(await harness.treeAsync(result.checkpoint)).keys()].sort(),
+      ["checkpoint.json", "files/gone/c.txt", "files/gone/deep/d.txt", "files/keep/a.txt", "files/keep/stays.txt", "files/old/stays.txt"]);
+    assert.deepEqual([...earlier].sort(), ["gone/c.txt", "gone/deep/d.txt", "keep/a.txt"]);
+  });
+
+  it("brings back no earlier copy of a path the ignore files now ignore, a file or one under an ignored folder", async t => {
+    const harness = await CheckpointsHarness.startAsync(t);
+    await harness.writeAsync("a.log", "log");
+    await harness.writeAsync("vendor/x.ts", "x");
+    await harness.writeAsync("a.txt", "alpha");
+    await harness.checkpointAsync(null);
+    harness.context.settings.write("checkpoints.followIgnoreFiles", true);
+    await harness.writeAsync(".gitignore", "*.log\nvendor/\n");
+    const asOf = new Date(Date.now() + 60_000);
+    await utimes(harness.folder, asOf, asOf);
+
+    const result = await harness.captureAsync(null, asOf);
+    assert.ok(result.checkpoint !== null);
+    const earlier = await earlierPathsAsync(harness, result.checkpoint);
+
+    assert.deepEqual([...(await harness.treeAsync(result.checkpoint)).keys()].sort(), ["checkpoint.json", "files/.gitignore", "files/a.txt", "rules/.gitignore"]);
+    assert.deepEqual(earlier, []);
   });
 });

@@ -8,7 +8,7 @@
 
 import assert from "node:assert/strict";
 import { constants, type BigIntStats } from "node:fs";
-import { chmod, link, lstat, mkdir, mkdtemp, realpath, rm, symlink, writeFile } from "node:fs/promises";
+import { chmod, link, lstat, mkdir, mkdtemp, realpath, rm, symlink, utimes, writeFile } from "node:fs/promises";
 import { createServer } from "node:net";
 import { tmpdir } from "node:os";
 import path from "node:path";
@@ -57,6 +57,24 @@ describe("FolderWalker", { concurrency: true }, () => {
     assert.equal(result.entries[3]?.location, path.join(folder, "src", "lib", "x.ts"));
     assert.equal(result.entries[1]?.size, 1);
     assert.deepEqual([result.emptyFolders, result.links, result.unreadPaths], [[], [], []]);
+  });
+
+  it("records each folder it walks, the walked one too, with the later of its modification and change times", async t => {
+    const folder = await folderAsync(t);
+    await writeAsync(folder, "src/lib/x.ts", "x");
+    const later = new Date(Date.now() + 3_600_000);
+    await utimes(path.join(folder, "src"), later, later);
+
+    const result = await new FolderWalker(process.platform).walkAsync(folder, CaptureMode.EveryFile, uncancelled);
+    const timeOf = async (location: string): Promise<bigint> => {
+      const stats = await lstat(location, { bigint: true });
+      return stats.mtimeNs > stats.ctimeNs ? stats.mtimeNs : stats.ctimeNs;
+    };
+
+    assert.deepEqual([...result.folderTimes.keys()], ["", "src", "src/lib"]);
+    assert.equal(result.folderTimes.get(""), await timeOf(folder));
+    assert.equal(result.folderTimes.get("src"), BigInt(later.getTime()) * 1_000_000n);
+    assert.equal(result.folderTimes.get("src/lib"), await timeOf(path.join(folder, "src", "lib")));
   });
 
   it("stops before its next entry once its signal aborts, inside a folder too, with the signal's reason", async t => {

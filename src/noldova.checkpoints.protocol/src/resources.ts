@@ -18,6 +18,7 @@ export class Resources {
   public static readonly base64Padding: string = "=";
   public static readonly base64Pattern: RegExp = /^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/;
   public static readonly base64TrailingPadding: RegExp = /=+$/;
+  public static readonly asOfField: string = "asOf";
   public static readonly beforeField: string = "before";
   public static readonly bitsPerBase64Digit: number = 6;
   public static readonly bitsPerByte: number = 8;
@@ -43,11 +44,14 @@ export class Resources {
   public static readonly compareRequestModel: string = "CompareRequest";
   public static readonly compareResultModel: string = "CompareResult";
   public static readonly contentField: string = "content";
+  public static readonly contentLimitField: string = "contentLimit";
+  public static readonly contentSizeField: string = "contentSize";
   public static readonly currentFolderName: string = ".";
   public static readonly deleteFolderMethod: string = "checkpoints.deleteFolder";
   public static readonly deleteFolderRequestModel: string = "DeleteFolderRequest";
   public static readonly deleteFolderResultModel: string = "DeleteFolderResult";
   public static readonly diffTargetModel: string = "DiffTarget";
+  public static readonly earlierPathsField: string = "earlierPaths";
   public static readonly folderField: string = "folder";
   public static readonly folderReferenceModel: string = "FolderReference";
   public static readonly foldersField: string = "folders";
@@ -189,6 +193,14 @@ export class Resources {
 
   public static formatSideSizeMismatch(kind: string): string {
     return `A side has a size exactly when it isn't a folder, and a folder is never text; the kind is ${kind}.`;
+  }
+
+  public static formatContentMismatch(outcome: string): string {
+    return `A capture result holds the content size and its limit exactly when its outcome is TooLarge; the outcome is ${outcome}.`;
+  }
+
+  public static formatEarlierPathsMismatch(path: string): string {
+    return `A restore plan names each of its earlier paths once, and only a path one of its steps writes; "${path}" is not.`;
   }
 
   public static formatSpaceMismatch(outcome: string): string {
