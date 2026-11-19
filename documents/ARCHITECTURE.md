@@ -207,7 +207,7 @@ The module walks the folder itself, reading names as bytes, and never follows a 
 - A file over 10 MiB isn't read: the checkpoint lists it as too large and keeps no content for it, and a restore of that checkpoint leaves it as it is; a link is kept whatever size it reports.
   A preview doesn't read one in the folder now either, so a file the checkpoint holds that has since grown past 10 MiB stays as it is, as too large.
   A file of up to 10 MiB is streamed, and Git writes a file over `core.bigFileThreshold` into its store without holding it in memory; a checkpoint an earlier version took may hold larger files, and they restore like any other.
-- Tests: "leaves out a file over 10 MiB as too large, keeps one of exactly 10 MiB, and its restore preview keeps the one left out"; "takes no checkpoint when the content it would add is over 1 GiB, and gives that size and the limit"; "restores a large file a checkpoint kept before the size limit, and a file's letter case where the folder ignores case"; "keeps a file that grew past 10 MiB since the checkpoint, without reading it, and restores the rest".
+- Tests: "leaves out a file over 10 MiB as too large, keeps one of exactly 10 MiB, and its restore preview keeps the one left out"; "takes no checkpoint when the content it would add is over 1 GiB, and gives that size and the limit"; "restores a large file a checkpoint kept before the size limit, and a file's letter case where the folder ignores case"; "keeps a file that grew past 10 MiB since the checkpoint as too large, and restores the rest".
 
 ### Following the ignore files
 
