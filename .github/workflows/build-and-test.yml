@@ -24,7 +24,7 @@ concurrency:
 jobs:
   build-and-test:
     name: Build and test
-    uses: noldova-com/.github/.github/workflows/build-and-test.yml@420ac04362aa51bd2b8d302578b0ec2f52c72bb3 # v2.41.1
+    uses: noldova-com/.github/.github/workflows/build-and-test.yml@cb9977bb95001c8dc88b3cea5fda8862bb45d057 # v2.41.3
     permissions:
       contents: read
       packages: read
