@@ -5,7 +5,7 @@
   "description": "Keeps a folder's files at chosen moments, with the module's own Git, lists them, compares them and restores one on request.",
   "parts": ["runtime"],
   "dependencies": {},
-  "noldovaDesktop": ">=0.0.11 <0.1.0",
+  "noldovaDesktop": ">=0.0.12 <0.1.0",
   "contributes": {
     "methods": ["checkpoints.capture", "checkpoints.list", "checkpoints.compare", "checkpoints.read", "checkpoints.previewRestore", "checkpoints.restore", "checkpoints.storage", "checkpoints.deleteFolder"],
     "events": ["checkpoints.capturePaused", "checkpoints.captureResumed", "checkpoints.restored", "checkpoints.restoreHeldUp"],
