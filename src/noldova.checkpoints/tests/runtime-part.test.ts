@@ -17,6 +17,8 @@ import { RuntimePart } from "../src/api/index.ts";
 import { CheckpointsContext } from "./fixtures/checkpoints-context.fixture.ts";
 import { JsonFixture, type JsonFields } from "./fixtures/json.fixture.ts";
 
+const CONTEXT_PEERS: readonly string[] = ["@noldova/context.exceptions", "@noldova/context.json"];
+
 async function readObjectAsync(file: string): Promise<JsonFields> {
   return JsonFixture.parse(await readFile(new URL(`../${file}`, import.meta.url), "utf8"));
 }
@@ -36,7 +38,7 @@ function rangeFrom(lowest: string): string {
 function lowestOf(range: string): string {
   const lowest = /^>=(\d+\.\d+\.\d+) /.exec(range)?.[1];
   if (lowest === undefined)
-    throw new TypeError(`${range} is not a range of Noldova Desktop versions.`);
+    throw new TypeError(`${range} is not a range of versions from its lowest.`);
   return lowest;
 }
 
@@ -60,15 +62,15 @@ describe("RuntimePart", { concurrency: true }, () => {
     const peers = textsOf((await readObjectAsync("package.json"))["peerDependencies"]);
     const devDependencies = textsOf((await readObjectAsync("../../package.json"))["devDependencies"]);
     const pins = Object.entries(devDependencies).filter(t => t[0].startsWith("@noldova/desktop."));
+    const contextPeers = Object.fromEntries(CONTEXT_PEERS.map(t => [t, rangeFrom(lowestOf(peers[t] ?? `no range for ${t}`))]));
 
     assert.equal(range, rangeFrom(lowestOf(range)));
     assert.deepEqual(pins.map(t => t[0]), ["@noldova/desktop.protocol", "@noldova/desktop.runtime"]);
     assert.deepEqual(pins.filter(t => !isInside(t[1], range)), []);
     assert.deepEqual(peers, {
-      "@noldova/desktop.protocol": range, "@noldova/desktop.runtime": range, "@noldova/context.exceptions": ">=0.0.7 <0.1.0", "@noldova/context.json": ">=0.0.7 <0.1.0"
+      "@noldova/desktop.protocol": range, "@noldova/desktop.runtime": range, ...contextPeers
     });
-    assert.equal(isInside(devDependencies["@noldova/context.exceptions"] ?? "", ">=0.0.7 <0.1.0"), true);
-    assert.equal(isInside(devDependencies["@noldova/context.json"] ?? "", ">=0.0.7 <0.1.0"), true);
+    assert.deepEqual(Object.entries(contextPeers).filter(t => !isInside(devDependencies[t[0]] ?? "", t[1])), []);
   });
 
   it("declares in settings.json each setting the module contributes, following the ignore files off by default and shared by every device", async () => {
