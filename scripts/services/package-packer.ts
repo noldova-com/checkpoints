@@ -10,8 +10,6 @@ import { existsSync, readdirSync } from "node:fs";
 import { copyFile, cp, mkdir, readdir, readFile, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 
-import "@noldova/context.core";
-
 import { CompilingFailedException } from "../exceptions/compiling-failed.exception.ts";
 import { ExportSourceInvalidException } from "../exceptions/export-source-invalid.exception.ts";
 import { ExportsInvalidException } from "../exceptions/exports-invalid.exception.ts";
@@ -87,15 +85,15 @@ export class PackagePacker {
 
   private static manifestOf(text: string, file: string, commit: string | null): string {
     const manifest: unknown = JSON.parse(text);
-    if (!Object.isObject(manifest) || Array.isArray(manifest))
+    if (typeof manifest !== "object" || manifest === null || Array.isArray(manifest))
       throw new ManifestNotObjectException(file);
     const exports: unknown = Object.entries(manifest).find(([field]) => field === Resources.exportsField)?.[1];
-    if (!Object.isObject(exports) || Array.isArray(exports))
+    if (typeof exports !== "object" || exports === null || Array.isArray(exports))
       throw new ExportsInvalidException(file);
     const mapped = Object.entries(exports).map(([subpath, target]) => {
       if (target === Resources.manifestExport)
         return [subpath, target] as const;
-      if (!Object.isString(target) || !target.endsWith(Resources.sourceExtension) || target.endsWith(Resources.declarationExtension))
+      if (typeof target !== "string" || !target.endsWith(Resources.sourceExtension) || target.endsWith(Resources.declarationExtension))
         throw new ExportSourceInvalidException(file, subpath);
       const stem = target.slice(0, -Resources.sourceExtension.length);
 
@@ -105,7 +103,7 @@ export class PackagePacker {
     const fields = new Map<string, unknown>(Object.entries(manifest).filter(([field]) => !PackagePacker.UNPACKED_FIELDS.includes(field)));
     fields.set(Resources.exportsField, Object.fromEntries(mapped));
     const own = fields.get(Resources.ownField);
-    if (Object.isObject(own) && !Array.isArray(own)) {
+    if (typeof own === "object" && own !== null && !Array.isArray(own)) {
       const version = fields.get(Resources.versionField);
       const rest = new Map<string, unknown>(Object.entries(own));
       for (const [ownField, field] of [[Resources.ownDependenciesField, Resources.dependenciesField], [Resources.ownOptionalDependenciesField, Resources.optionalDependenciesField]] as const) {
@@ -113,7 +111,7 @@ export class PackagePacker {
           continue;
         const names = rest.get(ownField);
         const dependencies = fields.get(field) ?? {};
-        if (!Array.isArray(names) || !names.every(t => Object.isString(t)) || !Object.isString(version) || !Object.isObject(dependencies))
+        if (!Array.isArray(names) || !names.every(t => typeof t === "string") || typeof version !== "string" || typeof dependencies !== "object" || dependencies === null)
           throw new OwnDependenciesInvalidException(file, ownField, field);
         fields.set(field, { ...dependencies, ...Object.fromEntries(names.map(t => [t, version])) });
         rest.delete(ownField);
@@ -123,7 +121,7 @@ export class PackagePacker {
       else
         fields.set(Resources.ownField, Object.fromEntries(rest));
     }
-    if (!Object.isNull(commit))
+    if (commit !== null)
       fields.set(Resources.commitField, commit);
 
     return Resources.formatLine(JSON.stringify(Object.fromEntries(fields), null, Resources.jsonIndent));

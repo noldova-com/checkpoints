@@ -11,8 +11,6 @@ import { readdir, readFile, stat } from "node:fs/promises";
 import path from "node:path";
 import type { Writable } from "node:stream";
 
-import "@noldova/context.core";
-
 import { PackageException } from "../exceptions/package.exception.ts";
 import { ProcessException } from "../exceptions/process.exception.ts";
 import { ReleaseCommitInvalidException } from "../exceptions/release-commit-invalid.exception.ts";
@@ -81,20 +79,20 @@ export class Release {
         throw error;
       throw new ReleaseManifestInvalidException(context, error);
     }
-    if (!Object.isObject(parsed) || Array.isArray(parsed))
+    if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed))
       throw new ReleaseManifestNotObjectException(context);
     return Object.fromEntries(Object.entries(parsed));
   }
 
   private static validateVersion(version: string | undefined): string {
-    if (Object.isUndefined(version) || !Resources.releaseVersionPattern.test(version))
+    if (version === undefined || !Resources.releaseVersionPattern.test(version))
       throw new ReleaseVersionInvalidException(version);
 
     return version;
   }
 
   private static validateCommit(commit: string | undefined): string {
-    if (Object.isUndefined(commit) || !Resources.commitPattern.test(commit))
+    if (commit === undefined || !Resources.commitPattern.test(commit))
       throw new ReleaseCommitInvalidException(commit);
 
     return commit;
@@ -102,16 +100,16 @@ export class Release {
 
   private static readText(fields: Readonly<Record<string, unknown>>, field: string, context: string): string {
     const value = fields[field];
-    if (!Object.isString(value))
+    if (typeof value !== "string")
       throw new ReleaseManifestFieldInvalidException(context, field);
     return value;
   }
 
   private static readDependencies(manifest: Readonly<Record<string, unknown>>, field: string, context: string): Readonly<Record<string, unknown>> {
     const value = manifest[field];
-    if (Object.isNullOrUndefined(value))
+    if (value === undefined || value === null)
       return {};
-    if (!Object.isObject(value) || Array.isArray(value))
+    if (typeof value !== "object" || Array.isArray(value))
       throw new ReleaseManifestFieldInvalidException(context, field);
     return Object.fromEntries(Object.entries(value));
   }
@@ -155,12 +153,12 @@ export class Release {
     pins: ReadonlyMap<string, string>): Promise<readonly string[]> {
     const archiveName = path.basename(archive.filePath);
     const tooLarge = ArchiveCheck.checkSize(archiveName, (await stat(archive.filePath)).size);
-    if (!Object.isNull(tooLarge))
+    if (tooLarge !== null)
       return [tooLarge];
 
     const entries = await this.archiveReader.readAsync(archive.filePath);
     const content = entries.get(Release.MANIFEST_ENTRY);
-    if (Object.isUndefined(content))
+    if (content === undefined)
       return [Resources.formatArchiveManifestMissing(archiveName)];
 
     const context = Resources.formatManifestContext(archiveName);
@@ -178,7 +176,7 @@ export class Release {
     if (manifest[Resources.privateField] === true)
       findings.push(Resources.formatMarkedPrivate(archiveName));
     const foundCommit = manifest[Resources.commitField];
-    if (!Object.isString(foundCommit))
+    if (typeof foundCommit !== "string")
       findings.push(Resources.formatCommitMissing(archiveName, commit));
     else if (foundCommit !== commit)
       findings.push(Resources.formatFieldDiffers(archiveName, Resources.commitField, foundCommit, commit));
@@ -204,7 +202,7 @@ export class Release {
 
   private readVariable(name: string): string {
     const value = this.environment[name];
-    if (Object.isUndefined(value) || value.length === 0)
+    if (value === undefined || value.length === 0)
       throw new ReleaseVariableMissingException(name);
 
     return value;

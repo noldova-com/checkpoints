@@ -10,8 +10,6 @@ import { existsSync } from "node:fs";
 import { readFile, rm, stat } from "node:fs/promises";
 import path from "node:path";
 
-import "@noldova/context.core";
-
 import { PackageException } from "../exceptions/package.exception.ts";
 import { ReleaseArchive } from "../models/release-archive.ts";
 import { RootManifest } from "../models/root-manifest.ts";
@@ -70,9 +68,9 @@ export class WorkspaceBuild {
       return 1;
     }
     const hostGit = WorkspaceLayout.gitPackageName(this.host);
-    const isRelease = !Object.isUndefined(this.environment[Resources.releaseVersionVariable]);
+    const isRelease = this.environment[Resources.releaseVersionVariable] !== undefined;
     const commit = isRelease ? this.environment[Resources.releaseCommitVariable] ?? "" : await this.readCommitAsync();
-    if (!Object.isNull(commit) && !Resources.commitPattern.test(commit)) {
+    if (commit !== null && !Resources.commitPattern.test(commit)) {
       this.report(Resources.formatReleaseCommitUnrecorded(commit));
       return 1;
     }
@@ -115,13 +113,13 @@ export class WorkspaceBuild {
     for (const archive of packed) {
       const archiveName = path.basename(archive.filePath);
       const tooLarge = ArchiveCheck.checkSize(archiveName, (await stat(archive.filePath)).size);
-      if (!Object.isNull(tooLarge)) {
+      if (tooLarge !== null) {
         findings.push(tooLarge);
         continue;
       }
       const entries = await reader.readAsync(archive.filePath);
       const packedManifest: unknown = JSON.parse(entries.get(WorkspaceBuild.MANIFEST_ENTRY)?.toString(Resources.utf8Encoding) ?? Resources.jsonNull);
-      if (!Object.isObject(packedManifest) || Array.isArray(packedManifest))
+      if (typeof packedManifest !== "object" || packedManifest === null || Array.isArray(packedManifest))
         findings.push(Resources.formatArchiveManifestMissing(archiveName));
       else
         findings.push(...ArchiveCheck.check(archiveName, archive.part, Object.fromEntries(Object.entries(packedManifest)), entries, manifest.pins));
@@ -131,7 +129,7 @@ export class WorkspaceBuild {
     if (findings.length > 0)
       return 1;
 
-    return isRelease && !Object.isNull(commit) ? await this.checkReleaseAsync(version, commit) : 0;
+    return isRelease && commit !== null ? await this.checkReleaseAsync(version, commit) : 0;
   }
 
   private async readReleasedVersionAsync(): Promise<unknown> {
@@ -147,7 +145,7 @@ export class WorkspaceBuild {
       return undefined;
     }
 
-    return Object.isObject(content) ? Object.entries(content).find(([field]) => field === Resources.versionField)?.[1] : undefined;
+    return typeof content === "object" && content !== null ? Object.entries(content).find(([field]) => field === Resources.versionField)?.[1] : undefined;
   }
 
   private archiveOf(part: WorkspacePart, version: string): string {

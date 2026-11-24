@@ -6,8 +6,6 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import "@noldova/context.core";
-
 import type { ProcessResult } from "../models/process-result.ts";
 import type { ProcessRunner } from "./process-runner.ts";
 import { NpmUnavailableException } from "../exceptions/npm-unavailable.exception.ts";
@@ -24,7 +22,7 @@ export class NpmCommand {
 
   public async runAsync(npmArguments: readonly string[], directory: string): Promise<ProcessResult> {
     const npm = this.environment[Resources.npmPathVariable];
-    if (Object.isUndefined(npm) || npm.length === 0)
+    if (npm === undefined || npm.length === 0)
       throw new NpmUnavailableException();
     return this.runner.captureAsync(process.execPath, [npm, ...npmArguments], directory, Resources.npmTimeout);
   }

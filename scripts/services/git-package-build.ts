@@ -11,8 +11,6 @@ import { existsSync } from "node:fs";
 import { constants, copyFile, mkdir, readdir, readFile, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 
-import "@noldova/context.core";
-
 import { ArchiveHashMismatchException } from "../exceptions/archive-hash-mismatch.exception.ts";
 import { ArchiveLongerThanPinnedException } from "../exceptions/archive-longer-than-pinned.exception.ts";
 import { ArchiveSizeMismatchException } from "../exceptions/archive-size-mismatch.exception.ts";
@@ -54,7 +52,7 @@ export class GitPackageBuild {
 
   public async packAsync(part: WorkspacePart, version: string, commit: string | null = null): Promise<void> {
     const target = this.builds.targets.find(t => WorkspaceLayout.gitPackageName(t.target) === part.name);
-    if (Object.isUndefined(target))
+    if (target === undefined)
       throw new PartBuildMissingException(part.name);
     const output = path.join(this.root, ...PackagePacker.workSegments, Resources.formatGitWorkFolder(target.target));
     await rm(output, { recursive: true, force: true });
@@ -63,7 +61,7 @@ export class GitPackageBuild {
     const listed = listing.map(t => t.split(Resources.columnSeparator).slice(Resources.listingPathColumn, Resources.listingPathColumn + 1).join(""));
     const dropped = await this.readLinesAsync(Resources.droppedFolder, target);
     const unlisted = dropped.find(t => !listed.includes(t) && !listed.some(u => t.endsWith(Resources.pathSeparator) && u.startsWith(t)));
-    if (!Object.isUndefined(unlisted))
+    if (unlisted !== undefined)
       throw new DroppedUnlistedException(target.target, unlisted);
 
     const archive = await this.readArchiveAsync(target);
@@ -86,12 +84,12 @@ export class GitPackageBuild {
       for (const text of component.texts) {
         const isBuild = text.startsWith(Resources.buildTextPrefix);
         const inBuild = isBuild ? text.slice(Resources.buildTextPrefix.length) : null;
-        const source = !Object.isNull(inBuild)
+        const source = inBuild !== null
           ? path.join(output, part.sources, ...inBuild.split(Resources.pathSeparator))
           : path.join(this.root, Resources.gitFolder, ...text.split(Resources.pathSeparator));
         if (!existsSync(source))
           throw new LicenceTextMissingException(componentsFile, component.name, text, isBuild);
-        const name = (!Object.isNull(inBuild) ? Resources.licenseFolderPattern.exec(inBuild)?.groups?.[Resources.licensePathGroup] : undefined) ?? path.posix.basename(text);
+        const name = (inBuild !== null ? Resources.licenseFolderPattern.exec(inBuild)?.groups?.[Resources.licensePathGroup] : undefined) ?? path.posix.basename(text);
         const destination = path.join(output, Resources.licensesFolder, component.name, ...name.split(Resources.pathSeparator));
         await mkdir(path.dirname(destination), { recursive: true });
         await copyFile(source, destination, constants.COPYFILE_EXCL);
@@ -123,12 +121,12 @@ export class GitPackageBuild {
     if (!response.ok)
       throw new DownloadFailedException(target.url, response.status);
     const declared = response.headers.get(Resources.contentLengthHeader);
-    if (!Object.isNull(declared) && Number(declared) !== target.size)
+    if (declared !== null && Number(declared) !== target.size)
       throw new ArchiveSizeMismatchException(target.url, Number(declared), target.size);
     const reader = response.body?.getReader();
     const chunks: Uint8Array[] = [];
     let size = 0;
-    for (let read = await reader?.read(); !Object.isUndefined(read) && !read.done; read = await reader?.read()) {
+    for (let read = await reader?.read(); read !== undefined && !read.done; read = await reader?.read()) {
       const chunk = Buffer.from(read.value);
       size += chunk.length;
       if (size > target.size)
@@ -163,7 +161,7 @@ export class GitPackageBuild {
     return Resources.formatLine(JSON.stringify({
       name: part.name,
       version,
-      ...(Object.isNull(commit) ? {} : { gitHead: commit }),
+      ...(commit === null ? {} : { gitHead: commit }),
       description: Resources.formatGitPackageDescription(target.gitVersion, target.target),
       license,
       repository: { type: Resources.gitRepositoryType, url: Resources.repositoryAddress, directory: Resources.gitFolder },

@@ -6,8 +6,6 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import "@noldova/context.core";
-
 import { ParsedJson } from "../models/parsed-json.ts";
 import { VersionRange } from "../models/version-range.ts";
 import type { WorkspacePart } from "../models/workspace-part.ts";
@@ -26,25 +24,25 @@ export class ArchiveCheck {
     const findings: string[] = [];
     const version = manifest[Resources.versionField];
     const content = part.folder === Resources.moduleFolder ? entries.get(Resources.formatArchiveEntry(Resources.moduleFile)) : undefined;
-    const declaration = Object.isUndefined(content) ? null : ArchiveCheck.parseJson(content);
+    const declaration = content === undefined ? null : ArchiveCheck.parseJson(content);
     if (part.folder === Resources.moduleFolder)
       findings.push(...ArchiveCheck.checkModule(archiveName, version, content, declaration));
     const range = ArchiveCheck.readObject(declaration?.value)?.[Resources.noldovaDesktopField];
 
     const exports = ArchiveCheck.readObject(manifest[Resources.exportsField]);
-    if (Object.isNull(exports))
+    if (exports === null)
       findings.push(Resources.formatExportsMissing(archiveName));
     for (const [subpath, target] of Object.entries(exports ?? {}))
-      for (const file of Object.isString(target) ? [target] : Object.values(ArchiveCheck.readObject(target) ?? {}))
-        if (!Object.isString(file) || !entries.has(Resources.formatArchiveEntry(file.slice(Resources.relativePrefix.length))))
+      for (const file of typeof target === "string" ? [target] : Object.values(ArchiveCheck.readObject(target) ?? {}))
+        if (typeof file !== "string" || !entries.has(Resources.formatArchiveEntry(file.slice(Resources.relativePrefix.length))))
           findings.push(Resources.formatExportFileMissing(archiveName, subpath, String(file)));
 
     for (const field of ArchiveCheck.PINNED_FIELDS)
       for (const [name, taken] of Object.entries(ArchiveCheck.readObject(manifest[field]) ?? {}))
         if (field === Resources.peerDependenciesField && name.startsWith(Resources.noldovaPrefix))
-          findings.push(...ArchiveCheck.checkPeerRange(archiveName, name, taken, Object.isString(range) && name.startsWith(Resources.noldovaDesktopPrefix) ? range : null,
+          findings.push(...ArchiveCheck.checkPeerRange(archiveName, name, taken, typeof range === "string" && name.startsWith(Resources.noldovaDesktopPrefix) ? range : null,
             rootPins.get(name)));
-        else if (!Object.isString(taken) || !Resources.exactVersionPattern.test(taken))
+        else if (typeof taken !== "string" || !Resources.exactVersionPattern.test(taken))
           findings.push(Resources.formatDependencyNotExact(archiveName, name, String(taken), field));
 
     if (part.folder === Resources.gitFolder)
@@ -65,9 +63,9 @@ export class ArchiveCheck {
   }
 
   private static checkModule(archiveName: string, version: unknown, content: Buffer | undefined, declaration: ParsedJson | null): readonly string[] {
-    if (Object.isUndefined(content))
+    if (content === undefined)
       return [Resources.formatModuleFileMissing(archiveName)];
-    if (Object.isNull(declaration))
+    if (declaration === null)
       return [Resources.formatModuleFileNotJson(archiveName)];
 
     const declared = ArchiveCheck.readObject(declaration.value);
@@ -75,18 +73,18 @@ export class ArchiveCheck {
     if (declared?.[Resources.versionField] !== version)
       findings.push(Resources.formatModuleVersionDiffers(archiveName, String(declared?.[Resources.versionField]), String(version)));
     const range = declared?.[Resources.noldovaDesktopField];
-    if (!Object.isUndefined(range) && (!Object.isString(range) || !ArchiveCheck.isRange(range)))
+    if (range !== undefined && (typeof range !== "string" || !ArchiveCheck.isRange(range)))
       findings.push(Resources.formatNoldovaDesktopRangeInvalid(archiveName, String(range)));
     return findings;
   }
 
   private static checkPeerRange(archiveName: string, name: string, taken: unknown, moduleRange: string | null, pin: string | undefined): readonly string[] {
-    const range = Object.isString(taken) ? VersionRange.parse(taken) : null;
-    if (Object.isNull(range) || !range.isStandard)
+    const range = typeof taken === "string" ? VersionRange.parse(taken) : null;
+    if (range === null || !range.isStandard)
       return [Resources.formatPeerRangeInvalid(archiveName, name, String(taken))];
-    if (!Object.isNull(moduleRange) && taken !== moduleRange)
+    if (moduleRange !== null && taken !== moduleRange)
       return [Resources.formatPeerOutsideRange(archiveName, name, String(taken), Resources.peerDependenciesField, moduleRange)];
-    if (Object.isUndefined(pin) || !Resources.plainVersionPattern.test(pin))
+    if (pin === undefined || !Resources.plainVersionPattern.test(pin))
       return [Resources.formatPeerPinMissing(archiveName, name, String(pin))];
     return range.holds(pin) ? [] : [Resources.formatPeerRangeMissesPin(archiveName, name, String(taken), pin)];
   }
@@ -99,16 +97,16 @@ export class ArchiveCheck {
     const findings: string[] = [];
     for (const field of ArchiveCheck.TARGET_FIELDS) {
       const value = manifest[field];
-      if (!Array.isArray(value) || value.length !== 1 || !Object.isString(value[0]))
+      if (!Array.isArray(value) || value.length !== 1 || typeof value[0] !== "string")
         findings.push(Resources.formatTargetMissing(archiveName, field));
     }
     const program = ArchiveCheck.readObject(ArchiveCheck.readObject(manifest[Resources.ownField])?.[Resources.gitField])?.[Resources.programField];
-    if (!Object.isString(program) || !entries.has(Resources.formatArchiveEntry(program)))
+    if (typeof program !== "string" || !entries.has(Resources.formatArchiveEntry(program)))
       findings.push(Resources.formatGitProgramMissing(archiveName, String(program)));
     return findings;
   }
 
   private static readObject(value: unknown): Readonly<Record<string, unknown>> | null {
-    return Object.isObject(value) && !Array.isArray(value) ? Object.fromEntries(Object.entries(value)) : null;
+    return typeof value === "object" && value !== null && !Array.isArray(value) ? Object.fromEntries(Object.entries(value)) : null;
   }
 }
