@@ -24,7 +24,7 @@ import { ReleaseVariableMissingException } from "../exceptions/release-variable-
 import { ReleaseVersionInvalidException } from "../exceptions/release-version-invalid.exception.ts";
 import { ReleaseException } from "../exceptions/release.exception.ts";
 import type { GitBuilds } from "../models/git-builds.ts";
-import type { SourceArchive } from "../models/git-sources.ts";
+import type { SourceArchive } from "../models/source-archive.ts";
 import { ReleaseArchive } from "../models/release-archive.ts";
 import { RootManifest } from "../models/root-manifest.ts";
 import type { WorkspacePart } from "../models/workspace-part.ts";
@@ -210,17 +210,31 @@ export class Release {
   // published at its address, as large as builds.json says, before the package is.
   private async checkSourceArchiveAsync(archiveName: string, manifest: Readonly<Record<string, unknown>>, source: SourceArchive): Promise<readonly string[]> {
     const archive = Release.objectOf(Release.objectOf(manifest[Resources.noldovaDesktopField])?.[Resources.sourceArchiveField]);
-    const expected = { url: source.url, size: source.size, sha256: source.sha256 };
-    if (JSON.stringify(archive) !== JSON.stringify(expected))
+    if (archive === null || Object.keys(archive).length !== Resources.sourceArchiveFieldCount || archive[Resources.urlField] !== source.url
+      || archive[Resources.sizeField] !== source.size || archive[Resources.sha256Field] !== source.sha256)
       return [Resources.formatSourceArchiveRecordDiffers(archiveName, source.url)];
 
     let published = this.published.get(source.url);
     if (published === undefined) {
-      published = fetch(source.url, { method: Resources.headMethod, signal: AbortSignal.timeout(Resources.downloadTimeout) })
-        .then(t => t.ok ? Number(t.headers.get(Resources.contentLengthHeader)) : null, () => null);
+      published = Release.readPublishedSizeAsync(source.url);
       this.published.set(source.url, published);
     }
-    return await published === source.size ? [] : [Resources.formatSourceArchiveNotPublished(archiveName, source.url, source.size)];
+    let size: number | null;
+    try {
+      size = await published;
+    }
+    catch (error) {
+      if (!(error instanceof TypeError) && !(error instanceof DOMException && error.name === Resources.timeoutErrorName))
+        throw error;
+      return [Resources.formatSourceArchiveUnreachable(archiveName, source.url, error.message)];
+    }
+    return size === source.size ? [] : [Resources.formatSourceArchiveNotPublished(archiveName, source.url, source.size)];
+  }
+
+  // The size a HEAD request of the address answers with, or null when it answers with a failure status.
+  private static async readPublishedSizeAsync(url: string): Promise<number | null> {
+    const response = await fetch(url, { method: Resources.headMethod, signal: AbortSignal.timeout(Resources.downloadTimeout) });
+    return response.ok ? Number(response.headers.get(Resources.contentLengthHeader)) : null;
   }
 
   private async checkHeadAsync(commit: string): Promise<void> {

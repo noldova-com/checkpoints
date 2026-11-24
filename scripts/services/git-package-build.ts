@@ -22,7 +22,7 @@ import { PackingFailedException } from "../exceptions/packing-failed.exception.t
 import { PartBuildMissingException } from "../exceptions/part-build-missing.exception.ts";
 import { SourcesFieldInvalidException } from "../exceptions/sources-field-invalid.exception.ts";
 import type { GitBuilds } from "../models/git-builds.ts";
-import type { SourceArchive } from "../models/git-sources.ts";
+import type { SourceArchive } from "../models/source-archive.ts";
 import { GitComponent } from "../models/git-component.ts";
 import type { GitTarget } from "../models/git-target.ts";
 import type { WorkspacePart } from "../models/workspace-part.ts";

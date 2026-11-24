@@ -8,20 +8,8 @@
 
 import { SourcesFieldInvalidException } from "../exceptions/sources-field-invalid.exception.ts";
 import { Resources } from "../resources.ts";
-
-export interface SourceFile {
-  readonly url: string;
-  readonly size: number;
-  readonly sha256: string;
-}
-
-export interface SourceArchive {
-  readonly name: string;
-  readonly url: string;
-  readonly size: number;
-  readonly sha256: string;
-  readonly files: readonly SourceFile[];
-}
+import { SourceArchive } from "./source-archive.ts";
+import { SourceFile } from "./source-file.ts";
 
 export class GitSources {
   public readonly release: string;
@@ -47,20 +35,15 @@ export class GitSources {
       const files = archive[Resources.filesField];
       if (!Array.isArray(files) || files.length === 0)
         throw new SourcesFieldInvalidException(file, Resources.formatFieldPath(context, Resources.filesField));
-      const pinned = GitSources.readPinned(archive, context, file);
-      archives.set(name, {
-        name,
-        url: Resources.formatSourceArchiveAddress(release, name),
-        ...pinned,
-        files: files.map((t: unknown, i) => {
+      archives.set(name, new SourceArchive(name, Resources.formatSourceArchiveAddress(release, name), GitSources.readSize(archive, context, file),
+        GitSources.readSha256(archive, context, file), files.map((t: unknown, i) => {
           const entryPath = Resources.formatFieldPath(context, `${Resources.filesField}[${String(i)}]`);
           const entry = GitSources.readObject(t, entryPath, file);
           const url = entry[Resources.urlField];
           if (typeof url !== "string" || !url.startsWith(Resources.httpsPrefix) || Resources.fileNameOf(url) === "")
             throw new SourcesFieldInvalidException(file, Resources.formatFieldPath(entryPath, Resources.urlField));
-          return { url, ...GitSources.readPinned(entry, entryPath, file) };
-        })
-      });
+          return new SourceFile(url, GitSources.readSize(entry, entryPath, file), GitSources.readSha256(entry, entryPath, file));
+        })));
     }
     if (archives.size === 0)
       throw new SourcesFieldInvalidException(file, archivesPath);
@@ -68,14 +51,18 @@ export class GitSources {
     return new GitSources(release, archives);
   }
 
-  private static readPinned(fields: Readonly<Record<string, unknown>>, context: string, file: string): { size: number; sha256: string } {
+  private static readSize(fields: Readonly<Record<string, unknown>>, context: string, file: string): number {
     const size = fields[Resources.sizeField];
-    const sha256 = fields[Resources.sha256Field];
     if (typeof size !== "number" || !Number.isSafeInteger(size) || size <= 0)
       throw new SourcesFieldInvalidException(file, Resources.formatFieldPath(context, Resources.sizeField));
+    return size;
+  }
+
+  private static readSha256(fields: Readonly<Record<string, unknown>>, context: string, file: string): string {
+    const sha256 = fields[Resources.sha256Field];
     if (typeof sha256 !== "string" || !Resources.sha256Pattern.test(sha256))
       throw new SourcesFieldInvalidException(file, Resources.formatFieldPath(context, Resources.sha256Field));
-    return { size, sha256 };
+    return sha256;
   }
 
   private static readObject(value: unknown, field: string, file: string): Readonly<Record<string, unknown>> {

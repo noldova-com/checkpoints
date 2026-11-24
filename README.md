@@ -315,7 +315,7 @@ Each archive must be smaller than 256,000,000 bytes, and is read only then; its 
   Its peers on the organization's `@noldova/` packages are each a range `>=<lowest version> <first version refused>`, the first refused being the next minor of a 0.x lowest version, such as `<0.1.0` for any 0.0.x, or the next major from 1.0.0, that holds the exact version the root `package.json` pins for the same package, the version the build and the tests used.
 The module's archive must hold `module.json` at the version.
 Its `noldovaDesktop`, the range of Noldova Desktop versions it accepts, must be `>=<lowest version> <first version refused>` with the first refused found the same way, and its peers on Noldova Desktop's `@noldova/desktop.` packages must name that same range.
-Each Git package's must name a single target in `os` and `cpu` and hold the Git program its `package.json` names, and its `noldovaDesktop.sourceArchive` must be the archive `builds.json` pins, published at its address with its pinned size.
+Each Git package must name a single target in `os` and `cpu` and hold the Git program its `package.json` names, and its `noldovaDesktop.sourceArchive` must be the archive `builds.json` pins, published at its address with its pinned size.
 
 A failed release runs again whole, as a new run, which builds and checks the archives again.
 

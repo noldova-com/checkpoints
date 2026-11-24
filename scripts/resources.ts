@@ -312,6 +312,7 @@ export class Resources {
   public static readonly signalExitCode: number = 128;
   public static readonly sizeField: string = "size";
   public static readonly sourceArchiveField: string = "sourceArchive";
+  public static readonly sourceArchiveFieldCount: number = 3;
   public static readonly sourceArchiveNamePattern: RegExp = /^git-[0-9][0-9A-Za-z.]*-source-[a-z0-9]+[.]tar$/;
   public static readonly sourceExtension: string = ".ts";
   public static readonly sourceField: string = "source";
@@ -1090,6 +1091,10 @@ export class Resources {
 
   public static formatSourceArchiveRecordDiffers(archiveName: string, url: string): string {
     return `${archiveName}'s package.json doesn't name the Git source archive ${Resources.buildsFile} pins, ${url}, with its size and SHA-256.`;
+  }
+
+  public static formatSourceArchiveUnreachable(archiveName: string, url: string, reason: string): string {
+    return `${archiveName}'s Git source archive at ${url} couldn't be reached to check that it's published: ${reason}`;
   }
 
   public static formatSourcesFieldInvalid(file: string, field: string): string {

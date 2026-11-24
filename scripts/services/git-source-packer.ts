@@ -12,7 +12,8 @@ import path from "node:path";
 
 import { SourceArchiveDiffersException } from "../exceptions/source-archive-differs.exception.ts";
 import { SourcesFieldInvalidException } from "../exceptions/sources-field-invalid.exception.ts";
-import type { GitSources, SourceArchive } from "../models/git-sources.ts";
+import type { GitSources } from "../models/git-sources.ts";
+import type { SourceArchive } from "../models/source-archive.ts";
 import { Resources } from "../resources.ts";
 import { PinnedDownload } from "./pinned-download.ts";
 import { SourceTar } from "./source-tar.ts";
@@ -54,7 +55,7 @@ export class GitSourcePacker {
   }
 
   private async packArchiveAsync(archive: SourceArchive): Promise<SourceArchiveDiffersException | null> {
-    const names = archive.files.map(t => Resources.fileNameOf(t.url));
+    const names = archive.files.map(t => t.name);
     if (new Set(names).size !== names.length || !names.every(t => SourceTar.fits(t)))
       throw new SourcesFieldInvalidException(Resources.buildsFile, Resources.formatFieldPath(archive.name, Resources.filesField));
     const file = path.join(this.output, archive.name);
@@ -67,11 +68,10 @@ export class GitSourcePacker {
         hash.update(bytes);
         size += bytes.length;
       };
-      for (const [i, entry] of archive.files.entries()) {
-        const name = names[i] ?? "";
-        const cached = path.join(this.root, Resources.buildWorkFolder, Resources.sourceFilesFolder, Resources.formatCachedSource(entry.sha256, name));
+      for (const entry of archive.files) {
+        const cached = path.join(this.root, Resources.buildWorkFolder, Resources.sourceFilesFolder, Resources.formatCachedSource(entry.sha256, entry.name));
         const content = await this.download.readAsync(entry.url, entry.size, entry.sha256, cached);
-        await put(SourceTar.headerOf(name, content.length));
+        await put(SourceTar.headerOf(entry.name, content.length));
         await put(content);
         await put(SourceTar.paddingOf(content.length));
       }
