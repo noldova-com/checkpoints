@@ -24,9 +24,9 @@ import { ReleaseVariableMissingException } from "../exceptions/release-variable-
 import { ReleaseVersionInvalidException } from "../exceptions/release-version-invalid.exception.ts";
 import { ReleaseException } from "../exceptions/release.exception.ts";
 import type { GitBuilds } from "../models/git-builds.ts";
-import type { SourceArchive } from "../models/source-archive.ts";
 import { ReleaseArchive } from "../models/release-archive.ts";
 import { RootManifest } from "../models/root-manifest.ts";
+import type { SourceSet } from "../models/source-set.ts";
 import type { WorkspacePart } from "../models/workspace-part.ts";
 import { Resources } from "../resources.ts";
 import { ArchiveCheck } from "./archive-check.ts";
@@ -44,7 +44,6 @@ export class Release {
   private readonly environment: NodeJS.ProcessEnv;
   private readonly output: Writable;
   private readonly archiveReader: ArchiveReader = new ArchiveReader();
-  private readonly published: Map<string, Promise<number | null>> = new Map();
 
   public constructor(root: string, runner: ProcessRunner, environment: NodeJS.ProcessEnv, output: Writable) {
     this.root = root;
@@ -199,42 +198,24 @@ export class Release {
     }
     findings.push(...ArchiveCheck.check(archiveName, archive.part, manifest, entries, pins));
     const target = builds.targets.find(t => WorkspaceLayout.gitPackageName(t.target) === archive.part.name);
-    const source = target === undefined ? undefined : builds.sources.archives.get(target.sourceArchive);
-    if (source !== undefined)
-      findings.push(...await this.checkSourceArchiveAsync(archiveName, manifest, source));
+    if (target !== undefined && !Release.namesSources(manifest, target.sourceSet))
+      findings.push(Resources.formatSourcesRecordDiffers(archiveName, target.sourceSet.name));
 
     return findings;
   }
 
-  // A Git package names the archive of its build's complete source, which must be the one builds.json pins and must be
-  // published at its address, as large as builds.json says, before the package is.
-  private async checkSourceArchiveAsync(archiveName: string, manifest: Readonly<Record<string, unknown>>, source: SourceArchive): Promise<readonly string[]> {
-    const archive = Release.objectOf(Release.objectOf(manifest[Resources.noldovaDesktopField])?.[Resources.sourceArchiveField]);
-    if (archive === null || Object.keys(archive).length !== Resources.sourceArchiveFieldCount || archive[Resources.urlField] !== source.url
-      || archive[Resources.sizeField] !== source.size || archive[Resources.sha256Field] !== source.sha256)
-      return [Resources.formatSourceArchiveRecordDiffers(archiveName, source.url)];
-
-    let published = this.published.get(source.url);
-    if (published === undefined) {
-      published = Release.readPublishedSizeAsync(source.url);
-      this.published.set(source.url, published);
-    }
-    let size: number | null;
-    try {
-      size = await published;
-    }
-    catch (error) {
-      if (!(error instanceof TypeError) && !(error instanceof DOMException && error.name === Resources.timeoutErrorName))
-        throw error;
-      return [Resources.formatSourceArchiveUnreachable(archiveName, source.url, error.message)];
-    }
-    return size === source.size ? [] : [Resources.formatSourceArchiveNotPublished(archiveName, source.url, source.size)];
-  }
-
-  // The size a HEAD request of the address answers with, or null when it answers with a failure status.
-  private static async readPublishedSizeAsync(url: string): Promise<number | null> {
-    const response = await fetch(url, { method: Resources.headMethod, signal: AbortSignal.timeout(Resources.downloadTimeout) });
-    return response.ok ? Number(response.headers.get(Resources.contentLengthHeader)) : null;
+  // A Git package names the upstream source of its build: the pages and the files builds.json pins for it, field by field.
+  private static namesSources(manifest: Readonly<Record<string, unknown>>, set: SourceSet): boolean {
+    const desktop = Release.objectOf(manifest[Resources.noldovaDesktopField]);
+    const pages = desktop?.[Resources.sourcePagesField];
+    const files = desktop?.[Resources.sourcesField];
+    if (!Array.isArray(pages) || !Array.isArray(files) || pages.length !== set.pages.length || files.length !== set.files.length)
+      return false;
+    return set.pages.every((t, i) => pages[i] === t) && set.files.every((t, i) => {
+      const file = Release.objectOf(files[i]);
+      return file !== null && Object.keys(file).length === Resources.sourceFileFieldCount && file[Resources.urlField] === t.url
+        && file[Resources.sizeField] === t.size && file[Resources.sha256Field] === t.sha256;
+    });
   }
 
   private async checkHeadAsync(commit: string): Promise<void> {

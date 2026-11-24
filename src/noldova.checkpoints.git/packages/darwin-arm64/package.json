@@ -119,10 +119,21 @@
       "git/share/git-core/templates/hooks/update.sample",
       "git/share/git-core/templates/info/exclude"
     ],
-    "sourceArchive": {
-      "url": "https://github.com/noldova-com/checkpoints/releases/download/git-sources-2.56.1/git-2.56.1-source-dugite.tar",
-      "size": 8541696,
-      "sha256": "e15e171cb320d4efe7533313ded81cfce065348cc785ba4b3276b3b534fe9ad7"
-    }
+    "sourcePages": [
+      "https://github.com/git/git/tree/v2.56.1",
+      "https://github.com/desktop/dugite-native/tree/238326e93b097bb31e138a75dbec433d789ef7a2"
+    ],
+    "sources": [
+      {
+        "url": "https://www.kernel.org/pub/software/scm/git/git-2.56.1.tar.xz",
+        "size": 8494608,
+        "sha256": "f0b0bf89264b9bd2e1c640363e7529643989da76281600473c50745cd34a607f"
+      },
+      {
+        "url": "https://github.com/desktop/dugite-native/archive/238326e93b097bb31e138a75dbec433d789ef7a2.tar.gz",
+        "size": 44169,
+        "sha256": "1a0f4513f6773472181efdd67052b3d2be04d8def7315570f9b3e46b9ef48697"
+      }
+    ]
   }
 }

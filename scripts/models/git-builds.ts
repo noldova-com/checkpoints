@@ -8,32 +8,26 @@
 
 import { BuildsEmptyException } from "../exceptions/builds-empty.exception.ts";
 import { FieldNotObjectException } from "../exceptions/field-not-object.exception.ts";
-import { SourcesFieldInvalidException } from "../exceptions/sources-field-invalid.exception.ts";
 import { Resources } from "../resources.ts";
 import { GitSources } from "./git-sources.ts";
 import { GitTarget } from "./git-target.ts";
 
 export class GitBuilds {
-  public readonly sources: GitSources;
   public readonly targets: readonly GitTarget[];
 
-  public constructor(targets: readonly GitTarget[], sources: GitSources) {
-    this.sources = sources;
+  public constructor(targets: readonly GitTarget[]) {
     this.targets = targets;
   }
 
   public static parse(json: unknown, file: string): GitBuilds {
     const fields = GitBuilds.readObject(json, Resources.rootContext, file);
+    const sources = GitSources.parse(fields[Resources.sourcesField], file);
     const targets = Object.entries(GitBuilds.readObject(fields[Resources.targetsField], Resources.targetsField, file))
-      .map(([target, value]) => new GitTarget(target, GitBuilds.readObject(value, target, file), file));
+      .map(([target, value]) => new GitTarget(target, GitBuilds.readObject(value, target, file), sources, file));
     if (targets.length === 0)
       throw new BuildsEmptyException(file);
-    const sources = GitSources.parse(fields[Resources.sourcesField], file);
-    const unknown = targets.find(t => !sources.archives.has(t.sourceArchive));
-    if (unknown !== undefined)
-      throw new SourcesFieldInvalidException(file, Resources.formatFieldPath(unknown.target, Resources.sourceArchiveField));
 
-    return new GitBuilds(targets, sources);
+    return new GitBuilds(targets);
   }
 
   private static readObject(value: unknown, field: string, file: string): Readonly<Record<string, unknown>> {

@@ -7,6 +7,7 @@
  */
 
 import { FieldNotTextListException } from "../exceptions/field-not-text-list.exception.ts";
+import { SourcesFieldInvalidException } from "../exceptions/sources-field-invalid.exception.ts";
 import { TargetAddressInvalidException } from "../exceptions/target-address-invalid.exception.ts";
 import { TargetFieldNotTextException } from "../exceptions/target-field-not-text.exception.ts";
 import { TargetHashInvalidException } from "../exceptions/target-hash-invalid.exception.ts";
@@ -14,6 +15,8 @@ import { TargetReportedVersionInvalidException } from "../exceptions/target-repo
 import { TargetSizeInvalidException } from "../exceptions/target-size-invalid.exception.ts";
 import { TargetUnknownException } from "../exceptions/target-unknown.exception.ts";
 import { Resources } from "../resources.ts";
+import type { GitSources } from "./git-sources.ts";
+import type { SourceSet } from "./source-set.ts";
 
 export class GitTarget {
   public readonly architecture: string;
@@ -27,11 +30,11 @@ export class GitTarget {
   public readonly sha256: string;
   public readonly size: number;
   public readonly source: string;
-  public readonly sourceArchive: string;
+  public readonly sourceSet: SourceSet;
   public readonly target: string;
   public readonly url: string;
 
-  public constructor(target: string, fields: Readonly<Record<string, unknown>>, file: string) {
+  public constructor(target: string, fields: Readonly<Record<string, unknown>>, sources: GitSources, file: string) {
     const match = Resources.targetPattern.exec(target);
     const platform = match?.groups?.[Resources.platformGroup];
     const architecture = match?.groups?.[Resources.architectureGroup];
@@ -51,13 +54,15 @@ export class GitTarget {
     const reportedVersion = fields[Resources.reportedVersionField] === undefined ? null : text(Resources.reportedVersionField);
     const sha256 = text(Resources.sha256Field);
     const source = text(Resources.sourceField);
-    const sourceArchive = text(Resources.sourceArchiveField);
+    const sourceSet = sources.sets.get(text(Resources.sourceSetField));
     const url = text(Resources.urlField);
     const size = fields[Resources.sizeField];
     if (typeof size !== "number" || !Number.isSafeInteger(size) || size <= 0)
       throw new TargetSizeInvalidException(file, target);
     if (reportedVersion !== null && !(reportedVersion.startsWith(`${gitVersion}.`) && Resources.reportedSuffixPattern.test(reportedVersion.slice(gitVersion.length + 1))))
       throw new TargetReportedVersionInvalidException(file, target, gitVersion);
+    if (sourceSet === undefined)
+      throw new SourcesFieldInvalidException(file, Resources.formatFieldPath(target, Resources.sourceSetField));
     if (!Resources.sha256Pattern.test(sha256))
       throw new TargetHashInvalidException(file, target);
     const kind = url.endsWith(Resources.zipExtension) ? Resources.zipKind : url.endsWith(Resources.tarGzExtension) ? Resources.tarGzKind : null;
@@ -75,7 +80,7 @@ export class GitTarget {
     this.sha256 = sha256;
     this.size = size;
     this.source = source;
-    this.sourceArchive = sourceArchive;
+    this.sourceSet = sourceSet;
     this.target = target;
     this.url = url;
   }

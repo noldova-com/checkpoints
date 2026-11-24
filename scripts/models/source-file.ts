@@ -6,8 +6,6 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { Resources } from "../resources.ts";
-
 export class SourceFile {
   public readonly url: string;
   public readonly size: number;
@@ -17,9 +15,5 @@ export class SourceFile {
     this.url = url;
     this.size = size;
     this.sha256 = sha256;
-  }
-
-  public get name(): string {
-    return Resources.fileNameOf(this.url);
   }
 }

@@ -8,47 +8,55 @@
 
 import { SourcesFieldInvalidException } from "../exceptions/sources-field-invalid.exception.ts";
 import { Resources } from "../resources.ts";
-import { SourceArchive } from "./source-archive.ts";
 import { SourceFile } from "./source-file.ts";
+import { SourceSet } from "./source-set.ts";
 
+// The upstream source of each family of Git builds, which builds.json pins: the pages a notice links, and each source
+// file the builds and their components were built from, by its address, size and SHA-256.
 export class GitSources {
-  public readonly release: string;
-  public readonly archives: ReadonlyMap<string, SourceArchive>;
+  public readonly sets: ReadonlyMap<string, SourceSet>;
 
-  public constructor(release: string, archives: ReadonlyMap<string, SourceArchive>) {
-    this.release = release;
-    this.archives = archives;
+  public constructor(sets: ReadonlyMap<string, SourceSet>) {
+    this.sets = sets;
   }
 
   public static parse(json: unknown, file: string): GitSources {
-    const fields = GitSources.readObject(json, Resources.sourcesField, file);
-    const release = fields[Resources.releaseField];
-    if (typeof release !== "string" || !Resources.sourcesReleasePattern.test(release))
-      throw new SourcesFieldInvalidException(file, Resources.formatFieldPath(Resources.sourcesField, Resources.releaseField));
-    const archives = new Map<string, SourceArchive>();
-    const archivesPath = Resources.formatFieldPath(Resources.sourcesField, Resources.archivesField);
-    for (const [name, value] of Object.entries(GitSources.readObject(fields[Resources.archivesField], archivesPath, file))) {
-      const context = Resources.formatFieldPath(archivesPath, name);
-      if (!Resources.sourceArchiveNamePattern.test(name))
+    const sets = new Map<string, SourceSet>();
+    for (const [name, value] of Object.entries(GitSources.readObject(json, Resources.sourcesField, file))) {
+      const context = Resources.formatFieldPath(Resources.sourcesField, name);
+      if (!Resources.sourceSetNamePattern.test(name))
         throw new SourcesFieldInvalidException(file, context);
-      const archive = GitSources.readObject(value, context, file);
-      const files = archive[Resources.filesField];
+      const set = GitSources.readObject(value, context, file);
+      const listed = set[Resources.pagesField];
+      const pagesPath = Resources.formatFieldPath(context, Resources.pagesField);
+      if (!Array.isArray(listed) || listed.length === 0)
+        throw new SourcesFieldInvalidException(file, pagesPath);
+      const pages: string[] = [];
+      for (const page of listed) {
+        if (!GitSources.isAddress(page))
+          throw new SourcesFieldInvalidException(file, pagesPath);
+        pages.push(page);
+      }
+      const files = set[Resources.filesField];
       if (!Array.isArray(files) || files.length === 0)
         throw new SourcesFieldInvalidException(file, Resources.formatFieldPath(context, Resources.filesField));
-      archives.set(name, new SourceArchive(name, Resources.formatSourceArchiveAddress(release, name), GitSources.readSize(archive, context, file),
-        GitSources.readSha256(archive, context, file), files.map((t: unknown, i) => {
-          const entryPath = Resources.formatFieldPath(context, `${Resources.filesField}[${String(i)}]`);
-          const entry = GitSources.readObject(t, entryPath, file);
-          const url = entry[Resources.urlField];
-          if (typeof url !== "string" || !url.startsWith(Resources.httpsPrefix) || Resources.fileNameOf(url) === "")
-            throw new SourcesFieldInvalidException(file, Resources.formatFieldPath(entryPath, Resources.urlField));
-          return new SourceFile(url, GitSources.readSize(entry, entryPath, file), GitSources.readSha256(entry, entryPath, file));
-        })));
+      sets.set(name, new SourceSet(name, pages, files.map((t: unknown, i) => {
+        const entryPath = Resources.formatFieldPath(context, `${Resources.filesField}[${String(i)}]`);
+        const entry = GitSources.readObject(t, entryPath, file);
+        const url = entry[Resources.urlField];
+        if (!GitSources.isAddress(url))
+          throw new SourcesFieldInvalidException(file, Resources.formatFieldPath(entryPath, Resources.urlField));
+        return new SourceFile(url, GitSources.readSize(entry, entryPath, file), GitSources.readSha256(entry, entryPath, file));
+      })));
     }
-    if (archives.size === 0)
-      throw new SourcesFieldInvalidException(file, archivesPath);
+    if (sets.size === 0)
+      throw new SourcesFieldInvalidException(file, Resources.sourcesField);
 
-    return new GitSources(release, archives);
+    return new GitSources(sets);
+  }
+
+  private static isAddress(value: unknown): value is string {
+    return typeof value === "string" && value.startsWith(Resources.httpsPrefix) && URL.canParse(value);
   }
 
   private static readSize(fields: Readonly<Record<string, unknown>>, context: string, file: string): number {

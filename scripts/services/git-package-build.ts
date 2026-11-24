@@ -6,12 +6,17 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import { createHash } from "node:crypto";
 import { existsSync } from "node:fs";
 import { constants, copyFile, mkdir, readdir, readFile, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 
+import { ArchiveHashMismatchException } from "../exceptions/archive-hash-mismatch.exception.ts";
+import { ArchiveLongerThanPinnedException } from "../exceptions/archive-longer-than-pinned.exception.ts";
+import { ArchiveSizeMismatchException } from "../exceptions/archive-size-mismatch.exception.ts";
 import { BuildFileMissingException } from "../exceptions/build-file-missing.exception.ts";
 import { ComponentsDifferException } from "../exceptions/components-differ.exception.ts";
+import { DownloadFailedException } from "../exceptions/download-failed.exception.ts";
 import { DroppedUnlistedException } from "../exceptions/dropped-unlisted.exception.ts";
 import { GitManifestDiffersException } from "../exceptions/git-manifest-differs.exception.ts";
 import { GitManifestMissingException } from "../exceptions/git-manifest-missing.exception.ts";
@@ -20,9 +25,8 @@ import { ListingDiffersException } from "../exceptions/listing-differs.exception
 import { PackageVersionsMissingException } from "../exceptions/package-versions-missing.exception.ts";
 import { PackingFailedException } from "../exceptions/packing-failed.exception.ts";
 import { PartBuildMissingException } from "../exceptions/part-build-missing.exception.ts";
-import { SourcesFieldInvalidException } from "../exceptions/sources-field-invalid.exception.ts";
 import type { GitBuilds } from "../models/git-builds.ts";
-import type { SourceArchive } from "../models/source-archive.ts";
+import type { SourceSet } from "../models/source-set.ts";
 import { GitComponent } from "../models/git-component.ts";
 import type { GitTarget } from "../models/git-target.ts";
 import type { WorkspacePart } from "../models/workspace-part.ts";
@@ -30,7 +34,6 @@ import { Resources } from "../resources.ts";
 import { BuildArchive } from "./build-archive.ts";
 import type { NpmCommand } from "./npm-command.ts";
 import { PackagePacker } from "./package-packer.ts";
-import { PinnedDownload } from "./pinned-download.ts";
 import { WorkspaceLayout } from "./workspace-layout.ts";
 
 export class GitPackageBuild {
@@ -93,11 +96,11 @@ export class GitPackageBuild {
         await copyFile(source, destination, constants.COPYFILE_EXCL);
       }
     const license = GitComponent.licenseOf(components);
-    const source = this.sourceArchiveOf(target);
+    const source = target.sourceSet;
     const unpacked = await GitPackageBuild.listFilesAsync(path.join(output, part.sources), part.sources);
     await this.checkManifestAsync(target, GitPackageBuild.manifestOf(part, target, version, null, license, unpacked, source));
     await writeFile(path.join(output, Resources.readmeFile), GitPackageBuild.readmeOf(part, target, components, source));
-    await writeFile(path.join(output, Resources.licenseFile), Resources.formatGitLicense(part.name, target.gitVersion, target.target, target.source, license, source.url));
+    await writeFile(path.join(output, Resources.licenseFile), Resources.formatGitLicense(part.name, target.gitVersion, target.target, target.source, license, source.pages));
     await writeFile(path.join(output, Resources.manifestFile), GitPackageBuild.manifestOf(part, target, version, commit, license, unpacked, source));
 
     const archives = path.join(this.root, Resources.archivesFolder);
@@ -109,7 +112,43 @@ export class GitPackageBuild {
 
   public async readArchiveAsync(target: GitTarget): Promise<Buffer> {
     const cached = path.join(this.root, ...GitPackageBuild.CACHE_SEGMENTS, Resources.formatCachedArchive(target.target, target.sha256, target.kind));
-    return await new PinnedDownload(this.report).readAsync(target.url, target.size, target.sha256, cached);
+    if (existsSync(cached)) {
+      const archive = await readFile(cached);
+      if (GitPackageBuild.hashOf(archive) === target.sha256)
+        return archive;
+    }
+
+    this.report(Resources.formatDownloading(target.url));
+    const response = await fetch(target.url, { signal: AbortSignal.timeout(Resources.downloadTimeout) });
+    if (!response.ok)
+      throw new DownloadFailedException(target.url, response.status);
+    const declared = response.headers.get(Resources.contentLengthHeader);
+    if (declared !== null && Number(declared) !== target.size)
+      throw new ArchiveSizeMismatchException(target.url, Number(declared), target.size);
+    const reader = response.body?.getReader();
+    const chunks: Uint8Array[] = [];
+    let size = 0;
+    for (let read = await reader?.read(); read !== undefined && !read.done; read = await reader?.read()) {
+      const chunk = Buffer.from(read.value);
+      size += chunk.length;
+      if (size > target.size)
+        throw new ArchiveLongerThanPinnedException(target.url, target.size);
+      chunks.push(chunk);
+    }
+    const archive = Buffer.concat(chunks);
+    if (archive.length !== target.size)
+      throw new ArchiveSizeMismatchException(target.url, archive.length, target.size);
+    const hash = GitPackageBuild.hashOf(archive);
+    if (hash !== target.sha256)
+      throw new ArchiveHashMismatchException(target.url, hash, target.sha256);
+
+    await mkdir(path.dirname(cached), { recursive: true });
+    await writeFile(cached, archive);
+    return archive;
+  }
+
+  private static hashOf(archive: Buffer): string {
+    return createHash(Resources.sha256Algorithm).update(archive).digest(Resources.hexEncoding);
   }
 
   private static async listFilesAsync(folder: string, prefix: string): Promise<readonly string[]> {
@@ -120,7 +159,7 @@ export class GitPackageBuild {
   }
 
   private static manifestOf(part: WorkspacePart, target: GitTarget, version: string, commit: string | null, license: string, unpacked: readonly string[],
-    source: SourceArchive): string {
+    source: SourceSet): string {
     const inBuild = (file: string): string => `${part.sources}${Resources.pathSeparator}${file}`;
     return Resources.formatLine(JSON.stringify({
       name: part.name,
@@ -145,12 +184,12 @@ export class GitPackageBuild {
           build: target.url
         }
       },
-      noldovaDesktop: { unpacked, sourceArchive: { url: source.url, size: source.size, sha256: source.sha256 } }
+      noldovaDesktop: { unpacked, sourcePages: source.pages, sources: source.files }
     }, null, Resources.jsonIndent));
   }
 
-  private static readmeOf(part: WorkspacePart, target: GitTarget, components: readonly GitComponent[], source: SourceArchive): string {
-    return Resources.formatGitReadme(part.name, target.gitVersion, target.target, target.url, target.sha256, target.source, source.url, source.sha256,
+  private static readmeOf(part: WorkspacePart, target: GitTarget, components: readonly GitComponent[], source: SourceSet): string {
+    return Resources.formatGitReadme(part.name, target.gitVersion, target.target, target.url, target.sha256, target.source, source.pages,
       components.map(t => Resources.formatComponentRow(t.name, t.version, t.license)));
   }
 
@@ -169,13 +208,6 @@ export class GitPackageBuild {
     ];
     if (differences.length > 0)
       throw new ComponentsDifferException(componentsFile, differences);
-  }
-
-  private sourceArchiveOf(target: GitTarget): SourceArchive {
-    const archive = this.builds.sources.archives.get(target.sourceArchive);
-    if (archive === undefined)
-      throw new SourcesFieldInvalidException(Resources.buildsFile, Resources.formatFieldPath(target.target, Resources.sourceArchiveField));
-    return archive;
   }
 
   private async checkManifestAsync(target: GitTarget, expected: string): Promise<void> {
