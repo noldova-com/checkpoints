@@ -145,6 +145,7 @@ Every pull request into `main` must pass "Check / Linked issue" and "Build and t
   | `services/restore-runner.aside-gone.test.ts` | 4.3 s | 1.5 s | 9.7 s | not measured | A whole restore on a real Git store whose moved-aside folder is gone when it is walked again, in a process of its own for its `readdir` mock. |
   | `services/checkpoints-host.cancel-walk.test.ts` | 5.5 s | 1.8 s | 9.0 s | not measured | Cancels compares, previews and restores through the whole service on the build's real Git mid-walk, in a process of its own for the cancel fixture's spies. |
   | `services/side-loader.test.ts` | 4.9 s | 1.4 s | 8.8 s | 1.6 s | Reads both sides of changes from real stores and real folders. |
+  | `services/restore-runner.held-staging.test.ts` | 2.4 s | < 1 s | 8.5 s | 1.1 s | Fails a whole restore's stage on a real Git store with a folder another program holds in its staging folder, in a process of its own for its `BlobStager.prototype.stageAsync` mock. |
   | `services/restore-applier.test.ts` | < 1 s | < 1 s | 8.0 s | 1.0 s | Moves, places and removes real files and folders, flushing each journal record to disk. |
   | `services/restore-runner.retries.test.ts` | 3.9 s | < 1 s | 6.9 s | 1.6 s | A whole restore on a real Git store, in a process of its own for its mock timers. |
   | `services/tree-lister.test.ts` | 3.8 s | < 1 s | 6.8 s | 1.0 s | Lists checkpoint trees with diff-tree on real stores. |

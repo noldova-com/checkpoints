@@ -203,10 +203,6 @@ export class RestoreRunner {
     return id;
   }
 
-  /**
-   * Removes what a restore staged before it applied anything, then its journal; while another program holds a staged file past the retries, it keeps the
-   * journal, raises the held-up event with the restore's folder, and answers `false`, so a later operation on the folder removes it.
-   */
   private async discardAsync(run: RestoreRun, identity: string): Promise<boolean> {
     try {
       await RestorePaths.retryAsync(run.script.staging, () => rm(run.locationOf(run.script.staging), { recursive: true, force: true }));
