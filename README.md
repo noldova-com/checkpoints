@@ -65,7 +65,7 @@ Each target's build is pinned in [`src/noldova.checkpoints.git/builds.json`](src
 | `git-2.56.1.windows.1-source-windows.tar` | `win32-x64`, `win32-arm64` | the source package of each of MinGit's components, from MSYS2 and Git for Windows' pacman repository |
 | `git-2.56.1-source-dugite.tar` | `darwin-x64`, `darwin-arm64`, `linux-x64`, `linux-arm64` | Git v2.56.1's release tarball and dugite-native's source at 238326e |
 
-The "Publish the Git sources" workflow attaches them to the release `git-sources-2.56.1` of this repository, and each Git package's `noldova.git.sourceArchive`, `README.md` and `LICENSE` give its archive's address, as [documents/ARCHITECTURE.md](documents/ARCHITECTURE.md#the-git-builds) says.
+The "Publish the Git sources" workflow attaches them to the release `git-sources-2.56.1` of this repository, and each Git package's `noldovaDesktop.sourceArchive`, `README.md` and `LICENSE` give its archive's address, as [documents/ARCHITECTURE.md](documents/ARCHITECTURE.md#the-git-builds) says.
 
 The Linux arm64 build reports itself as `git version 2.56.1.dirty`, though it is built from Git v2.56.1: dugite-native's Ubuntu build names the cross-compiler's strip tool by editing Git's tracked `Makefile` before it builds, and Git marks a build from a changed tree as dirty ([desktop/dugite-native#553](https://github.com/desktop/dugite-native/pull/553) passes the strip tool to `make` instead).
 So that target's entry also holds `reportedVersion`, the version the build prints, which the tests check in its place; the weekly Git builds check's issue asks for it to be dropped once a newer build reports its Git version.
@@ -315,7 +315,7 @@ Each archive must be smaller than 256,000,000 bytes, and is read only then; its 
   Its peers on the organization's `@noldova/` packages are each a range `>=<lowest version> <first version refused>`, the first refused being the next minor of a 0.x lowest version, such as `<0.1.0` for any 0.0.x, or the next major from 1.0.0, that holds the exact version the root `package.json` pins for the same package, the version the build and the tests used.
 The module's archive must hold `module.json` at the version.
 Its `noldovaDesktop`, the range of Noldova Desktop versions it accepts, must be `>=<lowest version> <first version refused>` with the first refused found the same way, and its peers on Noldova Desktop's `@noldova/desktop.` packages must name that same range.
-Each Git package's must name a single target in `os` and `cpu` and hold the Git program its `package.json` names, and its `noldova.git.sourceArchive` must be the archive `builds.json` pins, published at its address with its pinned size.
+Each Git package's must name a single target in `os` and `cpu` and hold the Git program its `package.json` names, and its `noldovaDesktop.sourceArchive` must be the archive `builds.json` pins, published at its address with its pinned size.
 
 A failed release runs again whole, as a new run, which builds and checks the archives again.
 

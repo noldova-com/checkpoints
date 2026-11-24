@@ -209,7 +209,7 @@ export class Release {
   // A Git package names the archive of its build's complete source, which must be the one builds.json pins and must be
   // published at its address, as large as builds.json says, before the package is.
   private async checkSourceArchiveAsync(archiveName: string, manifest: Readonly<Record<string, unknown>>, source: SourceArchive): Promise<readonly string[]> {
-    const archive = Release.objectOf(Release.objectOf(Release.objectOf(manifest[Resources.ownField])?.[Resources.gitField])?.[Resources.sourceArchiveField]);
+    const archive = Release.objectOf(Release.objectOf(manifest[Resources.noldovaDesktopField])?.[Resources.sourceArchiveField]);
     const expected = { url: source.url, size: source.size, sha256: source.sha256 };
     if (JSON.stringify(archive) !== JSON.stringify(expected))
       return [Resources.formatSourceArchiveRecordDiffers(archiveName, source.url)];

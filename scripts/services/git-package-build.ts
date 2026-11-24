@@ -142,11 +142,10 @@ export class GitPackageBuild {
           path: target.path.map(inBuild),
           version: target.gitVersion,
           source: target.source,
-          build: target.url,
-          sourceArchive: { url: source.url, size: source.size, sha256: source.sha256 }
+          build: target.url
         }
       },
-      noldovaDesktop: { unpacked }
+      noldovaDesktop: { unpacked, sourceArchive: { url: source.url, size: source.size, sha256: source.sha256 } }
     }, null, Resources.jsonIndent));
   }
 
