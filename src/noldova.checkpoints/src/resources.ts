@@ -396,6 +396,10 @@ export class Resources {
     return `${name}-${id}`;
   }
 
+  public static formatDiscardFailed(identity: string, reason: string): string {
+    return `A restore of the folder ${identity} changed nothing, but what it staged stays until the folder is next opened: ${reason}`;
+  }
+
   public static formatErrorsUnclosed(command: string, errors: string, milliseconds: number): string {
     const note = `Git's ${command} kept its error output open ${milliseconds} ms after it ended, so this is what it wrote by then.`;
     return errors.trim() === "" ? note : `${errors.trim()}\n${note}`;
