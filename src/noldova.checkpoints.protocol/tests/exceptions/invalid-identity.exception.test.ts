@@ -16,7 +16,7 @@ describe("InvalidIdentityException", { concurrency: true }, () => {
     const exception = new InvalidIdentityException("project 1");
 
     assert.equal(exception.name, "InvalidIdentityException");
-    assert.equal(exception.message, "A folder's identity must be 1 to 64 letters, digits or hyphens.");
+    assert.equal(exception.message, "A folder's identity must be 1 to 64 lower-case letters, digits or hyphens, so it names one store on every file system.");
     assert.equal(exception.identity, "project 1");
     assert.equal(exception.cause, undefined);
     assert.ok(exception instanceof ProtocolException);

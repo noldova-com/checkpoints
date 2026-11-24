@@ -60,6 +60,7 @@ describe("StorageReader", { concurrency: true }, () => {
       await fileAsync(module, `${identity}/index`, 10);
     await fileAsync(module, "stray-file", 5);
     await fileAsync(module, "not.an_identity/index", 5);
+    await fileAsync(module, "Upper-1/index", 5);
     const order = ["b", "large", "a", "c"];
     const rank = (name: string): number => order.includes(name) ? order.indexOf(name) : order.length;
     const listFolderAsync = async (folder: string): Promise<Dirent[]> => (await readdir(folder, { withFileTypes: true })).sort((a, b) => rank(a.name) - rank(b.name));
