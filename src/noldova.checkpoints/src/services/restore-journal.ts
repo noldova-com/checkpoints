@@ -7,7 +7,7 @@
  */
 
 import { createHash } from "node:crypto";
-import { open, readFile, rename, rm } from "node:fs/promises";
+import { open, readFile, rename, rm, type FileHandle } from "node:fs/promises";
 import path from "node:path";
 
 import { ProtocolException } from "@noldova/checkpoints.protocol";
@@ -40,7 +40,7 @@ export class RestoreJournal {
     try {
       const { size } = await handle.stat();
       try {
-        await handle.write(RestoreJournal.lineOf(record));
+        await RestoreJournal.writeWholeAsync(handle, RestoreJournal.lineOf(record));
         await handle.sync();
       }
       catch (error) {
@@ -59,7 +59,7 @@ export class RestoreJournal {
     const begin = JournalRecord.begin(script);
     const handle = await open(temporary, Resources.writeFlag);
     try {
-      await handle.write(RestoreJournal.lineOf(begin));
+      await RestoreJournal.writeWholeAsync(handle, RestoreJournal.lineOf(begin));
       await handle.sync();
     }
     finally {
@@ -107,6 +107,12 @@ export class RestoreJournal {
 
   public static async syncFolderAsync(folder: string): Promise<void> {
     await RestoreJournal.FOLDERS.syncAsync(folder);
+  }
+
+  private static async writeWholeAsync(handle: FileHandle, text: string): Promise<void> {
+    const bytes = Buffer.from(text, Resources.utf8Encoding);
+    for (let written = 0; written < bytes.length;)
+      written += (await handle.write(bytes, written)).bytesWritten;
   }
 
   private static lineOf(record: JournalRecord): string {
