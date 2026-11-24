@@ -53,7 +53,6 @@ export class CheckpointsHarness {
   public static readonly unknownId: string = "01890a5d-ac96-774b-bcce-b302099a8057";
 
   private static readonly appearInterval: number = 10;
-  private static readonly appearLimit: number = 60_000;
 
   private readonly build: GitBuild;
   private host: CheckpointsHost;
@@ -91,13 +90,10 @@ export class CheckpointsHarness {
     return path.join(this.context.moduleFolder, "folders", CheckpointsHarness.identity);
   }
 
-  public static async appearedAsync(location: string): Promise<void> {
-    const limit = performance.now() + CheckpointsHarness.appearLimit;
-    while (!existsSync(location)) {
-      if (performance.now() > limit)
-        throw new Error(`${location} didn't appear within ${CheckpointsHarness.appearLimit} ms.`);
-      await setTimeout(CheckpointsHarness.appearInterval);
-    }
+  /** Waits until the file or folder exists, however long the work that makes it takes, or until the test's signal aborts: Node's limit on a test is the suite's one hang limit. */
+  public static async appearedAsync(location: string, signal: AbortSignal): Promise<void> {
+    while (!existsSync(location))
+      await setTimeout(CheckpointsHarness.appearInterval, undefined, { signal });
   }
 
   public static async startAsync(t: ICleanups): Promise<CheckpointsHarness> {
