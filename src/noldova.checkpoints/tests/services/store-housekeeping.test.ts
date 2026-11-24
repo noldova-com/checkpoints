@@ -208,4 +208,25 @@ describe("StoreHousekeeping", { concurrency: true }, () => {
     assert.equal((await fixture.countAsync()).get("packs"), 1);
     await fixture.checkWholeAsync();
   });
+
+  it("removes at the start of a pass the reference locks a stopped Git command left, then packs the references and repacks", async t => {
+    const fixture = await HousekeepingStore.startAsync(t);
+    const refs = path.join(fixture.store.gitFolder, "refs");
+    const loose = (await readdir(refs, { recursive: true, withFileTypes: true })).filter(u => u.isFile()).map(u => path.join(u.parentPath, u.name));
+    const [reference] = loose;
+    assert.ok(reference !== undefined);
+    const locks = [path.join(fixture.store.gitFolder, "packed-refs.lock"), `${reference}.lock`];
+    for (const lock of locks)
+      await writeFile(lock, "");
+
+    assert.equal(await new StoreHousekeeping(fixture.git, plentyAsync, fixture.harness.clock).runAsync(fixture.store, uncancelled), true);
+
+    assert.deepEqual([loose.length, locks.map(u => existsSync(u))], [2, [false, false]]);
+    const packed = (await readFile(path.join(fixture.store.gitFolder, "packed-refs"), "utf8")).split("\n");
+    assert.equal(packed.filter(u => u.includes(" refs/checkpoints/")).length, 2);
+    assert.deepEqual((await readdir(refs, { recursive: true, withFileTypes: true })).filter(u => u.isFile()), []);
+    assert.equal((await fixture.countAsync()).get("count"), 0);
+    assert.equal((await fixture.readRecordAsync())?.fullPass, fixture.harness.clock.now());
+    await fixture.checkWholeAsync();
+  });
 });
