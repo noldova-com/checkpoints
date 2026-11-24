@@ -432,8 +432,11 @@ The restore writes only where the plan says, never through a link and never into
 - Each record after it names one action before it runs: the journal marked as applying, a target moved aside, a folder created or renamed to the checkpoint's case, a staged item placed, with its file id, and its copy's or new link's once it is created, before its content is written, a folder removed, the journal marked as cleaning, the changed moved-aside items kept, with the id of the checkpoint that keeps them, the rollback begun, each folder the rollback makes again, and each copy it creates, before its content is written, of a moved-aside item it moves back or of a file it writes again from the checkpoint taken before the restore.
 - It is written ahead: each record is appended and flushed to disk before the action it names runs, and each record carries a SHA-256 checksum, so a torn last record, even one that lacks only its line feed, is ignored, and cut off when the journal is read, so the next record follows the last whole one.
   Only an append is torn, and only at the journal's end, so a first record that isn't whole, or a record that isn't whole before the last one, leaves the journal unreadable, as it is, and the folder held up.
+- A write that writes only part of a record, as a nearly full disk does, writes the rest, so the record is written whole or the write fails, and the journal is created or appended to only with whole records.
+- An append that fails, such as on a full disk, cuts the journal back to its length before the append, then gives its failure, so a later append never follows a torn record.
 - The journal file is created by writing a temporary file, flushing it, renaming it into place and flushing the folder.
 - Each action can run again over its own part done, so a resume runs again the action of the last record, then the rest.
+- Tests: "cuts a failed append back to the last whole record, so the next append and a read keep both whole records"; "writes the rest of a record whose write wrote only part of it, so the next append and a read keep each whole record"; "writes the rest of the first record whose write wrote only part of it, so the journal it renames into place reads whole".
 
 ### An interrupted restore
 
