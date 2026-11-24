@@ -20,6 +20,7 @@ import {
   DeleteFolderRequest,
   FolderReference,
   FolderUsage,
+  InvalidIdentityException,
   type CaptureResult,
   type DeleteFolderResult,
   type StorageList
@@ -80,6 +81,19 @@ describe("CheckpointsHost's storage and delete", { concurrency: true }, () => {
     const [captured, deleted] = await Promise.all([harness.captureAsync(null), deleteAsync(harness)]);
 
     assert.deepEqual([captured.outcome, deleted.outcome, existsSync(harness.store), await harness.listAsync()], [CaptureOutcome.Captured, DeleteFolderOutcome.Deleted, false, []]);
+  });
+
+  it("refuses a capture of Case-1 while deleting case-1, so the two never share a store on a file system that ignores case", async t => {
+    const harness = await CheckpointsHarness.startAsync(t);
+    await harness.writeAsync("a.txt", "alpha");
+    const lower = new FolderReference("case-1", harness.folder);
+    await harness.service.captureAsync(new CaptureRequest(lower, null));
+
+    const deleting = harness.service.deleteFolderAsync(new DeleteFolderRequest(lower));
+
+    assert.throws(() => new CaptureRequest(new FolderReference("Case-1", harness.folder), null), new InvalidIdentityException("Case-1"));
+    assert.equal((await deleting).outcome, DeleteFolderOutcome.Deleted);
+    assert.deepEqual((await harness.service.storageAsync()).folders, []);
   });
 
   it("answers HeldUp and deletes nothing while an interrupted restore of the folder can't finish", async t => {

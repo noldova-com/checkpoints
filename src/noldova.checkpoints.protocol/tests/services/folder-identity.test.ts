@@ -14,13 +14,13 @@ import { InvalidIdentityException } from "@noldova/checkpoints.protocol";
 import { FolderIdentity } from "../../src/services/folder-identity.ts";
 
 describe("FolderIdentity", { concurrency: true }, () => {
-  it("takes 1 to 64 letters, digits or hyphens", () => {
-    for (const identity of ["a", "project-1", "A".repeat(64), "-"])
+  it("takes 1 to 64 lower-case letters, digits or hyphens", () => {
+    for (const identity of ["a", "project-1", "a".repeat(64), "-"])
       assert.doesNotThrow(() => FolderIdentity.check(identity));
   });
 
-  it("refuses an empty identity, a longer one, or any other character", () => {
-    for (const identity of ["", "A".repeat(65), "a_b", "a b", "é", "a/b"])
+  it("refuses an empty identity, a longer one, an upper-case letter, or any other character", () => {
+    for (const identity of ["", "a".repeat(65), "A", "Project-1", "a_b", "a b", "é", "a/b"])
       assert.throws(() => FolderIdentity.check(identity), new InvalidIdentityException(identity));
   });
 });

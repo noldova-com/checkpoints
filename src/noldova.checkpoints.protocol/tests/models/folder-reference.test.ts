@@ -30,9 +30,9 @@ describe("FolderReference", { concurrency: true }, () => {
       assert.throws(() => new FolderReference("a", path), new InvalidFolderPathException(path));
   });
 
-  it("takes an identity of 1 to 64 letters, digits or hyphens, and refuses any other", () => {
-    assert.equal(new FolderReference("A".repeat(64), "/").identity, "A".repeat(64));
-    for (const identity of ["", "A".repeat(65), "a_b", "a b", "é"])
+  it("takes an identity of 1 to 64 lower-case letters, digits or hyphens, and refuses any other", () => {
+    assert.equal(new FolderReference("a".repeat(64), "/").identity, "a".repeat(64));
+    for (const identity of ["", "a".repeat(65), "Case-1", "a_b", "a b", "é"])
       assert.throws(() => new FolderReference(identity, "/"), new InvalidIdentityException(identity));
   });
 

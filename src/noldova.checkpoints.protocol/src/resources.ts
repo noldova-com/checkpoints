@@ -59,9 +59,9 @@ export class Resources {
   public static readonly fromField: string = "from";
   public static readonly idField: string = "id";
   public static readonly identityField: string = "identity";
-  public static readonly identityPattern: RegExp = /^[A-Za-z0-9-]{1,64}$/;
+  public static readonly identityPattern: RegExp = /^[a-z0-9-]{1,64}$/;
   public static readonly invalidBase64: string = "The content is not base64 text.";
-  public static readonly invalidIdentity: string = "A folder's identity must be 1 to 64 letters, digits or hyphens.";
+  public static readonly invalidIdentity: string = "A folder's identity must be 1 to 64 lower-case letters, digits or hyphens, so it names one store on every file system.";
   public static readonly invalidTime: string = "A checkpoint's time must be a valid date.";
   public static readonly isCutField: string = "isCut";
   public static readonly isTextField: string = "isText";

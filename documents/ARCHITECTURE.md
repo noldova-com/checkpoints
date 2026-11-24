@@ -59,7 +59,8 @@ The module follows Noldova Desktop's module contract, `documents/MODULES.md` in 
 The runtime part publishes one service, and the same calls as `checkpoints.*` methods for the window part.
 
 - A folder is named by an identity the app owns and the folder's current path on this device.
-  The identity is 1 to 64 characters of letters, digits and `-`, such as a project's id; the store is keyed by it, so a moved folder keeps its checkpoints.
+  The identity is 1 to 64 characters of lower-case letters, digits and `-`, such as a project's id; the store is keyed by it, so a moved folder keeps its checkpoints.
+  The protocol refuses upper case: on Windows and macOS, two identities that differ only in case would share one store but not one queue, so a delete could move the store while a capture writes it.
 - `capture` takes a checkpoint of a folder and returns it; the app may attach a label of up to 1 KiB, such as the turn it belongs to.
   It answers `Captured` with the checkpoint, or `LowDiskSpace` with the space free and the space needed, in bytes ([Low disk space](#low-disk-space)), or `TooLarge` with the size of the new and changed files and its 1 GiB limit, or `FolderMissing` or `HeldUp`.
   The app may also give the time a turn started, `asOf`, and take the checkpoint after the turn starts, which keeps the folder as it was at that time ([The turn's start](#the-turns-start)).

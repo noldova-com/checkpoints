@@ -167,7 +167,7 @@ export class Resources {
   public static readonly housekeepingFile: string = "housekeeping.json";
   public static readonly housekeepingRecordModel: string = "HousekeepingRecord";
   public static readonly hunkStart: string = "\n@@";
-  public static readonly identityPattern: RegExp = /^[A-Za-z0-9-]{1,64}$/;
+  public static readonly identityPattern: RegExp = /^[a-z0-9-]{1,64}$/;
   public static readonly idField: string = "id";
   public static readonly ignoreComment: string = "#";
   public static readonly ignoreEscape: string = "\\";

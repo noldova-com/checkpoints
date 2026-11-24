@@ -303,7 +303,7 @@ export declare class InvalidFolderPathException extends ProtocolException {
 }
 
 /**
- * Thrown when a folder's identity isn't 1 to 64 letters, digits or hyphens.
+ * Thrown when a folder's identity isn't 1 to 64 lower-case letters, digits or hyphens.
  */
 export declare class InvalidIdentityException extends ProtocolException {
   /**
@@ -1307,7 +1307,7 @@ export declare class Checkpoint {
  */
 export declare class FolderReference {
   /**
-   * The identity the app owns, 1 to 64 letters, digits and `-`, such as a project's id.
+   * The identity the app owns, 1 to 64 lower-case letters, digits and `-`, such as a project's id.
    */
   public readonly identity: string;
 
@@ -1319,7 +1319,7 @@ export declare class FolderReference {
   /**
    * @param identity The identity the app owns.
    * @param path The folder's absolute path on this device now.
-   * @throws {ProtocolException} Thrown synchronously when the identity isn't 1 to 64 letters, digits and `-`, or the path isn't absolute.
+   * @throws {ProtocolException} Thrown synchronously when the identity isn't 1 to 64 lower-case letters, digits and `-`, or the path isn't absolute.
    * @example
    * ```ts
    * import { FolderReference } from "@noldova/checkpoints.protocol";
@@ -3253,7 +3253,7 @@ export declare class FolderUsage {
   public readonly path: string | null;
 
   /**
-   * @param identity The identity, 1 to 64 letters, digits and `-`.
+   * @param identity The identity, 1 to 64 lower-case letters, digits and `-`.
    * @param path The folder's absolute path at its last capture, or `null`.
    * @param bytes The space used, a whole number of bytes, 0 or more.
    * @throws {ProtocolException} Thrown synchronously when the identity, the path or the size isn't valid.
@@ -3532,7 +3532,7 @@ export declare class RestoredEvent {
   public readonly identity: string;
 
   /**
-   * @param identity The folder's identity, 1 to 64 letters, digits or hyphens.
+   * @param identity The folder's identity, 1 to 64 lower-case letters, digits or hyphens.
    * @param checkpoint The id of the checkpoint restored.
    * @param before The id of the checkpoint taken before the restore.
    * @throws {ProtocolException} Thrown synchronously when the identity or an id isn't one.
@@ -3608,7 +3608,7 @@ export declare class CapturePausedEvent {
   public readonly spaceNeeded: number;
 
   /**
-   * @param identity The folder's identity, 1 to 64 letters, digits or hyphens.
+   * @param identity The folder's identity, 1 to 64 lower-case letters, digits or hyphens.
    * @param spaceFree The bytes free.
    * @param spaceNeeded The bytes needed.
    * @throws {ProtocolException} Thrown synchronously when the identity isn't one, or a size isn't a whole number of bytes.
@@ -3668,7 +3668,7 @@ export declare class CaptureResumedEvent {
   public readonly identity: string;
 
   /**
-   * @param identity The folder's identity, 1 to 64 letters, digits or hyphens.
+   * @param identity The folder's identity, 1 to 64 lower-case letters, digits or hyphens.
    * @throws {ProtocolException} Thrown synchronously when the identity isn't one.
    * @example
    * ```ts
@@ -3731,7 +3731,7 @@ export declare class RestoreHeldUpEvent {
   public readonly paths: readonly string[];
 
   /**
-   * @param identity The folder's identity, 1 to 64 letters, digits or hyphens.
+   * @param identity The folder's identity, 1 to 64 lower-case letters, digits or hyphens.
    * @param paths The paths the module couldn't change.
    * @throws {ProtocolException} Thrown synchronously when the identity isn't one, or a path isn't relative to the folder.
    * @example
