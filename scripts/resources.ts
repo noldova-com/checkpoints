@@ -118,6 +118,7 @@ export class Resources {
   public static readonly examplesFolder: string = "examples";
   public static readonly examplesInclude: string = "**/*.ts";
   public static readonly exampleStart: string = "```ts";
+  public static readonly filesField: string = "files";
   public static readonly forwardedSignals: readonly NodeJS.Signals[] = ["SIGINT", "SIGTERM"];
   public static readonly gitHubBodyLimit: number = 16 * 1024 * 1024;
   public static readonly gitHubTimeout: number = 60_000;
@@ -241,6 +242,7 @@ export class Resources {
   public static readonly packageVersionsFolder: string = "package-versions";
   public static readonly packCommand: string = "pack";
   public static readonly packDestinationOption: string = "--pack-destination";
+  public static readonly pagesField: string = "pages";
   public static readonly parentFolderName: string = "..";
   public static readonly partProjects: readonly string[] = ["src/tsconfig.json", "tests/tsconfig.json"];
   public static readonly pathField: string = "path";
@@ -307,6 +309,11 @@ export class Resources {
   public static readonly sourceExtension: string = ".ts";
   public static readonly sourceField: string = "source";
   public static readonly sourceMapOption: string = "--sourceMap";
+  public static readonly sourceFileFieldCount: number = 3;
+  public static readonly sourcePagesField: string = "sourcePages";
+  public static readonly sourceSetField: string = "sourceSet";
+  public static readonly sourceSetNamePattern: RegExp = /^[a-z0-9]+$/;
+  public static readonly sourcesField: string = "sources";
   public static readonly sourcesFolder: string = "src";
   public static readonly startedCommands: readonly string[] = ["git-receive-pack", "git-upload-archive", "git-upload-pack"];
   public static readonly stateField: string = "state";
@@ -687,9 +694,12 @@ export class Resources {
     return `GitHub answered ${status} when reading ${context}: ${body}`;
   }
 
-  public static formatGitLicense(packageName: string, gitVersion: string, target: string, source: string, license: string): string {
+  public static formatGitLicense(packageName: string, gitVersion: string, target: string, source: string, license: string, sourcePages: readonly string[]): string {
     return [
       `${packageName} holds Git ${gitVersion} for ${target}, built from ${source}, and the components that build ships.`,
+      '',
+      `The complete corresponding source of the build and of each component is the upstream source it was built from, at ${sourcePages.join(Resources.listSeparator)}; `
+        + `\`${Resources.manifestFile}\`'s \`${Resources.noldovaDesktopField}.${Resources.sourcesField}\` lists each source file with its address, size and SHA-256.`,
       '',
       "Its licence, as an SPDX expression of its components' licences:",
       '',
@@ -720,7 +730,8 @@ export class Resources {
     return `${archiveName}'s package.json names its Git program as ${program}, which the archive lacks.`;
   }
 
-  public static formatGitReadme(packageName: string, gitVersion: string, target: string, url: string, sha256: string, source: string, rows: readonly string[]): string {
+  public static formatGitReadme(packageName: string, gitVersion: string, target: string, url: string, sha256: string, source: string, sourcePages: readonly string[],
+    rows: readonly string[]): string {
     return [
       `# ${packageName}`,
       '',
@@ -728,6 +739,8 @@ export class Resources {
       '',
       `- The build: ${url}, with the SHA-256 ${sha256}.`,
       `- Its source: ${source}.`,
+      `- The complete corresponding source of the build and of each component, from upstream: ${sourcePages.join(Resources.listSeparator)}; `
+        + `\`${Resources.manifestFile}\`'s \`${Resources.noldovaDesktopField}.${Resources.sourcesField}\` lists each source file with its address, size and SHA-256.`,
       `- Its components' licences: in the \`${Resources.licensesFolder}\` folder, one folder for each component.`,
       '',
       "| Component | Version | Licence |",
@@ -1041,6 +1054,15 @@ export class Resources {
 
   public static formatSkipWithoutReason(file: string, name: string): string {
     return `${file}: "${name}" is skipped without a reason; a skip names why, beside its test.`;
+  }
+
+  public static formatSourcesRecordDiffers(archiveName: string, sourceSet: string): string {
+    return `${archiveName}'s package.json doesn't name, in ${Resources.noldovaDesktopField}.${Resources.sourcesField} and ${Resources.noldovaDesktopField}.${Resources.sourcePagesField}, `
+      + `the upstream source ${Resources.buildsFile} pins for its build as ${sourceSet}.`;
+  }
+
+  public static formatSourcesFieldInvalid(file: string, field: string): string {
+    return `${file}'s ${field} is missing or not valid.`;
   }
 
   public static formatSupersededBy(title: string, url: string): string {

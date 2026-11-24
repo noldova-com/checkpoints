@@ -9,6 +9,7 @@
 import { BuildsEmptyException } from "../exceptions/builds-empty.exception.ts";
 import { FieldNotObjectException } from "../exceptions/field-not-object.exception.ts";
 import { Resources } from "../resources.ts";
+import { GitSources } from "./git-sources.ts";
 import { GitTarget } from "./git-target.ts";
 
 export class GitBuilds {
@@ -20,8 +21,9 @@ export class GitBuilds {
 
   public static parse(json: unknown, file: string): GitBuilds {
     const fields = GitBuilds.readObject(json, Resources.rootContext, file);
+    const sources = GitSources.parse(fields[Resources.sourcesField], file);
     const targets = Object.entries(GitBuilds.readObject(fields[Resources.targetsField], Resources.targetsField, file))
-      .map(([target, value]) => new GitTarget(target, GitBuilds.readObject(value, target, file), file));
+      .map(([target, value]) => new GitTarget(target, GitBuilds.readObject(value, target, file), sources, file));
     if (targets.length === 0)
       throw new BuildsEmptyException(file);
 

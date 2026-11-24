@@ -58,6 +58,16 @@ Each target's build is pinned in [`src/noldova.checkpoints.git/builds.json`](src
 
 `builds.json` is the record: when it moves to a newer build, the package's `noldova.git.source` field names the new upstream version.
 
+`builds.json`'s `sources` pins, for each family of builds, the upstream places their complete corresponding source is published, which every app that ships a Git package must point to:
+
+| Sources | Targets | Pages | Files |
+|---|---|---|---|
+| `windows` | `win32-x64`, `win32-arm64` | the Git for Windows v2.56.1.windows.1 release | the source package of each of MinGit's components, from MSYS2 and Git for Windows' pacman repository |
+| `dugite` | `darwin-x64`, `darwin-arm64`, `linux-x64`, `linux-arm64` | Git's tag v2.56.1 and dugite-native's commit 238326e | Git v2.56.1's release tarball |
+
+Each Git package's `noldovaDesktop.sourcePages` and `noldovaDesktop.sources`, `README.md` and `LICENSE` give those addresses, as [documents/ARCHITECTURE.md](documents/ARCHITECTURE.md#the-git-builds) says; the module publishes no copy of them.
+Each file is pinned by its address, size and SHA-256, so it must be one its upstream publishes as fixed bytes; a source GitHub only offers as an archive generated from a commit, such as dugite-native's, whose bytes GitHub doesn't promise, is pinned by the commit's page alone.
+
 The Linux arm64 build reports itself as `git version 2.56.1.dirty`, though it is built from Git v2.56.1: dugite-native's Ubuntu build names the cross-compiler's strip tool by editing Git's tracked `Makefile` before it builds, and Git marks a build from a changed tree as dirty ([desktop/dugite-native#553](https://github.com/desktop/dugite-native/pull/553) passes the strip tool to `make` instead).
 So that target's entry also holds `reportedVersion`, the version the build prints, which the tests check in its place; the weekly Git builds check's issue asks for it to be dropped once a newer build reports its Git version.
 
@@ -262,6 +272,7 @@ A weekly workflow, `.github/workflows/git-builds.yml`, files an issue labelled `
 A PR that moves `builds.json` to newer builds takes each archive's address, size and SHA-256 from its release, then runs `node scripts/list-git-builds.ts`.
 It installs nothing and builds nothing, and downloads every target's archive, about 300 MB, checking each one's size and SHA-256 against `builds.json` as the build does.
 Into `_build/git-lists` it writes each archive's entries as `listings/<target>.txt` lists them, and MinGit's `etc/package-versions.txt`, under `package-versions/<target>.txt`.
+- The PR also pins in `builds.json`'s `sources` the upstream pages of the new builds' source and the source file of each component they hold, by its address, size and SHA-256, or by its commit's page alone for an archive GitHub generates, so the packages name them.
 - The new listings replace `src/noldova.checkpoints.git/listings/`; an entry they no longer hold leaves `dropped/` too, and a new program of Git LFS or the credential manager joins it.
   The CA certificate bundles stay in `dropped/` too: the release refuses them as files that may hold credentials, and the module never reaches a server, since its stores have no remote.
 - `components/<target>.json` takes each Windows component's name and version from the package list, which the build then holds it to, and each dugite-native component's from the release and its `dependencies.json`; a licence text the build now holds replaces the one pinned in `licenses/`, and a pinned text whose component moved is checked against its upstream file.
@@ -305,7 +316,7 @@ Each archive must be smaller than 256,000,000 bytes, and is read only then; its 
   Its peers on the organization's `@noldova/` packages are each a range `>=<lowest version> <first version refused>`, the first refused being the next minor of a 0.x lowest version, such as `<0.1.0` for any 0.0.x, or the next major from 1.0.0, that holds the exact version the root `package.json` pins for the same package, the version the build and the tests used.
 The module's archive must hold `module.json` at the version.
 Its `noldovaDesktop`, the range of Noldova Desktop versions it accepts, must be `>=<lowest version> <first version refused>` with the first refused found the same way, and its peers on Noldova Desktop's `@noldova/desktop.` packages must name that same range.
-Each Git package's must name a single target in `os` and `cpu` and hold the Git program its `package.json` names.
+Each Git package must name a single target in `os` and `cpu` and hold the Git program its `package.json` names, and its `noldovaDesktop.sourcePages` and `noldovaDesktop.sources` must be the pages and files `builds.json` pins for its build, entry by entry.
 
 A failed release runs again whole, as a new run, which builds and checks the archives again.
 

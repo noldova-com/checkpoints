@@ -26,6 +26,7 @@ import { PackageVersionsMissingException } from "../exceptions/package-versions-
 import { PackingFailedException } from "../exceptions/packing-failed.exception.ts";
 import { PartBuildMissingException } from "../exceptions/part-build-missing.exception.ts";
 import type { GitBuilds } from "../models/git-builds.ts";
+import type { SourceSet } from "../models/source-set.ts";
 import { GitComponent } from "../models/git-component.ts";
 import type { GitTarget } from "../models/git-target.ts";
 import type { WorkspacePart } from "../models/workspace-part.ts";
@@ -95,11 +96,12 @@ export class GitPackageBuild {
         await copyFile(source, destination, constants.COPYFILE_EXCL);
       }
     const license = GitComponent.licenseOf(components);
+    const source = target.sourceSet;
     const unpacked = await GitPackageBuild.listFilesAsync(path.join(output, part.sources), part.sources);
-    await this.checkManifestAsync(target, GitPackageBuild.manifestOf(part, target, version, null, license, unpacked));
-    await writeFile(path.join(output, Resources.readmeFile), GitPackageBuild.readmeOf(part, target, components));
-    await writeFile(path.join(output, Resources.licenseFile), Resources.formatGitLicense(part.name, target.gitVersion, target.target, target.source, license));
-    await writeFile(path.join(output, Resources.manifestFile), GitPackageBuild.manifestOf(part, target, version, commit, license, unpacked));
+    await this.checkManifestAsync(target, GitPackageBuild.manifestOf(part, target, version, null, license, unpacked, source));
+    await writeFile(path.join(output, Resources.readmeFile), GitPackageBuild.readmeOf(part, target, components, source));
+    await writeFile(path.join(output, Resources.licenseFile), Resources.formatGitLicense(part.name, target.gitVersion, target.target, target.source, license, source.pages));
+    await writeFile(path.join(output, Resources.manifestFile), GitPackageBuild.manifestOf(part, target, version, commit, license, unpacked, source));
 
     const archives = path.join(this.root, Resources.archivesFolder);
     await mkdir(archives, { recursive: true });
@@ -156,7 +158,8 @@ export class GitPackageBuild {
       .sort();
   }
 
-  private static manifestOf(part: WorkspacePart, target: GitTarget, version: string, commit: string | null, license: string, unpacked: readonly string[]): string {
+  private static manifestOf(part: WorkspacePart, target: GitTarget, version: string, commit: string | null, license: string, unpacked: readonly string[],
+    source: SourceSet): string {
     const inBuild = (file: string): string => `${part.sources}${Resources.pathSeparator}${file}`;
     return Resources.formatLine(JSON.stringify({
       name: part.name,
@@ -181,12 +184,12 @@ export class GitPackageBuild {
           build: target.url
         }
       },
-      noldovaDesktop: { unpacked }
+      noldovaDesktop: { unpacked, sourcePages: source.pages, sources: source.files }
     }, null, Resources.jsonIndent));
   }
 
-  private static readmeOf(part: WorkspacePart, target: GitTarget, components: readonly GitComponent[]): string {
-    return Resources.formatGitReadme(part.name, target.gitVersion, target.target, target.url, target.sha256, target.source,
+  private static readmeOf(part: WorkspacePart, target: GitTarget, components: readonly GitComponent[], source: SourceSet): string {
+    return Resources.formatGitReadme(part.name, target.gitVersion, target.target, target.url, target.sha256, target.source, source.pages,
       components.map(t => Resources.formatComponentRow(t.name, t.version, t.license)));
   }
 

@@ -23,8 +23,10 @@ import { ReleaseManifestNotObjectException } from "../exceptions/release-manifes
 import { ReleaseVariableMissingException } from "../exceptions/release-variable-missing.exception.ts";
 import { ReleaseVersionInvalidException } from "../exceptions/release-version-invalid.exception.ts";
 import { ReleaseException } from "../exceptions/release.exception.ts";
+import type { GitBuilds } from "../models/git-builds.ts";
 import { ReleaseArchive } from "../models/release-archive.ts";
 import { RootManifest } from "../models/root-manifest.ts";
+import type { SourceSet } from "../models/source-set.ts";
 import type { WorkspacePart } from "../models/workspace-part.ts";
 import { Resources } from "../resources.ts";
 import { ArchiveCheck } from "./archive-check.ts";
@@ -84,6 +86,10 @@ export class Release {
     return Object.fromEntries(Object.entries(parsed));
   }
 
+  private static objectOf(value: unknown): Readonly<Record<string, unknown>> | null {
+    return typeof value === "object" && value !== null && !Array.isArray(value) ? Object.fromEntries(Object.entries(value)) : null;
+  }
+
   private static validateVersion(version: string | undefined): string {
     if (version === undefined || !Resources.releaseVersionPattern.test(version))
       throw new ReleaseVersionInvalidException(version);
@@ -140,8 +146,9 @@ export class Release {
     ];
 
     const names = archives.map(t => t.part.name);
+    const builds = await new WorkspaceLayout(this.root).readBuildsAsync();
     for (const archive of archives.filter(t => found.includes(path.basename(t.filePath))))
-      findings.push(...await this.checkArchiveAsync(archive, version, commit, scope, names, pins));
+      findings.push(...await this.checkArchiveAsync(archive, version, commit, scope, names, pins, builds));
 
     if (findings.length > 0)
       throw new ReleaseFindingsException(findings);
@@ -150,7 +157,7 @@ export class Release {
   }
 
   private async checkArchiveAsync(archive: ReleaseArchive, version: string, commit: string, scope: string, names: readonly string[],
-    pins: ReadonlyMap<string, string>): Promise<readonly string[]> {
+    pins: ReadonlyMap<string, string>, builds: GitBuilds): Promise<readonly string[]> {
     const archiveName = path.basename(archive.filePath);
     const tooLarge = ArchiveCheck.checkSize(archiveName, (await stat(archive.filePath)).size);
     if (tooLarge !== null)
@@ -190,8 +197,25 @@ export class Release {
       }
     }
     findings.push(...ArchiveCheck.check(archiveName, archive.part, manifest, entries, pins));
+    const target = builds.targets.find(t => WorkspaceLayout.gitPackageName(t.target) === archive.part.name);
+    if (target !== undefined && !Release.namesSources(manifest, target.sourceSet))
+      findings.push(Resources.formatSourcesRecordDiffers(archiveName, target.sourceSet.name));
 
     return findings;
+  }
+
+  // A Git package names the upstream source of its build: the pages and the files builds.json pins for it, field by field.
+  private static namesSources(manifest: Readonly<Record<string, unknown>>, set: SourceSet): boolean {
+    const desktop = Release.objectOf(manifest[Resources.noldovaDesktopField]);
+    const pages = desktop?.[Resources.sourcePagesField];
+    const files = desktop?.[Resources.sourcesField];
+    if (!Array.isArray(pages) || !Array.isArray(files) || pages.length !== set.pages.length || files.length !== set.files.length)
+      return false;
+    return set.pages.every((t, i) => pages[i] === t) && set.files.every((t, i) => {
+      const file = Release.objectOf(files[i]);
+      return file !== null && Object.keys(file).length === Resources.sourceFileFieldCount && file[Resources.urlField] === t.url
+        && file[Resources.sizeField] === t.size && file[Resources.sha256Field] === t.sha256;
+    });
   }
 
   private async checkHeadAsync(commit: string): Promise<void> {
