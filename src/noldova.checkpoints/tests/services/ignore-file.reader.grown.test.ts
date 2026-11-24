@@ -13,6 +13,8 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { describe, it, type TestContext } from "node:test";
 
+import "@noldova/context.core";
+
 import { IgnoreFileReader } from "../../src/services/ignore-file.reader.ts";
 
 const folderAsync = async (t: TestContext): Promise<string> => {
@@ -28,7 +30,7 @@ describe("IgnoreFileReader on a .gitignore that grows after it opens", () => {
     const { ino } = await opened.stat({ bigint: true });
     await opened.close();
     const isStatting = (value: unknown): value is Pick<FileHandle, "stat"> =>
-      typeof value === "object" && value !== null && "stat" in value && typeof value.stat === "function";
+      Object.isObject(value) && "stat" in value && Object.isFunction(value.stat);
     assert.ok(isStatting(prototype));
 
     t.mock.method(prototype, "stat", async function (this: FileHandle): Promise<BigIntStats> {

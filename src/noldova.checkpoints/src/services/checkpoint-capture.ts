@@ -8,6 +8,7 @@
 
 import { stat } from "node:fs/promises";
 
+import "@noldova/context.core";
 import { CaptureMode, CaptureOutcome, CaptureResult, Checkpoint, UnreadPath, UnreadReason } from "@noldova/checkpoints.protocol";
 
 import { CheckpointRecord } from "../models/checkpoint-record.ts";
@@ -74,11 +75,11 @@ export class CheckpointCapture {
     const start = this.clock.fileTime();
     await this.opener.openAsync(store, signal);
     const walk = await this.walker.walkAsync(folder, mode, signal);
-    if (walk === null)
+    if (Object.isNull(walk))
       return new CaptureResult(CaptureOutcome.FolderMissing, null, null, null);
     const index = await StoreFile.readAsync(store.indexFile, t => FolderIndex.fromJson(t)) ?? FolderIndex.Empty;
     const parent = await this.lister.findNewestAsync(store, signal);
-    const cutoff = asOf === null ? null : BigInt(asOf.getTime()) * Resources.nanosecondsPerMillisecond - Resources.racyWindowNanoseconds;
+    const cutoff = Object.isNull(asOf) ? null : BigInt(asOf.getTime()) * Resources.nanosecondsPerMillisecond - Resources.racyWindowNanoseconds;
     const adding = walk.entries.reduce((sum, t) => CheckpointCapture.needsRead(t, index, cutoff) ? sum + t.size : sum, 0);
     if (adding > Resources.maximumCaptureContent)
       return new CaptureResult(CaptureOutcome.TooLarge, null, null, null, adding, Resources.maximumCaptureContent);
@@ -92,7 +93,7 @@ export class CheckpointCapture {
     const unreadPaths: UnreadPath[] = [...walk.unreadPaths];
     const keepEarlier = (path: string): void => {
       const earlier = index.find(path);
-      if (earlier === null)
+      if (Object.isNull(earlier))
         return;
       kept.push(earlier);
       earlierPaths.push(path);
@@ -110,7 +111,7 @@ export class CheckpointCapture {
         const known = index.findUnchanged(entry);
         if (entry.isTooLarge)
           unreadPaths.push(new UnreadPath(entry.path, UnreadReason.TooLarge, null));
-        else if (known !== null)
+        else if (!Object.isNull(known))
           kept.push(IndexEntry.of(entry, known.objectId));
         else if (CheckpointCapture.isAtOrAfter(entry, cutoff))
           keepEarlier(entry.path);
@@ -120,7 +121,7 @@ export class CheckpointCapture {
             return null;
           if (result instanceof IndexEntry && !CheckpointCapture.isAtOrAfter(result, cutoff))
             kept.push(result);
-          else if (cutoff !== null && (result === null || result instanceof IndexEntry || result.reason === UnreadReason.Changing))
+          else if (!Object.isNull(cutoff) && (Object.isNull(result) || result instanceof IndexEntry || result.reason === UnreadReason.Changing))
             keepEarlier(entry.path);
           else if (result instanceof UnreadPath)
             unreadPaths.push(result);
@@ -135,7 +136,7 @@ export class CheckpointCapture {
       const isOutside = (entry: { readonly path: string }): boolean => !isInside(entry.path);
       files = kept.filter(isOutside);
       const taken = new Checkpoint(this.ids.next(), time, mode, label, unreadPaths.filter(isOutside));
-      const ignoreRecord = walk.rules === null ? null : new IgnoreRecord(walk.rules.ignoresCase, walk.rules.repositoryFolders);
+      const ignoreRecord = Object.isNull(walk.rules) ? null : new IgnoreRecord(walk.rules.ignoresCase, walk.rules.repositoryFolders);
       const emptyFolders = walk.emptyFolders.filter(t => !replaced.includes(t) && !isInside(t));
       const record = new CheckpointRecord(taken, emptyFolders, walk.links.filter(isOutside), ignoreRecord, earlierPaths);
       await input.writeAsync(CheckpointCapture.formatCommit(taken, parent, files));
@@ -145,7 +146,7 @@ export class CheckpointCapture {
       await input.writeAsync(CheckpointCapture.formatInline(Resources.checkpointFile, Buffer.from(JSON.stringify(record.toJson()))));
       return taken;
     }, signal);
-    if (imported === null) {
+    if (Object.isNull(imported)) {
       await leftovers.removeAddedAsync();
       return new CaptureResult(CaptureOutcome.LowDiskSpace, null, left, Resources.spaceMargin + adding);
     }
@@ -162,7 +163,7 @@ export class CheckpointCapture {
 
   public async captureMovedAsync(store: FolderStore, entries: readonly WalkedEntry[], label: string, id: string): Promise<Checkpoint | null> {
     const existing = (await this.lister.listAsync(store, Resources.neverCancelled)).find(t => t.id === id);
-    if (existing !== undefined)
+    if (!Object.isUndefined(existing))
       return existing;
     const time = new Date(this.clock.now());
     const parent = await this.lister.findNewestAsync(store, Resources.neverCancelled);
@@ -184,7 +185,7 @@ export class CheckpointCapture {
   }
 
   private static goneSince(index: FolderIndex, walk: WalkResult, cutoff: bigint | null): readonly string[] {
-    if (cutoff === null)
+    if (Object.isNull(cutoff))
       return [];
     const walked = new Set(walk.entries.map(t => t.path));
     const leftOut = new Set([...walk.ignoredPaths, ...walk.repositoryPaths, ...walk.unreadPaths.map(t => t.path)]);
@@ -195,7 +196,7 @@ export class CheckpointCapture {
         return false;
       let folder = path;
       let time = walk.folderTimes.get(folder);
-      while (time === undefined) {
+      while (Object.isUndefined(time)) {
         if (leftOut.has(folder))
           return false;
         folder = RelativePath.parentOf(folder);
@@ -206,11 +207,11 @@ export class CheckpointCapture {
   }
 
   private static isAtOrAfter(entry: WalkedEntry | IndexEntry, cutoff: bigint | null): boolean {
-    return cutoff !== null && (entry.modified >= cutoff || entry.changed >= cutoff);
+    return !Object.isNull(cutoff) && (entry.modified >= cutoff || entry.changed >= cutoff);
   }
 
   private static needsRead(entry: WalkedEntry, index: FolderIndex, cutoff: bigint | null): boolean {
-    return !entry.isTooLarge && index.findUnchanged(entry) === null && !CheckpointCapture.isAtOrAfter(entry, cutoff);
+    return !entry.isTooLarge && Object.isNull(index.findUnchanged(entry)) && !CheckpointCapture.isAtOrAfter(entry, cutoff);
   }
 
   private async importAsync(store: FolderStore, write: (input: InputWriter) => Promise<Checkpoint | null>, signal: AbortSignal): Promise<Checkpoint | null> {
@@ -218,7 +219,7 @@ export class CheckpointCapture {
       this.lister.forget(store);
       throw error;
     });
-    if (taken === null || commit === null) {
+    if (Object.isNull(taken) || Object.isNull(commit)) {
       this.lister.forget(store);
       return null;
     }
@@ -236,7 +237,7 @@ export class CheckpointCapture {
       Resources.formatFastImportCommitter(signature),
       Resources.formatFastImportData(Buffer.byteLength(message)),
       message,
-      ...(parent === null ? [] : [Resources.formatFastImportFrom(parent)]),
+      ...(Object.isNull(parent) ? [] : [Resources.formatFastImportFrom(parent)]),
       Resources.fastImportDeleteAll,
       ...kept.map(t => Resources.formatFastImportModify(t.kind.gitMode, t.objectId, GitPath.quote(GitPath.ofEntry(t.path)))),
       ""

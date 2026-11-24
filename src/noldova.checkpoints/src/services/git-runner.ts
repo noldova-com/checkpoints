@@ -9,6 +9,7 @@
 import path from "node:path";
 import type { Readable } from "node:stream";
 
+import "@noldova/context.core";
 import { ProcessRequest, type IRuntimePartContext } from "@noldova/desktop.runtime";
 
 import { GitStoppedException } from "../exceptions/git-stopped.exception.ts";
@@ -157,7 +158,7 @@ export class GitRunner {
     use: (running: GitProcess) => Promise<T>,
     signal: AbortSignal,
     deadline: CommandDeadline | null): Promise<T> {
-    const stop = deadline === null ? signal : deadline.signal;
+    const stop = Object.isNull(deadline) ? signal : deadline.signal;
     if (stop.aborted)
       throw stop.reason;
     this.timers.get(store.folder)?.cancel();
@@ -167,7 +168,7 @@ export class GitRunner {
       const live = this.live.get(store.folder) ?? new Map<string, GitProcess>();
       this.live.set(store.folder, live);
       let found = live.get(command);
-      if (found === undefined || found.hasExited) {
+      if (Object.isUndefined(found) || found.hasExited) {
         found = await this.startLiveAsync(store, command, commandArguments, first);
         live.set(command, found);
       }
@@ -239,12 +240,12 @@ export class GitRunner {
 
   private async stopFolderAsync(folder: string, commands: readonly string[]): Promise<void> {
     const live = this.live.get(folder);
-    if (live === undefined)
+    if (Object.isUndefined(live))
       return;
     const ending: Promise<void>[] = [];
     for (const command of commands) {
       const running = live.get(command);
-      if (running === undefined)
+      if (Object.isUndefined(running))
         continue;
       live.delete(command);
       ending.push(running.endAsync(command === Resources.fastImportCommand ? Resources.fastImportEnd : "", this.limits.stopMilliseconds));

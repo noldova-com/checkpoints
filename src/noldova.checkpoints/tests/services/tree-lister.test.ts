@@ -11,6 +11,8 @@ import { mkdir, symlink } from "node:fs/promises";
 import path from "node:path";
 import { describe, it, type TestContext } from "node:test";
 
+import "@noldova/context.core";
+
 import { UnknownGitModeException } from "../../src/api/index.ts";
 import { EntryKind } from "../../src/models/entry-kind.ts";
 import { FolderStore } from "../../src/models/folder-store.ts";
@@ -44,7 +46,7 @@ describe("TreeLister", { concurrency: true }, () => {
     const tree = await harness.treeAsync(checkpoint);
     const idOf = (treePath: string): string => {
       const entry = tree.get(treePath);
-      assert.ok(entry !== undefined);
+      assert.ok(!Object.isUndefined(entry));
       return entry.objectId;
     };
     const start = harness.context.requests.length;

@@ -6,6 +6,8 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import "@noldova/context.core";
+
 import { UnknownPathKindException } from "../exceptions/unknown-path-kind.exception.ts";
 
 export class PathKind {
@@ -22,7 +24,7 @@ export class PathKind {
 
   public static fromJson(value: unknown): PathKind {
     const kind = PathKind.ALL.find(t => t.value === value);
-    if (kind === undefined)
+    if (Object.isUndefined(kind))
       throw new UnknownPathKindException(String(value));
     return kind;
   }

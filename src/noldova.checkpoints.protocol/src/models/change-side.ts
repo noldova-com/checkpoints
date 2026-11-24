@@ -6,6 +6,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import "@noldova/context.core";
 import type { JsonObject } from "@noldova/context.json";
 
 import { SideSizeMismatchException } from "../exceptions/side-size-mismatch.exception.ts";
@@ -21,9 +22,9 @@ export class ChangeSide {
   public readonly size: number | null;
 
   public constructor(kind: PathKind, size: number | null, isText: boolean) {
-    if ((kind === PathKind.Folder) !== (size === null) || kind === PathKind.Folder && isText)
+    if ((kind === PathKind.Folder) !== (Object.isNull(size)) || kind === PathKind.Folder && isText)
       throw new SideSizeMismatchException(kind);
-    if (size !== null)
+    if (!Object.isNull(size))
       ByteSize.check(size);
 
     this.isText = isText;

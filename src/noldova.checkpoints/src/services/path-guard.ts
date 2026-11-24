@@ -6,6 +6,8 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import "@noldova/context.core";
+
 import { RestoreFolderChangedException } from "../exceptions/restore-folder-changed.exception.ts";
 import { Resources } from "../resources.ts";
 import { RelativePath } from "./relative-path.ts";
@@ -30,11 +32,11 @@ export class PathGuard {
       folders.splice(1, 0, folder);
     for (const folder of folders) {
       const stats = await RestorePaths.lstatAsync(RestorePaths.locationOf(this.folder, folder));
-      if (stats === null || !RestorePaths.isFolder(stats))
+      if (Object.isNull(stats) || !RestorePaths.isFolder(stats))
         throw new RestoreFolderChangedException(changing, folder);
       const fileId = RestorePaths.fileIdOf(stats);
       const known = this.ids.get(folder);
-      if (known === undefined)
+      if (Object.isUndefined(known))
         this.ids.set(folder, fileId);
       else if (known !== fileId)
         throw new RestoreFolderChangedException(changing, folder);

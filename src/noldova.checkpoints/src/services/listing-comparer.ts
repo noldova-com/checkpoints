@@ -6,6 +6,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import "@noldova/context.core";
 import { ChangeStatus, PathKind } from "@noldova/checkpoints.protocol";
 
 import { PendingChange } from "../models/pending-change.ts";
@@ -19,7 +20,7 @@ export class ListingComparer {
     const paths = [...new Set([...before.paths, ...after.paths])].sort((t, u) => Buffer.compare(Buffer.from(t), Buffer.from(u)));
     return paths.flatMap(t => {
       const change = ListingComparer.compareAt(t, before, after);
-      return change === null ? [] : [change];
+      return Object.isNull(change) ? [] : [change];
     });
   }
 
@@ -34,9 +35,9 @@ export class ListingComparer {
       return null;
 
     const unreadReason = after.unreadReasonOf(path) ?? before.unreadReasonOf(path);
-    if (unreadReason !== null)
+    if (!Object.isNull(unreadReason))
       return new PendingChange(path, ChangeStatus.Unknown, old, current, unreadReason);
-    if (old === null || current === null)
+    if (Object.isNull(old) || Object.isNull(current))
       return ListingComparer.compareOneSide(path, old, current);
     if (old.isOtherKindThan(current))
       return new PendingChange(path, ChangeStatus.KindChanged, old, current, null);
@@ -44,7 +45,7 @@ export class ListingComparer {
   }
 
   private static compareOneSide<B extends SideEntry, A extends SideEntry>(path: string, old: B | null, current: A | null): PendingChange<B, A> {
-    return old === null
+    return Object.isNull(old)
       ? new PendingChange<B, A>(path, ChangeStatus.Added, null, current, null)
       : new PendingChange<B, A>(path, ChangeStatus.Deleted, old, null, null);
   }

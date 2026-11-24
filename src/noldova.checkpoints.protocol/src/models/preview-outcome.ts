@@ -6,6 +6,8 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import "@noldova/context.core";
+
 import { UnknownPreviewOutcomeException } from "../exceptions/unknown-preview-outcome.exception.ts";
 
 export class PreviewOutcome {
@@ -26,7 +28,7 @@ export class PreviewOutcome {
 
   public static fromJson(value: unknown): PreviewOutcome {
     const outcome = PreviewOutcome.ALL.find(t => t.value === value);
-    if (outcome === undefined)
+    if (Object.isUndefined(outcome))
       throw new UnknownPreviewOutcomeException(String(value));
     return outcome;
   }

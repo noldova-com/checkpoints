@@ -10,6 +10,8 @@ import assert from "node:assert/strict";
 import { access, open, readdir, readFile, rm, utimes, writeFile } from "node:fs/promises";
 import path from "node:path";
 
+import "@noldova/context.core";
+
 import { JournalRecordType } from "../../src/models/journal-record-type.ts";
 import type { JournalRecord } from "../../src/models/journal-record.ts";
 import { RestoreJournal } from "../../src/services/restore-journal.ts";
@@ -34,7 +36,7 @@ export class RestoreFolder {
   }
 
   public static presentOf<T>(value: T | null): T {
-    assert.ok(value !== null);
+    assert.ok(!Object.isNull(value));
     return value;
   }
 

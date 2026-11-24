@@ -6,6 +6,8 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import "@noldova/context.core";
+
 import { UnknownUnreadReasonException } from "../exceptions/unknown-unread-reason.exception.ts";
 
 export class UnreadReason {
@@ -23,7 +25,7 @@ export class UnreadReason {
 
   public static fromJson(value: unknown): UnreadReason {
     const reason = UnreadReason.ALL.find(t => t.value === value);
-    if (reason === undefined)
+    if (Object.isUndefined(reason))
       throw new UnknownUnreadReasonException(String(value));
     return reason;
   }

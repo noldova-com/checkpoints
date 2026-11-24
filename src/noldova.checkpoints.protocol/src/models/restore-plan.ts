@@ -6,6 +6,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import "@noldova/context.core";
 import type { JsonObject } from "@noldova/context.json";
 
 import { EarlierPathsMismatchException } from "../exceptions/earlier-paths-mismatch.exception.ts";
@@ -42,7 +43,7 @@ export class RestorePlan {
       throw new InvalidPlanStateException(state);
     const stepPaths = new Set(steps.map(t => t.path));
     const earlier = earlierPaths.find((t, u) => !stepPaths.has(t) || earlierPaths.indexOf(t) !== u);
-    if (earlier !== undefined)
+    if (!Object.isUndefined(earlier))
       throw new EarlierPathsMismatchException(earlier);
 
     this.bytesToWrite = bytesToWrite;

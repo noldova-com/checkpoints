@@ -6,6 +6,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import "@noldova/context.core";
 import { PathKind, RestoreAction } from "@noldova/checkpoints.protocol";
 import type { JsonObject } from "@noldova/context.json";
 
@@ -57,9 +58,9 @@ export class ScriptStep {
       RestoreAction.fromJson(reader.readValue(Resources.actionField)),
       reader.readNullableString(Resources.stageField),
       reader.readNullableString(Resources.asideField),
-      kind === null ? null : PathKind.fromJson(kind),
+      Object.isNull(kind) ? null : PathKind.fromJson(kind),
       reader.readNullableString(Resources.objectIdField),
-      linkKind === null ? null : LinkKind.fromJson(linkKind));
+      Object.isNull(linkKind) ? null : LinkKind.fromJson(linkKind));
   }
 
   public readAside(): string {
@@ -85,14 +86,14 @@ export class ScriptStep {
       [Resources.actionField]: this.action.toJson(),
       [Resources.stageField]: this.stage,
       [Resources.asideField]: this.aside,
-      [Resources.kindField]: this.kind === null ? null : this.kind.toJson(),
+      [Resources.kindField]: Object.isNull(this.kind) ? null : this.kind.toJson(),
       [Resources.objectIdField]: this.objectId,
-      [Resources.linkKindField]: this.linkKind === null ? null : this.linkKind.toJson()
+      [Resources.linkKindField]: Object.isNull(this.linkKind) ? null : this.linkKind.toJson()
     };
   }
 
   private static required<T>(value: T | null, field: string): T {
-    if (value === null)
+    if (Object.isNull(value))
       throw new JournalFieldMissingException(Resources.scriptStepModel, field);
     return value;
   }

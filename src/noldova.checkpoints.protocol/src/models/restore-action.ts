@@ -6,6 +6,8 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import "@noldova/context.core";
+
 import { UnknownRestoreActionException } from "../exceptions/unknown-restore-action.exception.ts";
 
 export class RestoreAction {
@@ -21,7 +23,7 @@ export class RestoreAction {
 
   public static fromJson(value: unknown): RestoreAction {
     const action = RestoreAction.ALL.find(t => t.value === value);
-    if (action === undefined)
+    if (Object.isUndefined(action))
       throw new UnknownRestoreActionException(String(value));
     return action;
   }

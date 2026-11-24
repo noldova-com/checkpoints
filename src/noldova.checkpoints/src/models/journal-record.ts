@@ -6,6 +6,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import "@noldova/context.core";
 import type { JsonObject } from "@noldova/context.json";
 
 import { JournalFieldMissingException } from "../exceptions/journal-field-missing.exception.ts";
@@ -77,7 +78,7 @@ export class JournalRecord {
     const reader = StoreFormat.read(value, Resources.journalRecordModel, JournalRecord.FIELDS);
     const type = JournalRecordType.fromJson(reader.readString(Resources.typeField));
     const script = reader.readValue(Resources.scriptField);
-    return new JournalRecord(type, script === null ? null : RestoreScript.fromJson(script), StoreFormat.readNullableNumber(reader, Resources.stepField),
+    return new JournalRecord(type, Object.isNull(script) ? null : RestoreScript.fromJson(script), StoreFormat.readNullableNumber(reader, Resources.stepField),
       reader.readNullableString(Resources.pathField), reader.readNullableString(Resources.fromField), reader.readNullableString(Resources.fileIdField),
       reader.readNullableString(Resources.checkpointField));
   }
@@ -105,7 +106,7 @@ export class JournalRecord {
   public toJson(): JsonObject {
     return {
       [Resources.typeField]: this.type.toJson(),
-      [Resources.scriptField]: this.script === null ? null : this.script.toJson(),
+      [Resources.scriptField]: Object.isNull(this.script) ? null : this.script.toJson(),
       [Resources.stepField]: this.step,
       [Resources.pathField]: this.path,
       [Resources.fromField]: this.from,
@@ -115,7 +116,7 @@ export class JournalRecord {
   }
 
   private static required<T>(value: T | null, field: string): T {
-    if (value === null)
+    if (Object.isNull(value))
       throw new JournalFieldMissingException(Resources.journalRecordModel, field);
     return value;
   }

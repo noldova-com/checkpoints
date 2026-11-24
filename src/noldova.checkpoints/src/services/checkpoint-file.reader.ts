@@ -9,6 +9,7 @@
 import { lstat, readdir, readlink, stat } from "node:fs/promises";
 import path from "node:path";
 
+import "@noldova/context.core";
 import { ReadOutcome, ReadResult, type DiffTarget, type ReadRequest } from "@noldova/checkpoints.protocol";
 
 import { EntryKind } from "../models/entry-kind.ts";
@@ -45,28 +46,28 @@ export class CheckpointFileReader {
 
   public async readAsync(store: FolderStore, request: ReadRequest, signal: AbortSignal): Promise<ReadResult> {
     const base = await StoreOpener.existsAsync(store) ? await this.loader.loadCheckpointAsync(store, request.checkpoint, signal) : null;
-    if (base === null)
+    if (Object.isNull(base))
       return CheckpointFileReader.resultOf(ReadOutcome.CheckpointMissing);
-    if (base.listing.unreadReasonOf(request.path) !== null)
+    if (!Object.isNull(base.listing.unreadReasonOf(request.path)))
       return CheckpointFileReader.resultOf(ReadOutcome.Unknown);
 
     const old = CheckpointFileReader.fileOf(base.listing, request.path);
-    if (request.against === null)
-      return old === null ? CheckpointFileReader.resultOf(ReadOutcome.PathMissing) : await this.readContentAsync(store, old, request.limit, signal);
+    if (Object.isNull(request.against))
+      return Object.isNull(old) ? CheckpointFileReader.resultOf(ReadOutcome.PathMissing) : await this.readContentAsync(store, old, request.limit, signal);
 
     const current = await this.findTargetAsync(store, request, request.against, signal);
     if (current instanceof ReadOutcome)
       return CheckpointFileReader.resultOf(current);
-    const oldSide = old === null ? null : await this.readSideAsync(store, request.folder.path, old, signal);
+    const oldSide = Object.isNull(old) ? null : await this.readSideAsync(store, request.folder.path, old, signal);
     if (oldSide instanceof ReadOutcome)
       return CheckpointFileReader.resultOf(oldSide);
-    const currentSide = current === null ? null : await this.readSideAsync(store, request.folder.path, current, signal);
+    const currentSide = Object.isNull(current) ? null : await this.readSideAsync(store, request.folder.path, current, signal);
     if (currentSide instanceof ReadOutcome)
       return CheckpointFileReader.resultOf(currentSide);
 
-    if (currentSide === null)
-      return oldSide === null ? CheckpointFileReader.resultOf(ReadOutcome.PathMissing) : CheckpointFileReader.resultOfDiff(LineDiff.ofOneSide(oldSide.content, false), request.limit);
-    if (oldSide === null)
+    if (Object.isNull(currentSide))
+      return Object.isNull(oldSide) ? CheckpointFileReader.resultOf(ReadOutcome.PathMissing) : CheckpointFileReader.resultOfDiff(LineDiff.ofOneSide(oldSide.content, false), request.limit);
+    if (Object.isNull(oldSide))
       return CheckpointFileReader.resultOfDiff(LineDiff.ofOneSide(currentSide.content, true), request.limit);
     return await this.diffAsync(store, oldSide, currentSide, request.limit, signal);
   }
@@ -95,7 +96,7 @@ export class CheckpointFileReader {
   }
 
   private static unknownOf(failure: ReadFailure): ReadOutcome | null {
-    return failure.reason === null ? null : ReadOutcome.Unknown;
+    return Object.isNull(failure.reason) ? null : ReadOutcome.Unknown;
   }
 
   private async diffAsync(store: FolderStore, old: SideContent, current: SideContent, limit: number, signal: AbortSignal): Promise<ReadResult> {
@@ -111,7 +112,7 @@ export class CheckpointFileReader {
     const stats = await lstat(location, { bigint: true });
     const kind = EntryKind.ofStats(this.platform, stats);
     const fileId = Resources.formatFileId(stats.dev, stats.ino);
-    if (kind === null)
+    if (Object.isNull(kind))
       return null;
     if (kind === EntryKind.Link)
       return new FolderFile(kind, FolderFileReader.linkIdOf(await readlink(location, Resources.bufferEncoding)), location, Number(stats.size), fileId);
@@ -137,11 +138,11 @@ export class CheckpointFileReader {
   }
 
   private async findTargetAsync(store: FolderStore, request: ReadRequest, against: DiffTarget, signal: AbortSignal): Promise<SideFile | UnhashedFile | ReadOutcome | null> {
-    if (against.checkpoint !== null) {
+    if (!Object.isNull(against.checkpoint)) {
       const target = await this.loader.loadCheckpointAsync(store, against.checkpoint, signal);
-      if (target === null)
+      if (Object.isNull(target))
         return ReadOutcome.CheckpointMissing;
-      return target.listing.unreadReasonOf(request.path) === null ? CheckpointFileReader.fileOf(target.listing, request.path) : ReadOutcome.Unknown;
+      return Object.isNull(target.listing.unreadReasonOf(request.path)) ? CheckpointFileReader.fileOf(target.listing, request.path) : ReadOutcome.Unknown;
     }
     if (!await Failures.recoverAsync(stat(request.folder.path).then(t => t.isDirectory()), t => Failures.isAbsent(t), false))
       return ReadOutcome.FolderMissing;
@@ -165,7 +166,7 @@ export class CheckpointFileReader {
 
     const content = await FolderFileReader.readAsync(folder, file, Resources.bigFileThreshold + 1);
     if (content instanceof ReadFailure)
-      return content.reason === null ? null : ReadOutcome.Unknown;
+      return Object.isNull(content.reason) ? null : ReadOutcome.Unknown;
     return TextProbe.isText(content.length, content) ? new SideContent(file, content) : ReadOutcome.Binary;
   }
 

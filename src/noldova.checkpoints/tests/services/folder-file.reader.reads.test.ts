@@ -13,6 +13,8 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { describe, it } from "node:test";
 
+import "@noldova/context.core";
+
 import { FolderFileReader } from "../../src/services/folder-file.reader.ts";
 
 describe("FolderFileReader's reads", () => {
@@ -27,7 +29,7 @@ describe("FolderFileReader's reads", () => {
     const prototype: unknown = opened.constructor.prototype;
     await opened.close();
     const isReadable = (value: unknown): value is Pick<FileHandle, "read"> =>
-      typeof value === "object" && value !== null && "read" in value && typeof value.read === "function";
+      Object.isObject(value) && "read" in value && Object.isFunction(value.read);
     assert.ok(isReadable(prototype));
 
     assert.equal(await FolderFileReader.objectIdOfAsync(empty, false), "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391");

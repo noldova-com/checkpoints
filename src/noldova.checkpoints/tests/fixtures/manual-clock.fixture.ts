@@ -8,6 +8,8 @@
 
 import { setImmediate } from "node:timers/promises";
 
+import "@noldova/context.core";
+
 import { ScheduledCall } from "../../src/models/scheduled-call.ts";
 import { Resources } from "../../src/resources.ts";
 import { Clock } from "../../src/services/clock.ts";
@@ -56,7 +58,7 @@ export class ManualClock extends Clock {
 
   public tick(milliseconds: number): void {
     const end = this.time + milliseconds;
-    for (let next = this.nextBy(end); next !== undefined; next = this.nextBy(end)) {
+    for (let next = this.nextBy(end); !Object.isUndefined(next); next = this.nextBy(end)) {
       this.remove(next);
       this.time = next.at;
       next.call();
@@ -65,7 +67,7 @@ export class ManualClock extends Clock {
   }
 
   private nextBy(end: number): DueCall | undefined {
-    return this.due.filter(t => t.at <= end).reduce<DueCall | undefined>((first, t) => first === undefined || t.at < first.at ? t : first, undefined);
+    return this.due.filter(t => t.at <= end).reduce<DueCall | undefined>((first, t) => Object.isUndefined(first) || t.at < first.at ? t : first, undefined);
   }
 
   private remove(due: DueCall): void {

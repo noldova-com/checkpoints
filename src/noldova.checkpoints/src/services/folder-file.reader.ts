@@ -11,6 +11,7 @@ import type { BigIntStats } from "node:fs";
 import { lstat, open, readlink, realpath } from "node:fs/promises";
 import path from "node:path";
 
+import "@noldova/context.core";
 import { PathKind } from "@noldova/checkpoints.protocol";
 
 import { FolderFile } from "../models/folder-file.ts";
@@ -80,7 +81,7 @@ export class FolderFileReader {
       ? await FolderFileReader.readLinkAsync(file.location, file.fileId, file.objectId)
       : await FolderFileReader.readFileAsync(file.location, file.fileId, keep);
     const [root, parent] = await Promise.all([realpath(folder), realpath(path.dirname(file.location))]);
-    return content !== null && (parent === root || parent.startsWith(path.join(root, path.sep))) ? content : ReadFailure.Changing;
+    return !Object.isNull(content) && (parent === root || parent.startsWith(path.join(root, path.sep))) ? content : ReadFailure.Changing;
   }
 
   private static async readLinkAsync(location: string, fileId: string, objectId: string): Promise<Buffer | null> {

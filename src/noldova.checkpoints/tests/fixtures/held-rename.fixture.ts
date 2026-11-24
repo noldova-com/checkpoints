@@ -12,6 +12,8 @@ import path from "node:path";
 import type { TestContext } from "node:test";
 import { setImmediate } from "node:timers/promises";
 
+import "@noldova/context.core";
+
 import { FailureFixture } from "./failure.fixture.ts";
 
 export class HeldRename {
@@ -23,7 +25,7 @@ export class HeldRename {
     const attempt = this.tries.push(path.basename(from)) - 1;
     this.calls[attempt]?.resolve();
     const code = this.refusals[attempt];
-    if (code !== undefined)
+    if (!Object.isUndefined(code))
       throw new FailureFixture(`${code} for the test`, code);
     await rename(from, to);
   };

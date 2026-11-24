@@ -6,6 +6,8 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import "@noldova/context.core";
+
 import { TreeLineMalformedException } from "../exceptions/tree-line-malformed.exception.ts";
 import { Resources } from "../resources.ts";
 import { EntryKind } from "./entry-kind.ts";
@@ -24,9 +26,9 @@ export class TreeListing {
     const fields = output.split(Resources.nulCharacter);
     const files = new Map<string, TreeFile>();
     const rules = new Map<string, string>();
-    for (let line = fields.shift(), treePath = fields.shift(); line !== undefined && treePath !== undefined; line = fields.shift(), treePath = fields.shift()) {
+    for (let line = fields.shift(), treePath = fields.shift(); !Object.isUndefined(line) && !Object.isUndefined(treePath); line = fields.shift(), treePath = fields.shift()) {
       const [, mode, , objectId] = line.split(Resources.treeFieldSeparator);
-      if (mode === undefined || objectId === undefined)
+      if (Object.isUndefined(mode) || Object.isUndefined(objectId))
         throw new TreeLineMalformedException(line);
       if (treePath.startsWith(Resources.filesPrefix))
         files.set(treePath.slice(Resources.filesPrefix.length), new TreeFile(EntryKind.ofGitMode(mode), objectId));

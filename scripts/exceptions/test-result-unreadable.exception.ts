@@ -6,6 +6,8 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import "@noldova/context.core";
+
 import { Resources } from "../resources.ts";
 import { TestRunException } from "./test-run.exception.ts";
 
@@ -14,7 +16,7 @@ export class TestResultUnreadableException extends TestRunException {
   public readonly resultsFile: string;
 
   public constructor(resultsFile: string, line: string, cause?: unknown) {
-    super(Resources.formatTestResultUnreadable(resultsFile, line), cause === undefined ? undefined : { cause });
+    super(Resources.formatTestResultUnreadable(resultsFile, line), Object.isUndefined(cause) ? undefined : { cause });
 
     this.line = line;
     this.resultsFile = resultsFile;

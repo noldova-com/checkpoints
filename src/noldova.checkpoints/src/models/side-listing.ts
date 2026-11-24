@@ -6,6 +6,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import "@noldova/context.core";
 import type { UnreadPath, UnreadReason } from "@noldova/checkpoints.protocol";
 
 import { Resources } from "../resources.ts";
@@ -42,13 +43,13 @@ export class SideListing<F extends SideFile = SideFile> {
   }
 
   public excludes(relativePath: string, isFolder: boolean): boolean {
-    return this.rules !== null && this.rules.excludes(relativePath, isFolder);
+    return !Object.isNull(this.rules) && this.rules.excludes(relativePath, isFolder);
   }
 
   public unreadReasonOf(relativePath: string): UnreadReason | null {
     for (let end = relativePath.length; end > 0; end = relativePath.lastIndexOf(Resources.relativePathSeparator, end - 1)) {
       const reason = this.unreadMap.get(relativePath.slice(0, end));
-      if (reason !== undefined)
+      if (!Object.isUndefined(reason))
         return reason;
     }
     return null;
@@ -56,6 +57,6 @@ export class SideListing<F extends SideFile = SideFile> {
 
   public isUnderUnread(relativePath: string): boolean {
     const end = relativePath.lastIndexOf(Resources.relativePathSeparator);
-    return end > 0 && this.unreadReasonOf(relativePath.slice(0, end)) !== null;
+    return end > 0 && !Object.isNull(this.unreadReasonOf(relativePath.slice(0, end)));
   }
 }

@@ -6,6 +6,8 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import "@noldova/context.core";
+
 import { UnknownCompareOutcomeException } from "../exceptions/unknown-compare-outcome.exception.ts";
 
 export class CompareOutcome {
@@ -23,7 +25,7 @@ export class CompareOutcome {
 
   public static fromJson(value: unknown): CompareOutcome {
     const outcome = CompareOutcome.ALL.find(t => t.value === value);
-    if (outcome === undefined)
+    if (Object.isUndefined(outcome))
       throw new UnknownCompareOutcomeException(String(value));
     return outcome;
   }

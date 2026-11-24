@@ -6,8 +6,10 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import "@noldova/context.core";
+
 export class ErrorCode {
   public static of(error: unknown): string | undefined {
-    return error instanceof Error && "code" in error && typeof error.code === "string" ? error.code : undefined;
+    return error instanceof Error && "code" in error && Object.isString(error.code) ? error.code : undefined;
   }
 }

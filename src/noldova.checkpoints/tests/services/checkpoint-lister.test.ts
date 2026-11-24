@@ -9,6 +9,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
+import "@noldova/context.core";
 import { CaptureRequest, DeleteFolderRequest, type Checkpoint } from "@noldova/checkpoints.protocol";
 import { JsonException } from "@noldova/context.json";
 
@@ -20,7 +21,7 @@ describe("CheckpointLister", { concurrency: true }, () => {
 
   const plantAsync = async (harness: CheckpointsHarness, id: string, record: string | null): Promise<string> => {
     const blob = (await harness.gitAsync(["hash-object", "-w", "--stdin"], record ?? "")).toString("utf8").trim();
-    const tree = (await harness.gitAsync(["mktree"], record === null ? "" : `100644 blob ${blob}\tcheckpoint.json\n`)).toString("utf8").trim();
+    const tree = (await harness.gitAsync(["mktree"], Object.isNull(record) ? "" : `100644 blob ${blob}\tcheckpoint.json\n`)).toString("utf8").trim();
     const commit = (await harness.gitAsync([...identity, "commit-tree", tree, "-m", "planted"])).toString("utf8").trim();
     await harness.gitAsync(["update-ref", `refs/checkpoints/${id}`, commit]);
     return commit;

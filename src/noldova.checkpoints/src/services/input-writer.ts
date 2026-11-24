@@ -8,6 +8,8 @@
 
 import { Writable } from "node:stream";
 
+import "@noldova/context.core";
+
 import { WriteMeter } from "../models/write-meter.ts";
 import { Resources } from "../resources.ts";
 import { Failures } from "./failures.ts";
@@ -54,7 +56,7 @@ export class InputWriter {
   }
 
   public throwIfFailed(): void {
-    if (this.failure !== undefined)
+    if (!Object.isUndefined(this.failure))
       throw this.failure;
   }
 
@@ -65,8 +67,8 @@ export class InputWriter {
     if (!this.stream.write(chunk))
       await Promise.race([new Promise<void>(resolve => this.stream.once("drain", () => resolve())), this.closed]);
     this.throwIfFailed();
-    this.written += typeof chunk === "string" ? Buffer.byteLength(chunk) : chunk.length;
-    if (this.meter !== null && this.written - this.checked >= this.meter.interval) {
+    this.written += Object.isString(chunk) ? Buffer.byteLength(chunk) : chunk.length;
+    if (!Object.isNull(this.meter) && this.written - this.checked >= this.meter.interval) {
       this.checked = this.written;
       if (!await this.meter.check(this.written)) {
         this.stopped = true;

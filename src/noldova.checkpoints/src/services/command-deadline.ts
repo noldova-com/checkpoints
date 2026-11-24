@@ -6,6 +6,8 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import "@noldova/context.core";
+
 import type { ScheduledCall } from "../models/scheduled-call.ts";
 import type { Clock } from "./clock.ts";
 
@@ -30,7 +32,7 @@ export class CommandDeadline {
   }
 
   public restart(): void {
-    if (this.timer === undefined)
+    if (Object.isUndefined(this.timer))
       return;
     this.timer.cancel();
     this.timer = this.start();

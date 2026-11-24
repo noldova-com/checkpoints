@@ -9,6 +9,8 @@
 import { readdir, rm, stat } from "node:fs/promises";
 import path from "node:path";
 
+import "@noldova/context.core";
+
 import type { FolderStore } from "../models/folder-store.ts";
 import { HousekeepingRecord } from "../models/housekeeping-record.ts";
 import { ObjectCounts } from "../models/object-counts.ts";
@@ -44,7 +46,7 @@ export class StoreHousekeeping {
 
     await this.git.runLongAsync(store, Resources.packRefsCommand, Resources.packRefsArguments, signal);
     const time = this.clock.now();
-    if (record === null || time - record.fullPass >= Resources.fullPassInterval || time < record.fullPass) {
+    if (Object.isNull(record) || time - record.fullPass >= Resources.fullPassInterval || time < record.fullPass) {
       await this.git.stopStoreAsync(store);
       await this.git.runLongAsync(store, Resources.repackCommand, Resources.formatCruftRepackArguments(Resources.unreachableExpiry), signal);
       await this.git.runLongAsync(store, Resources.pruneCommand, [Resources.formatPruneArgument(Resources.unreachableExpiry)], signal);

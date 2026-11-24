@@ -6,6 +6,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import "@noldova/context.core";
 import type { JsonObject } from "@noldova/context.json";
 
 import { InvalidDateException } from "../exceptions/invalid-date.exception.ts";
@@ -22,12 +23,12 @@ export class CaptureRequest {
   public readonly label: string | null;
 
   public constructor(folder: FolderReference, label: string | null, asOf: Date | null = null) {
-    if (label !== null && label.length > Resources.maximumLabelLength)
+    if (!Object.isNull(label) && label.length > Resources.maximumLabelLength)
       throw new LabelTooLongException(label.length);
-    if (asOf !== null && Number.isNaN(asOf.getTime()))
+    if (!Object.isNull(asOf) && Number.isNaN(asOf.getTime()))
       throw new InvalidDateException();
 
-    this.asOf = asOf === null ? null : new Date(asOf.getTime());
+    this.asOf = Object.isNull(asOf) ? null : new Date(asOf.getTime());
     this.folder = folder;
     this.label = label;
   }
@@ -42,7 +43,7 @@ export class CaptureRequest {
     return {
       [Resources.folderField]: this.folder.toJson(),
       [Resources.labelField]: this.label,
-      [Resources.asOfField]: this.asOf === null ? null : this.asOf.toISOString()
+      [Resources.asOfField]: Object.isNull(this.asOf) ? null : this.asOf.toISOString()
     };
   }
 }

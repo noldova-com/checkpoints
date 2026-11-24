@@ -12,6 +12,7 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { describe, it, type TestContext } from "node:test";
 
+import "@noldova/context.core";
 import { CaptureMode } from "@noldova/checkpoints.protocol";
 
 import { FolderWalker } from "../../src/services/folder-walker.ts";
@@ -42,7 +43,7 @@ describe("FolderWalker's time of a folder after its walk", () => {
 
     const result = await new FolderWalker(process.platform).walkAsync(folder, CaptureMode.EveryFile, new AbortController().signal);
 
-    assert.ok(result !== null);
+    assert.ok(!Object.isNull(result));
     assert.deepEqual(result.entries.map(u => u.path), ["big/a.ts"]);
     assert.deepEqual([...result.folderTimes.keys()], ["", "big"]);
     assert.equal(result.folderTimes.get(""), (await lstat(folder, { bigint: true })).mtimeNs);

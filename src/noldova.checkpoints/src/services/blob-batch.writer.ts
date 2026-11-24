@@ -8,6 +8,7 @@
 
 import type { FileHandle } from "node:fs/promises";
 
+import "@noldova/context.core";
 import { PathKind } from "@noldova/checkpoints.protocol";
 
 import { StoreObjectMissingException } from "../exceptions/store-object-missing.exception.ts";
@@ -37,20 +38,20 @@ export class BlobBatchWriter {
 
   public end(): void {
     const missing = this.blobs[this.index];
-    if (missing !== undefined)
+    if (!Object.isUndefined(missing))
       throw new StoreObjectMissingException(missing.objectId);
   }
 
   public async pushAsync(chunk: Buffer): Promise<void> {
     let offset = 0;
     while (offset < chunk.length)
-      offset = this.blob === null ? await this.readHeaderAsync(chunk, offset) : await this.readContentAsync(this.blob, chunk, offset);
+      offset = Object.isNull(this.blob) ? await this.readHeaderAsync(chunk, offset) : await this.readContentAsync(this.blob, chunk, offset);
   }
 
   private async readContentAsync(blob: StagedBlob, chunk: Buffer, offset: number): Promise<number> {
     const piece = chunk.subarray(offset, offset + this.remaining);
     const content = piece.subarray(0, Math.min(piece.length, this.remaining - 1));
-    if (this.handle !== null)
+    if (!Object.isNull(this.handle))
       await this.handle.write(content);
     else
       this.link.push(content);
@@ -61,7 +62,7 @@ export class BlobBatchWriter {
   }
 
   private async finishAsync(blob: StagedBlob): Promise<void> {
-    if (this.handle !== null) {
+    if (!Object.isNull(this.handle)) {
       await this.handle.sync();
       await this.handle.close();
       this.handle = null;
@@ -84,11 +85,11 @@ export class BlobBatchWriter {
     const [name, type, size] = header.split(Resources.batchHeaderSeparator);
     this.header = [];
     const blob = this.blobs[this.index];
-    if (blob === undefined || name !== blob.objectId)
+    if (Object.isUndefined(blob) || name !== blob.objectId)
       throw new UnexpectedStoreObjectException(header);
     if (type === Resources.missingType)
       throw new StoreObjectMissingException(blob.objectId);
-    if (type !== Resources.blobType || size === undefined)
+    if (type !== Resources.blobType || Object.isUndefined(size))
       throw new StoreObjectNotABlobException(blob.objectId, header);
     this.blob = blob;
     this.remaining = Number(size) + 1;

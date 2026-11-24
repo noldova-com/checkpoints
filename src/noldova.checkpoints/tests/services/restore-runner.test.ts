@@ -12,6 +12,7 @@ import { chmod, lstat, mkdir, readdir, readFile, rename, rm, symlink, utimes, wr
 import path from "node:path";
 import { describe, it, type TestContext } from "node:test";
 
+import "@noldova/context.core";
 import {
   CaptureOutcome,
   KeepReason,
@@ -569,7 +570,7 @@ describe("RestoreRunner", { concurrency: true }, () => {
     let placed = false;
     const service = await harness.createServiceAsync(ServiceSeams.system.withJournals(file => new ScriptedJournal(file, async record => {
       if (record.type === JournalRecordType.Applying) {
-        const staged = (await scriptAsync(harness)).steps.filter(u => u.stage !== null);
+        const staged = (await scriptAsync(harness)).steps.filter(u => !Object.isNull(u.stage));
         await rm(locationOf(harness, RestoreFolder.presentOf(staged.at(-1)?.stage ?? null)));
       }
       else if (record.type === JournalRecordType.Placing && !placed) {

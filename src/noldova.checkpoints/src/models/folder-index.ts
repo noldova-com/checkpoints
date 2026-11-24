@@ -6,6 +6,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import "@noldova/context.core";
 import type { JsonObject } from "@noldova/context.json";
 
 import { Resources } from "../resources.ts";
@@ -40,7 +41,7 @@ export class FolderIndex {
 
   public findUnchanged(entry: WalkedEntry): IndexEntry | null {
     const known = this.byPath.get(entry.path);
-    return known !== undefined && known.matches(entry, this.start - Resources.racyWindowNanoseconds) ? known : null;
+    return !Object.isUndefined(known) && known.matches(entry, this.start - Resources.racyWindowNanoseconds) ? known : null;
   }
 
   public toJson(): JsonObject {

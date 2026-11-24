@@ -6,6 +6,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import "@noldova/context.core";
 import type { JsonObject } from "@noldova/context.json";
 
 import { JournalRecordType } from "../../src/models/journal-record-type.ts";
@@ -44,8 +45,8 @@ export class StopPoint {
   }
 
   public static fromJson(fields: JsonFields): StopPoint {
-    const at = fields["at"] === null ? Number.POSITIVE_INFINITY : JsonFixture.numberOf(fields["at"]);
-    const afterType = fields["afterType"] === null ? null : JournalRecordType.fromJson(JsonFixture.textOf(fields["afterType"]));
+    const at = Object.isNull(fields["at"]) ? Number.POSITIVE_INFINITY : JsonFixture.numberOf(fields["at"]);
+    const afterType = Object.isNull(fields["afterType"]) ? null : JournalRecordType.fromJson(JsonFixture.textOf(fields["afterType"]));
     return new StopPoint(at, JsonFixture.booleanOf(fields["afterRecord"]), afterType, JsonFixture.booleanOf(fields["onRemove"]));
   }
 
@@ -61,7 +62,7 @@ export class StopPoint {
     return {
       at: Number.isFinite(this.at) ? this.at : null,
       afterRecord: this.afterRecord,
-      afterType: this.afterType === null ? null : this.afterType.toJson(),
+      afterType: Object.isNull(this.afterType) ? null : this.afterType.toJson(),
       onRemove: this.onRemove
     };
   }

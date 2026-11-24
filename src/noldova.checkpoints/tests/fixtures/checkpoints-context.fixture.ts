@@ -9,6 +9,7 @@
 import type { Writable } from "node:stream";
 import { mock } from "node:test";
 
+import "@noldova/context.core";
 import type { JsonValue } from "@noldova/context.json";
 import type { NotificationPost, UpdateProcess } from "@noldova/desktop.protocol";
 import { EventChannel, NotificationHandle, type OwnedProcess, RequestContext, type IMethodHandler, type ProcessRequest } from "@noldova/desktop.runtime";
@@ -62,7 +63,7 @@ export class CheckpointsContext extends FakeRuntimePartContext {
 
   public async callAsync(name: string, payload: JsonValue, signal: AbortSignal = new AbortController().signal): Promise<JsonValue> {
     const handler = this.methods.get(name);
-    if (handler === undefined)
+    if (Object.isUndefined(handler))
       throw new Error(`The method ${name} isn't registered.`);
     return await handler.handleAsync(new RequestContext("test", payload, signal, 1));
   }
@@ -70,7 +71,7 @@ export class CheckpointsContext extends FakeRuntimePartContext {
   public async disposeAsync(): Promise<void> {
     const processes = this.processes;
     this.processes = undefined;
-    if (processes !== undefined)
+    if (!Object.isUndefined(processes))
       await (await processes).disposeAsync();
   }
 
@@ -119,7 +120,7 @@ export class CheckpointsContext extends FakeRuntimePartContext {
 
   private settingOf(name: string): JsonValue {
     const value = this.values.get(name);
-    if (value === undefined)
+    if (Object.isUndefined(value))
       throw new Error(`The checkpoints module declares no setting ${name}.`);
     return value;
   }

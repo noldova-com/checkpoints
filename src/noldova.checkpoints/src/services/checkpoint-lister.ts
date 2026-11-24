@@ -6,6 +6,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import "@noldova/context.core";
 import type { Checkpoint } from "@noldova/checkpoints.protocol";
 
 import { CheckpointFileMissingException } from "../exceptions/checkpoint-file-missing.exception.ts";
@@ -27,7 +28,7 @@ export class CheckpointLister {
 
   public async findNewestAsync(store: FolderStore, signal: AbortSignal): Promise<string | null> {
     const remembered = this.newest.get(store.folder);
-    if (remembered !== undefined)
+    if (!Object.isUndefined(remembered))
       return remembered?.commit ?? null;
     const output = await this.git.runAsync(store, Resources.forEachRefCommand,
       [...Resources.latestCheckpointArguments, Resources.checkpointReferencePrefix], "", signal);
@@ -45,7 +46,7 @@ export class CheckpointLister {
   public remember(store: FolderStore, id: string, commit: string): void {
     const remembered = this.newest.get(store.folder);
     const reference = `${Resources.checkpointReferencePrefix}${id}`;
-    if (remembered === null || (remembered !== undefined && reference > remembered.reference))
+    if (Object.isNull(remembered) || (!Object.isUndefined(remembered) && reference > remembered.reference))
       this.newest.set(store.folder, new NewestCheckpoint(reference, commit));
   }
 

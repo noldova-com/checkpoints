@@ -13,6 +13,7 @@ import path from "node:path";
 import { buffer } from "node:stream/consumers";
 import { setTimeout } from "node:timers/promises";
 
+import "@noldova/context.core";
 import {
   CaptureRequest,
   CompareRequest,
@@ -160,7 +161,7 @@ export class CheckpointsHarness {
 
   public async checkpointAsync(label: string | null): Promise<Checkpoint> {
     const result = await this.captureAsync(label);
-    if (result.checkpoint === null)
+    if (Object.isNull(result.checkpoint))
       throw new Error(`The capture gave ${result.outcome.value}.`);
     return result.checkpoint;
   }
@@ -179,8 +180,8 @@ export class CheckpointsHarness {
   }
 
   public async compareAsync(from: Checkpoint | string, to: Checkpoint | string | null): Promise<CompareResult> {
-    const idOf = (checkpoint: Checkpoint | string): string => typeof checkpoint === "string" ? checkpoint : checkpoint.id;
-    return await this.service.compareAsync(new CompareRequest(this.reference, idOf(from), to === null ? null : idOf(to)));
+    const idOf = (checkpoint: Checkpoint | string): string => Object.isString(checkpoint) ? checkpoint : checkpoint.id;
+    return await this.service.compareAsync(new CompareRequest(this.reference, idOf(from), Object.isNull(to) ? null : idOf(to)));
   }
 
   public async contentAsync(checkpoint: Checkpoint, treePath: string): Promise<Buffer> {
@@ -208,18 +209,18 @@ export class CheckpointsHarness {
   }
 
   public async previewAsync(checkpoint: Checkpoint | string, paths?: readonly string[]): Promise<PreviewResult> {
-    return await this.service.previewRestoreAsync(new PreviewRequest(this.reference, typeof checkpoint === "string" ? checkpoint : checkpoint.id, paths ?? null));
+    return await this.service.previewRestoreAsync(new PreviewRequest(this.reference, Object.isString(checkpoint) ? checkpoint : checkpoint.id, paths ?? null));
   }
 
   public async readAsync(checkpoint: Checkpoint | string, relativePath: string, against: Checkpoint | string | null, limit: number = 1024 * 1024): Promise<ReadResult> {
-    const idOf = (value: Checkpoint | string): string => typeof value === "string" ? value : value.id;
-    const target = against === null ? null : new DiffTarget(against === "now" ? null : idOf(against));
+    const idOf = (value: Checkpoint | string): string => Object.isString(value) ? value : value.id;
+    const target = Object.isNull(against) ? null : new DiffTarget(against === "now" ? null : idOf(against));
     return await this.service.readAsync(new ReadRequest(this.reference, idOf(checkpoint), relativePath, target, limit));
   }
 
   public async planAsync(checkpoint: Checkpoint | string, paths?: readonly string[]): Promise<RestorePlan> {
     const result = await this.previewAsync(checkpoint, paths);
-    if (result.plan === null)
+    if (Object.isNull(result.plan))
       throw new Error(`The preview gave ${result.outcome.value}.`);
     return result.plan;
   }

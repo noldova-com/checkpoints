@@ -10,6 +10,7 @@ import { createHash } from "node:crypto";
 import type { BigIntStats } from "node:fs";
 import { lstat, open, readlink } from "node:fs/promises";
 
+import "@noldova/context.core";
 import { UnreadPath, UnreadReason } from "@noldova/checkpoints.protocol";
 
 import { EntryKind } from "../models/entry-kind.ts";
@@ -35,7 +36,7 @@ export class EntryReader {
         : await EntryReader.readFileAsync(input, current);
       if (objectId instanceof ReadFailure)
         return objectId.unreadOf(entry.path);
-      if (objectId !== null)
+      if (!Object.isNull(objectId))
         return IndexEntry.of(current, objectId);
       if (input.isStopped || attempt === Resources.maximumReadAttempts)
         return new UnreadPath(entry.path, UnreadReason.Changing, null);

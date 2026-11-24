@@ -6,6 +6,8 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import "@noldova/context.core";
+
 import { Resources } from "../resources.ts";
 
 export class VersionRange {
@@ -21,7 +23,7 @@ export class VersionRange {
     const match = Resources.peerRangePattern.exec(range);
     const lowest = match?.groups?.[Resources.lowestVersionGroup];
     const refused = match?.groups?.[Resources.refusedVersionGroup];
-    return lowest === undefined || refused === undefined ? null : new VersionRange(lowest, refused);
+    return Object.isUndefined(lowest) || Object.isUndefined(refused) ? null : new VersionRange(lowest, refused);
   }
 
   public static isNewer(version: string, than: string): boolean {

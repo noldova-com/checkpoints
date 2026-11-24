@@ -10,6 +10,7 @@ import assert from "node:assert/strict";
 import { lstat } from "node:fs/promises";
 import { describe, it, type TestContext } from "node:test";
 
+import "@noldova/context.core";
 import { RestoreOutcome } from "@noldova/checkpoints.protocol";
 import { ProcessPresence } from "@noldova/desktop.runtime";
 
@@ -123,7 +124,7 @@ describe("RestoreRunner, interrupted", { concurrency: true }, () => {
     let journal: ScriptedJournal | undefined;
     await run.restoreAsync(await run.planAsync(first.checkpoint),
       await run.createServiceAsync(ServiceSeams.system.withJournals(file => journal = new ScriptedJournal(file, RestoreFolder.of(run).actionOf(action))).withoutHardLinks()));
-    const at = journal?.appended.findLastIndex(u => u.type === type && u.step !== null) ?? -1;
+    const at = journal?.appended.findLastIndex(u => u.type === type && !Object.isNull(u.step)) ?? -1;
     assert.ok(at > 0, type.value);
 
     const harness = await CheckpointsHarness.startAsync(t);

@@ -12,6 +12,7 @@ import { chmod, lstat, mkdir, readFile, readlink, rm, symlink, unlink, utimes, w
 import path from "node:path";
 import { describe, it } from "node:test";
 
+import "@noldova/context.core";
 import { CaptureMode, CaptureOutcome, CaptureRequest, KeepReason, KeptPath, UnreadPath, UnreadReason, type CaptureResult, type Checkpoint } from "@noldova/checkpoints.protocol";
 
 import { GitExitedException } from "../../src/api/index.ts";
@@ -381,7 +382,7 @@ describe("CheckpointCapture", { concurrency: true }, () => {
 
     assert.equal(sent(), interval);
     assert.deepEqual([result.outcome, reads], [CaptureOutcome.Captured, 1]);
-    assert.ok(result.checkpoint !== null);
+    assert.ok(!Object.isNull(result.checkpoint));
     const object = (await harness.treeAsync(result.checkpoint)).get("files/part-6.bin")?.objectId ?? "";
     assert.equal((await harness.gitAsync(["cat-file", "-s", object])).toString("utf8").trim(), String(last));
   });
@@ -484,7 +485,7 @@ describe("CheckpointCapture", { concurrency: true }, () => {
     await harness.writeAsync("b.txt", "beta!");
 
     const result = await harness.captureAsync(null, asOf);
-    assert.ok(result.checkpoint !== null);
+    assert.ok(!Object.isNull(result.checkpoint));
     const earlier = await earlierPathsAsync(harness, result.checkpoint);
     const plan = await harness.planAsync(result.checkpoint);
 
@@ -509,7 +510,7 @@ describe("CheckpointCapture", { concurrency: true }, () => {
     await utimes(await harness.writeAsync("far.txt", "far!"), far, far);
 
     const result = await harness.captureAsync(null, asOf);
-    assert.ok(result.checkpoint !== null);
+    assert.ok(!Object.isNull(result.checkpoint));
 
     assert.equal((await harness.contentAsync(result.checkpoint, "files/near.txt")).toString(), "near");
     assert.equal((await harness.contentAsync(result.checkpoint, "files/far.txt")).toString(), "far!");
@@ -523,7 +524,7 @@ describe("CheckpointCapture", { concurrency: true }, () => {
     await harness.writeAsync("b.txt", "beta");
 
     const result = await harness.captureAsync(null, new Date(Date.now() - 3_600_000));
-    assert.ok(result.checkpoint !== null);
+    assert.ok(!Object.isNull(result.checkpoint));
 
     assert.deepEqual([...(await harness.treeAsync(result.checkpoint)).keys()].sort(), ["checkpoint.json", "files/a.txt"]);
     assert.equal((await harness.contentAsync(result.checkpoint, "files/a.txt")).toString(), "alpha");
@@ -545,7 +546,7 @@ describe("CheckpointCapture", { concurrency: true }, () => {
     });
 
     const result = await harness.captureAsync(null, new Date(Date.now() + 60_000));
-    assert.ok(result.checkpoint !== null);
+    assert.ok(!Object.isNull(result.checkpoint));
     const earlier = await earlierPathsAsync(harness, result.checkpoint);
 
     assert.deepEqual([...(await harness.treeAsync(result.checkpoint)).keys()].sort(), ["checkpoint.json", "files/a.txt", "files/b.txt"]);
@@ -578,7 +579,7 @@ describe("CheckpointCapture", { concurrency: true }, () => {
     });
 
     const result = await harness.captureAsync(null, asOf);
-    assert.ok(result.checkpoint !== null);
+    assert.ok(!Object.isNull(result.checkpoint));
 
     assert.equal((await harness.contentAsync(result.checkpoint, "files/a.txt")).toString(), "alpha");
     assert.deepEqual(await harness.contentAsync(result.checkpoint, "files/out"), await harness.contentAsync(first, "files/out"));
@@ -602,7 +603,7 @@ describe("CheckpointCapture", { concurrency: true }, () => {
     await utimes(path.join(harness.folder, "b"), asOf, asOf);
 
     const result = await harness.captureAsync(null, asOf);
-    assert.ok(result.checkpoint !== null);
+    assert.ok(!Object.isNull(result.checkpoint));
     const record = JsonFixture.parse((await harness.contentAsync(result.checkpoint, "checkpoint.json")).toString());
     const index = await harness.readStoreFileAsync("index");
 
@@ -625,7 +626,7 @@ describe("CheckpointCapture", { concurrency: true }, () => {
     await utimes(path.join(harness.folder, "notes"), asOf, asOf);
 
     const result = await harness.captureAsync(null, asOf);
-    assert.ok(result.checkpoint !== null);
+    assert.ok(!Object.isNull(result.checkpoint));
 
     assert.deepEqual([...(await harness.treeAsync(result.checkpoint)).keys()].sort(), ["checkpoint.json", "files/notes/a.md"]);
     assert.deepEqual(await earlierPathsAsync(harness, result.checkpoint), []);
@@ -650,7 +651,7 @@ describe("CheckpointCapture", { concurrency: true }, () => {
     await utimes(harness.folder, asOf, asOf);
 
     const result = await harness.captureAsync(null, asOf);
-    assert.ok(result.checkpoint !== null);
+    assert.ok(!Object.isNull(result.checkpoint));
     const earlier = await earlierPathsAsync(harness, result.checkpoint);
 
     assert.deepEqual([...(await harness.treeAsync(result.checkpoint)).keys()].sort(),
@@ -668,7 +669,7 @@ describe("CheckpointCapture", { concurrency: true }, () => {
 
     await AccessFixture.whileDeniedAsync(path.join(harness.folder, "closed"), async () => {
       const result = await harness.captureAsync(null, asOf);
-      assert.ok(result.checkpoint !== null);
+      assert.ok(!Object.isNull(result.checkpoint));
 
       assert.deepEqual([...(await harness.treeAsync(result.checkpoint)).keys()].sort(), ["checkpoint.json", "files/a.txt"]);
       assert.deepEqual(result.checkpoint.unreadPaths, [new UnreadPath("closed", UnreadReason.Denied, null)]);
@@ -688,7 +689,7 @@ describe("CheckpointCapture", { concurrency: true }, () => {
     await utimes(harness.folder, asOf, asOf);
 
     const result = await harness.captureAsync(null, asOf);
-    assert.ok(result.checkpoint !== null);
+    assert.ok(!Object.isNull(result.checkpoint));
     const earlier = await earlierPathsAsync(harness, result.checkpoint);
 
     assert.deepEqual([...(await harness.treeAsync(result.checkpoint)).keys()].sort(), ["checkpoint.json", "files/.gitignore", "files/a.txt", "rules/.gitignore"]);

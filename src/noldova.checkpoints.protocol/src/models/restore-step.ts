@@ -6,6 +6,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import "@noldova/context.core";
 import type { JsonObject } from "@noldova/context.json";
 
 import { InvalidRelativePathException } from "../exceptions/invalid-relative-path.exception.ts";
@@ -26,7 +27,7 @@ export class RestoreStep {
   public constructor(path: string, action: RestoreAction, before: ChangeSide | null, after: ChangeSide | null) {
     if (!RelativePath.isValid(path))
       throw new InvalidRelativePathException(path);
-    if ((before === null) !== (action === RestoreAction.Write) || (after === null) !== (action === RestoreAction.Delete))
+    if ((Object.isNull(before)) !== (action === RestoreAction.Write) || (Object.isNull(after)) !== (action === RestoreAction.Delete))
       throw new StepSidesMismatchException(action);
 
     this.action = action;
@@ -42,16 +43,16 @@ export class RestoreStep {
     return new RestoreStep(
       reader.readString(Resources.pathField),
       RestoreAction.fromJson(reader.readValue(Resources.actionField)),
-      before === null ? null : ChangeSide.fromJson(before),
-      after === null ? null : ChangeSide.fromJson(after));
+      Object.isNull(before) ? null : ChangeSide.fromJson(before),
+      Object.isNull(after) ? null : ChangeSide.fromJson(after));
   }
 
   public toJson(): JsonObject {
     return {
       [Resources.pathField]: this.path,
       [Resources.actionField]: this.action.toJson(),
-      [Resources.beforeField]: this.before === null ? null : this.before.toJson(),
-      [Resources.afterField]: this.after === null ? null : this.after.toJson()
+      [Resources.beforeField]: Object.isNull(this.before) ? null : this.before.toJson(),
+      [Resources.afterField]: Object.isNull(this.after) ? null : this.after.toJson()
     };
   }
 }

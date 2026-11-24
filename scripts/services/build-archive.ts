@@ -10,6 +10,8 @@ import { chmod, cp, mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import zlib from "node:zlib";
 
+import "@noldova/context.core";
+
 import { BuildCentralEntryMalformedException } from "../exceptions/build-central-entry-malformed.exception.ts";
 import { BuildCompressionException } from "../exceptions/build-compression.exception.ts";
 import { BuildEntryMalformedException } from "../exceptions/build-entry-malformed.exception.ts";
@@ -92,7 +94,7 @@ export class BuildArchive {
   private resolve(location: string): string {
     let target = location;
     let next = this.links.get(target);
-    for (let hops = 0; next !== undefined; hops++) {
+    for (let hops = 0; !Object.isUndefined(next); hops++) {
       if (hops > this.links.size)
         throw new BuildLinkLoopException(path.relative(this.folder, location));
       target = next;

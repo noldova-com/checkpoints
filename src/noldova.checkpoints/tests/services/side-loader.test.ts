@@ -12,6 +12,7 @@ import { lstat, readdir, readFile, rename, rm, writeFile } from "node:fs/promise
 import path from "node:path";
 import { describe, it, type TestContext } from "node:test";
 
+import "@noldova/context.core";
 import { CaptureMode, PathKind, UnreadReason } from "@noldova/checkpoints.protocol";
 
 import { StoreObjectMissingException, StoreObjectNotABlobException } from "../../src/api/index.ts";
@@ -70,7 +71,7 @@ describe("SideLoader", { concurrency: true }, () => {
 
     const loaded = await loader.loadCheckpointAsync(store, checkpoint.id, uncancelled);
 
-    assert.ok(loaded !== null && stored !== undefined);
+    assert.ok(!Object.isNull(loaded) && !Object.isUndefined(stored));
     const { record, listing } = loaded;
     assert.deepEqual(record.checkpoint.toJson(), checkpoint.toJson());
     assert.deepEqual(listing.entryOf("a.txt"), new TreeFile(EntryKind.File, stored.objectId));
@@ -97,7 +98,7 @@ describe("SideLoader", { concurrency: true }, () => {
     const loaded = await loader.loadCheckpointAsync(store, checkpoint.id, uncancelled);
 
     const rules = loaded?.listing.rules ?? null;
-    assert.ok(rules !== null);
+    assert.ok(!Object.isNull(rules));
     assert.equal(rules.ignoresCase, loaded?.record.ignoreRules?.ignoresCase);
     assert.deepEqual(rules.repositoryFolders, ["nested"]);
     assert.deepEqual(["a.log", "sub/b.tmp", "b.tmp", "nested/n.log", "a.txt"].map(u => rules.excludes(u, false)), [true, true, false, false, false]);
@@ -140,9 +141,9 @@ describe("SideLoader", { concurrency: true }, () => {
     const start = harness.context.requests.length;
 
     const every = await loader.loadFolderAsync(store, harness.folder, CaptureMode.EveryFile, uncancelled);
-    assert.ok(every !== null);
+    assert.ok(!Object.isNull(every));
     const following = await loader.loadFolderAsync(store, harness.folder, CaptureMode.IgnoreFiles, uncancelled);
-    assert.ok(following !== null);
+    assert.ok(!Object.isNull(following));
 
     const stats = await lstat(location, { bigint: true });
     assert.deepEqual(every.entryOf("a.txt"), new FolderFile(EntryKind.File, idOf("alpha 2"), location, 7, `${stats.dev}:${stats.ino}`));
@@ -166,7 +167,7 @@ describe("SideLoader", { concurrency: true }, () => {
     await writeFile(path.join(harness.store, "index"), JSON.stringify({ formatVersion: 1, start: later, entries }));
 
     const listing = await loader.loadFolderAsync(store, harness.folder, CaptureMode.EveryFile, uncancelled);
-    assert.ok(listing !== null);
+    assert.ok(!Object.isNull(listing));
 
     const planted = listing.entryOf("a.txt");
     assert.ok(planted instanceof FolderFile);
@@ -190,10 +191,10 @@ describe("SideLoader", { concurrency: true }, () => {
 
     const listing = await loader.loadFolderAsync(new FolderStore(harness.context.moduleFolder, CheckpointsHarness.identity), harness.folder, CaptureMode.EveryFile,
       uncancelled);
-    assert.ok(listing !== null);
+    assert.ok(!Object.isNull(listing));
 
     const now = (await real.walkAsync(harness.folder, CaptureMode.EveryFile, uncancelled))?.entries.find(u => u.path === "a.txt");
-    assert.ok(now !== undefined);
+    assert.ok(!Object.isUndefined(now));
     assert.deepEqual(listing.entryOf("a.txt"), new FolderFile(EntryKind.File, idOf("replaced"), location, 8, now.fileId));
   });
 
@@ -207,7 +208,7 @@ describe("SideLoader", { concurrency: true }, () => {
     await AccessFixture.whileDeniedAsync(secret, async () => {
       await AccessFixture.whileDeniedAsync(path.join(harness.folder, "closed"), async () => {
         const listing = await loader.loadFolderAsync(store, harness.folder, CaptureMode.EveryFile, uncancelled);
-        assert.ok(listing !== null);
+        assert.ok(!Object.isNull(listing));
 
         assert.deepEqual(["closed", "secret.txt"].map(u => listing.unreadReasonOf(u)), [UnreadReason.Denied, UnreadReason.Denied]);
         assert.deepEqual(listing.paths, ["closed", "secret.txt"]);

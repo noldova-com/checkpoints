@@ -6,6 +6,8 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import "@noldova/context.core";
+
 import { UnknownKeepReasonException } from "../exceptions/unknown-keep-reason.exception.ts";
 
 export class KeepReason {
@@ -24,7 +26,7 @@ export class KeepReason {
 
   public static fromJson(value: unknown): KeepReason {
     const reason = KeepReason.ALL.find(t => t.value === value);
-    if (reason === undefined)
+    if (Object.isUndefined(reason))
       throw new UnknownKeepReasonException(String(value));
     return reason;
   }

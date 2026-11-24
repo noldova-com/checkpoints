@@ -6,6 +6,8 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import "@noldova/context.core";
+
 import { ComponentFieldNotTextException } from "../exceptions/component-field-not-text.exception.ts";
 import { ComponentTextsMissingException } from "../exceptions/component-texts-missing.exception.ts";
 import { ComponentsMissingException } from "../exceptions/components-missing.exception.ts";
@@ -28,16 +30,16 @@ export class GitComponent {
     if (!Array.isArray(json) || json.length === 0)
       throw new ComponentsMissingException(file);
     return json.map((value: unknown, index) => {
-      const fields: Readonly<Record<string, unknown>> = typeof value === "object" && value !== null && !Array.isArray(value) ? Object.fromEntries(Object.entries(value)) : {};
+      const fields: Readonly<Record<string, unknown>> = Object.isObject(value) && !Array.isArray(value) ? Object.fromEntries(Object.entries(value)) : {};
       const text = (field: string): string => {
         const found = fields[field];
-        if (typeof found !== "string" || found === "")
+        if (!Object.isString(found) || found === "")
           throw new ComponentFieldNotTextException(file, index, field);
         return found;
       };
       const listed = fields[Resources.textsField];
       const texts = Array.isArray(listed)
-        ? listed.filter((t: unknown): t is string => typeof t === "string" && (t.startsWith(Resources.buildTextPrefix) || t.startsWith(Resources.pinnedTextPrefix)))
+        ? listed.filter((t: unknown): t is string => Object.isString(t) && (t.startsWith(Resources.buildTextPrefix) || t.startsWith(Resources.pinnedTextPrefix)))
         : [];
       if (!Array.isArray(listed) || texts.length === 0 || texts.length !== listed.length)
         throw new ComponentTextsMissingException(file, index);

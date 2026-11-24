@@ -6,6 +6,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import "@noldova/context.core";
 import { UnreadPath, UnreadReason } from "@noldova/checkpoints.protocol";
 
 import { Resources } from "../resources.ts";
@@ -31,12 +32,12 @@ export class ReadFailure {
     if (Failures.hasCode(error, Resources.changingCodes))
       return ReadFailure.Changing;
     const code = Failures.systemCodeOf(error);
-    if (code === null || Resources.failingCodes.includes(code))
+    if (Object.isNull(code) || Resources.failingCodes.includes(code))
       throw error;
     return new ReadFailure(UnreadReason.Unreadable, code);
   }
 
   public unreadOf(path: string): UnreadPath | null {
-    return this.reason === null ? null : new UnreadPath(path, this.reason, this.code);
+    return Object.isNull(this.reason) ? null : new UnreadPath(path, this.reason, this.code);
   }
 }

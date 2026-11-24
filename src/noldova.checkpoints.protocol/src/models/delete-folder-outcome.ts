@@ -6,6 +6,8 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import "@noldova/context.core";
+
 import { UnknownDeleteFolderOutcomeException } from "../exceptions/unknown-delete-folder-outcome.exception.ts";
 
 export class DeleteFolderOutcome {
@@ -20,7 +22,7 @@ export class DeleteFolderOutcome {
 
   public static fromJson(value: unknown): DeleteFolderOutcome {
     const outcome = DeleteFolderOutcome.ALL.find(t => t.value === value);
-    if (outcome === undefined)
+    if (Object.isUndefined(outcome))
       throw new UnknownDeleteFolderOutcomeException(String(value));
     return outcome;
   }

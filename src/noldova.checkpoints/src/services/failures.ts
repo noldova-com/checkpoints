@@ -6,24 +6,26 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import "@noldova/context.core";
+
 import { Resources } from "../resources.ts";
 
 export class Failures {
   public static codeOf(error: unknown): string | null {
-    return error instanceof Error && "code" in error && typeof error.code === "string" ? error.code : null;
+    return error instanceof Error && "code" in error && Object.isString(error.code) ? error.code : null;
   }
 
   public static systemCodeOf(error: unknown): string | null {
-    return error instanceof Error && "errno" in error && typeof error.errno === "number" ? Failures.codeOf(error) : null;
+    return error instanceof Error && "errno" in error && Object.isNumber(error.errno) ? Failures.codeOf(error) : null;
   }
 
   public static hasErrno(error: unknown, errnos: readonly number[]): boolean {
-    return error instanceof Error && "errno" in error && typeof error.errno === "number" && errnos.includes(error.errno);
+    return error instanceof Error && "errno" in error && Object.isNumber(error.errno) && errnos.includes(error.errno);
   }
 
   public static hasCode(error: unknown, codes: readonly string[]): boolean {
     const code = Failures.codeOf(error);
-    return code !== null && codes.includes(code);
+    return !Object.isNull(code) && codes.includes(code);
   }
 
   public static isAbsent(error: unknown): boolean {

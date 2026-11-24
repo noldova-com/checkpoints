@@ -13,6 +13,8 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { describe, it, type TestContext } from "node:test";
 
+import "@noldova/context.core";
+
 import { JournalRecordType } from "../../src/models/journal-record-type.ts";
 import { JournalRecord } from "../../src/models/journal-record.ts";
 import { RestoreScript } from "../../src/models/restore-script.ts";
@@ -70,7 +72,7 @@ describe("RestoreJournal", { concurrency: true }, () => {
     await journal.appendAsync(JournalRecord.Applying);
     const whole = await readFile(journal.file, "utf8");
     const [, second] = whole.split("\n");
-    assert.ok(second !== undefined);
+    assert.ok(!Object.isUndefined(second));
 
     await appendFile(journal.file, second.slice(0, 20));
     assert.equal((await journal.readAsync())?.records.length, 2);
@@ -95,7 +97,7 @@ describe("RestoreJournal", { concurrency: true }, () => {
     await journal.createAsync(script);
     await journal.appendAsync(JournalRecord.Applying);
     const [first, second] = (await readFile(journal.file, "utf8")).split("\n");
-    assert.ok(first !== undefined && second !== undefined);
+    assert.ok(!Object.isUndefined(first) && !Object.isUndefined(second));
 
     for (const text of ["not a record\n", `not a record\n${second}\n`, `${first}\nnot a record\n${second}\n`]) {
       await writeFile(journal.file, text);

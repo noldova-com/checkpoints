@@ -13,6 +13,7 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { describe, it, type TestContext } from "node:test";
 
+import "@noldova/context.core";
 import { PathKind, RestoreAction } from "@noldova/checkpoints.protocol";
 import type { JsonObject } from "@noldova/context.json";
 
@@ -163,7 +164,7 @@ describe("RestoreApplier", { concurrency: true }, () => {
       const folder = await folderAsync(t);
       await writeAsync(folder, "a.txt", "a");
       const entry = change(await entryAsync(folder, "a.txt"));
-      const run = runOf(folder, scriptOf([deleting(0, "a.txt")]), entry === null ? [] : [entry]);
+      const run = runOf(folder, scriptOf([deleting(0, "a.txt")]), Object.isNull(entry) ? [] : [entry]);
 
       await assert.rejects(applier.applyAsync(run, []), new RestorePathChangedException("a.txt"));
     }

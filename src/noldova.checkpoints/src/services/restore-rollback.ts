@@ -9,6 +9,7 @@
 import { mkdir, rename, rm, rmdir, unlink, type link } from "node:fs/promises";
 import path from "node:path";
 
+import "@noldova/context.core";
 import type { IModuleLog } from "@noldova/desktop.runtime";
 
 import { RestorePathOccupiedException } from "../exceptions/restore-path-occupied.exception.ts";
@@ -45,7 +46,7 @@ export class RestoreRollback {
       await run.journal.appendAsync(JournalRecord.RollingBack);
     const failed: string[] = [];
     const missing: ScriptStep[] = [];
-    for (const record of records.filter(t => t.type === JournalRecordType.Made && t.path !== null))
+    for (const record of records.filter(t => t.type === JournalRecordType.Made && !Object.isNull(t.path)))
       await this.attemptAsync(run, record.readPath(), failed, async () => {
         if (RestorePaths.isFolder(await RestorePaths.lstatAsync(run.locationOf(record.readPath()))))
           await run.guard.renewAsync(record.readPath());
@@ -77,7 +78,7 @@ export class RestoreRollback {
     if (record.type === JournalRecordType.Placing || record.type === JournalRecordType.Placed) {
       const step = run.script.stepAt(record.readStep());
       const there = await RestorePaths.lstatAsync(run.locationOf(step.path));
-      if (there !== null && RestorePaths.fileIdOf(there) === record.fileId) {
+      if (!Object.isNull(there) && RestorePaths.fileIdOf(there) === record.fileId) {
         await run.guard.checkAsync(step.path);
         await RestorePaths.retryAsync(step.path, () => unlink(run.locationOf(step.path)));
       }
@@ -97,7 +98,7 @@ export class RestoreRollback {
       }
     }
     else if (record.type === JournalRecordType.Removing) {
-      if (await RestorePaths.lstatAsync(run.locationOf(record.readPath())) === null)
+      if (Object.isNull(await RestorePaths.lstatAsync(run.locationOf(record.readPath()))))
         await RestoreRollback.makeFolderAsync(run, record.readPath());
     }
     else if (record.type === JournalRecordType.Aside)
@@ -119,7 +120,7 @@ export class RestoreRollback {
 
   private async placeBackAsync(run: RestoreRun, step: ScriptStep, from: string, type: JournalRecordType, records: readonly JournalRecord[]): Promise<void> {
     const moving = await RestorePaths.lstatAsync(from);
-    if (moving === null)
+    if (Object.isNull(moving))
       throw new StagedFileMissingException(step.path);
     await run.guard.checkAsync(step.path);
     await RestorePaths.placeAsync(step.path, from, moving, run.locationOf(step.path), RestorePathOccupiedException,
@@ -137,10 +138,10 @@ export class RestoreRollback {
   private async moveBackAsync(run: RestoreRun, step: ScriptStep, records: readonly JournalRecord[], missing: ScriptStep[]): Promise<void> {
     const aside = run.locationOf(step.readAside());
     const there = await RestorePaths.lstatAsync(run.locationOf(step.path));
-    if (await RestorePaths.lstatAsync(aside) === null) {
-      if (there === null && run.script.folders.has(step.path))
+    if (Object.isNull(await RestorePaths.lstatAsync(aside))) {
+      if (Object.isNull(there) && run.script.folders.has(step.path))
         await RestoreRollback.makeFolderAsync(run, step.path);
-      else if (there === null || RestoreRollback.copyIdsOf(records, JournalRecordType.Made, step.index).includes(RestorePaths.fileIdOf(there)))
+      else if (Object.isNull(there) || RestoreRollback.copyIdsOf(records, JournalRecordType.Made, step.index).includes(RestorePaths.fileIdOf(there)))
         missing.push(step);
       return;
     }
@@ -151,7 +152,7 @@ export class RestoreRollback {
     if (missing.length === 0)
       return [];
     const staged = await this.stageMissingAsync(run, missing).catch((error: unknown) => this.notStaged(run, Failures.messageOf(error)));
-    if (staged === null)
+    if (Object.isNull(staged))
       return missing.map(t => t.path);
     const failed: string[] = [];
     for (const { step, blob } of staged)
@@ -161,7 +162,7 @@ export class RestoreRollback {
 
   private async stageMissingAsync(run: RestoreRun, missing: readonly ScriptStep[]): Promise<readonly StagedStep[] | null> {
     const loaded = await this.loader.loadCheckpointAsync(run.store, run.script.before, Resources.neverCancelled);
-    if (loaded === null)
+    if (Object.isNull(loaded))
       return this.notStaged(run, Resources.beforeMissingReason);
     const { record, listing: before } = loaded;
     const staged: StagedStep[] = [];

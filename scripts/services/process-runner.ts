@@ -8,6 +8,8 @@
 
 import { type ChildProcess, spawn } from "node:child_process";
 
+import "@noldova/context.core";
+
 import { ProcessNotStartedException } from "../exceptions/process-not-started.exception.ts";
 import { ProcessNotStoppedException } from "../exceptions/process-not-stopped.exception.ts";
 import { ProcessOutputTooLongException } from "../exceptions/process-output-too-long.exception.ts";
@@ -19,7 +21,7 @@ import { ErrorCode } from "./error-code.ts";
 
 export class ProcessRunner {
   public static exitCodeOf(code: number | null, signal: NodeJS.Signals | null): number {
-    return code ?? (signal === null ? 1 : Resources.signalExitCode);
+    return code ?? (Object.isNull(signal) ? 1 : Resources.signalExitCode);
   }
 
   public static stopTree(processId: number, fallback: () => void): void {
@@ -89,7 +91,7 @@ export class ProcessRunner {
           process.off(signal, forward);
       };
       const stop = (reason: ProcessException): void => {
-        if (failure !== null)
+        if (!Object.isNull(failure))
           return;
         failure = reason;
         ProcessRunner.stopChild(child);
@@ -98,12 +100,12 @@ export class ProcessRunner {
           reject(new ProcessNotStoppedException(command, Resources.processStopWait, reason));
         }, Resources.processStopWait);
       };
-      const deadline = timeout === undefined ? undefined : setTimeout(() => stop(new ProcessTimeoutException(command, timeout)), timeout);
+      const deadline = Object.isUndefined(timeout) ? undefined : setTimeout(() => stop(new ProcessTimeoutException(command, timeout)), timeout);
       for (const signal of Resources.forwardedSignals)
         process.on(signal, forward);
       watch(stop);
       child.once("error", t => {
-        if (child.pid !== undefined) {
+        if (!Object.isUndefined(child.pid)) {
           stop(new ProcessNotStartedException(command, t));
           return;
         }
@@ -112,9 +114,9 @@ export class ProcessRunner {
       });
       child.once("close", (code, signal) => {
         release();
-        if (interrupted !== undefined)
+        if (!Object.isUndefined(interrupted))
           process.kill(process.pid, interrupted);
-        else if (failure === null)
+        else if (Object.isNull(failure))
           resolve(finish(code, signal));
         else
           reject(failure);
@@ -124,7 +126,7 @@ export class ProcessRunner {
 
   private static stopChild(child: ChildProcess): void {
     const pid = child.pid;
-    if (pid !== undefined)
+    if (!Object.isUndefined(pid))
       ProcessRunner.stopTree(pid, () => child.kill(Resources.killSignal));
   }
 }

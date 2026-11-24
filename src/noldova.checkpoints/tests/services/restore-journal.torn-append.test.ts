@@ -12,6 +12,8 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { describe, it } from "node:test";
 
+import "@noldova/context.core";
+
 import { JournalRecordType } from "../../src/models/journal-record-type.ts";
 import { JournalRecord } from "../../src/models/journal-record.ts";
 import { RestoreScript } from "../../src/models/restore-script.ts";
@@ -30,7 +32,7 @@ describe("RestoreJournal's torn append", () => {
     await opened.close();
     await rm(path.join(folder, "probe"));
     const isWriting = (value: unknown): value is Pick<FileHandle, "write"> =>
-      typeof value === "object" && value !== null && "write" in value && typeof value.write === "function";
+      Object.isObject(value) && "write" in value && Object.isFunction(value.write);
     assert.ok(isWriting(prototype));
     const write = t.mock.method(prototype, "write");
     write.mock.mockImplementationOnce(async (data: unknown) => {

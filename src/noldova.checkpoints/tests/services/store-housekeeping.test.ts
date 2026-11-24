@@ -13,6 +13,8 @@ import { readdir, readFile, utimes, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { describe, it } from "node:test";
 
+import "@noldova/context.core";
+
 import { StoreFileUnreadableException, UnsupportedStoreFormatException } from "../../src/api/index.ts";
 import { FolderStore } from "../../src/models/folder-store.ts";
 import { GitLimits } from "../../src/models/git-limits.ts";
@@ -214,7 +216,7 @@ describe("StoreHousekeeping", { concurrency: true }, () => {
     const refs = path.join(fixture.store.gitFolder, "refs");
     const loose = (await readdir(refs, { recursive: true, withFileTypes: true })).filter(u => u.isFile()).map(u => path.join(u.parentPath, u.name));
     const [reference] = loose;
-    assert.ok(reference !== undefined);
+    assert.ok(!Object.isUndefined(reference));
     const locks = [path.join(fixture.store.gitFolder, "packed-refs.lock"), `${reference}.lock`];
     for (const lock of locks)
       await writeFile(lock, "");

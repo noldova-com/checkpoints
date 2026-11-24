@@ -9,6 +9,7 @@
 import type { BigIntStats } from "node:fs";
 import { mkdir, rename, rm, rmdir, type link } from "node:fs/promises";
 
+import "@noldova/context.core";
 import { CaptureMode } from "@noldova/checkpoints.protocol";
 
 import { RestorePathChangedException } from "../exceptions/restore-path-changed.exception.ts";
@@ -46,7 +47,7 @@ export class RestoreApplier {
     return [
       ...script.asideOrder.map(t => JournalRecord.ofStep(JournalRecordType.Aside, t.index)),
       ...script.create.map(t => JournalRecord.ofPath(JournalRecordType.Created, t)),
-      ...script.steps.filter(t => t.stage !== null).map(t => JournalRecord.ofStep(JournalRecordType.Placing, t.index)),
+      ...script.steps.filter(t => !Object.isNull(t.stage)).map(t => JournalRecord.ofStep(JournalRecordType.Placing, t.index)),
       ...script.remove.map(t => JournalRecord.ofPath(JournalRecordType.Removing, t))
     ];
   }
@@ -61,13 +62,13 @@ export class RestoreApplier {
     for (const action of actions.slice(start)) {
       const recorded = records.find(t => t.isSameAs(action)) ?? null;
       if (action.type === JournalRecordType.Aside)
-        await this.moveAsideAsync(run, RestoreApplier.stepOf(run, action), recorded === null);
+        await this.moveAsideAsync(run, RestoreApplier.stepOf(run, action), Object.isNull(recorded));
       else if (action.type === JournalRecordType.Created)
-        await RestoreApplier.createAsync(run, action.readPath(), recorded === null);
+        await RestoreApplier.createAsync(run, action.readPath(), Object.isNull(recorded));
       else if (action.type === JournalRecordType.Placing)
         await this.placeAsync(run, RestoreApplier.stepOf(run, action), records);
       else
-        await RestoreApplier.removeAsync(run, action.readPath(), recorded === null);
+        await RestoreApplier.removeAsync(run, action.readPath(), Object.isNull(recorded));
     }
   }
 
@@ -76,23 +77,23 @@ export class RestoreApplier {
     for (const step of run.script.asideOrder) {
       const location = run.locationOf(step.readAside());
       const stats = await RestorePaths.lstatAsync(location);
-      if (stats === null)
+      if (Object.isNull(stats))
         continue;
       if (RestorePaths.isFolder(stats)) {
         const walk = await this.walker.walkAsync(location, CaptureMode.EveryFile, Resources.neverCancelled);
-        if (walk === null)
+        if (Object.isNull(walk))
           continue;
         if (walk.repositoryPaths.length > 0)
           return null;
         for (const entry of walk.entries) {
           const now = await RestorePaths.lstatAsync(entry.location);
-          if (now !== null)
+          if (!Object.isNull(now))
             changed.push(new WalkedEntry(RelativePath.join(step.path, entry.path), entry.location, entry.kind, now));
         }
         continue;
       }
       const kind = EntryKind.ofStats(this.platform, stats);
-      if (kind !== null && !this.isAsBefore(run, step, stats))
+      if (!Object.isNull(kind) && !this.isAsBefore(run, step, stats))
         changed.push(new WalkedEntry(step.path, location, kind, stats));
     }
     return changed;
@@ -120,10 +121,10 @@ export class RestoreApplier {
   }
 
   private isAsBefore(run: RestoreRun, step: ScriptStep, stats: BigIntStats | null): boolean {
-    if (stats !== null && RestorePaths.isFolder(stats))
+    if (!Object.isNull(stats) && RestorePaths.isFolder(stats))
       return run.script.folders.get(step.path) === RestorePaths.fileIdOf(stats);
     const entry = run.index.get(step.path);
-    return stats !== null && entry !== undefined && EntryKind.ofStats(this.platform, stats) === entry.kind &&
+    return !Object.isNull(stats) && !Object.isUndefined(entry) && EntryKind.ofStats(this.platform, stats) === entry.kind &&
       Number(stats.size) === entry.size && stats.mtimeNs === entry.modified && RestorePaths.fileIdOf(stats) === entry.fileId;
   }
 
@@ -138,8 +139,8 @@ export class RestoreApplier {
       await run.journal.appendAsync(JournalRecord.ofStep(JournalRecordType.Aside, step.index));
     const target = run.locationOf(step.path);
     const aside = run.locationOf(step.readAside());
-    if (await RestorePaths.lstatAsync(aside) === null) {
-      if (await RestorePaths.lstatAsync(target) === null)
+    if (Object.isNull(await RestorePaths.lstatAsync(aside))) {
+      if (Object.isNull(await RestorePaths.lstatAsync(target)))
         return;
       await run.guard.checkAsync(step.path);
       await RestorePaths.retryAsync(step.path, () => rename(target, aside));
@@ -147,7 +148,7 @@ export class RestoreApplier {
     }
     const stats = await RestorePaths.lstatAsync(aside);
     const entry = run.index.get(step.path);
-    if (!this.isAsBefore(run, step, stats) || !RestorePaths.isFolder(stats) && (entry === undefined || !await RestoreApplier.holdsAsBeforeAsync(step, aside, entry)))
+    if (!this.isAsBefore(run, step, stats) || !RestorePaths.isFolder(stats) && (Object.isUndefined(entry) || !await RestoreApplier.holdsAsBeforeAsync(step, aside, entry)))
       throw new RestorePathChangedException(step.path);
   }
 
@@ -156,7 +157,7 @@ export class RestoreApplier {
       await run.journal.appendAsync(JournalRecord.ofPath(JournalRecordType.Created, relativePath));
     const target = run.locationOf(relativePath);
     const twin = run.script.remove.find(t => t !== relativePath && t.toLowerCase() === relativePath.toLowerCase());
-    if (twin !== undefined && await RestorePaths.isEmptyFolderAsync(run.locationOf(twin))) {
+    if (!Object.isUndefined(twin) && await RestorePaths.isEmptyFolderAsync(run.locationOf(twin))) {
       await run.journal.appendAsync(JournalRecord.renamed(relativePath, twin));
       await run.guard.checkAsync(relativePath);
       await RestorePaths.retryAsync(relativePath, () => rename(run.locationOf(twin), target));
@@ -175,9 +176,9 @@ export class RestoreApplier {
     const stage = run.locationOf(step.readStage());
     const target = run.locationOf(step.path);
     const staged = await RestorePaths.lstatAsync(stage);
-    if (staged === null) {
+    if (Object.isNull(staged)) {
       const there = await RestorePaths.lstatAsync(target);
-      if (there !== null && ids.includes(RestorePaths.fileIdOf(there)))
+      if (!Object.isNull(there) && ids.includes(RestorePaths.fileIdOf(there)))
         return;
       throw new StagedFileMissingException(step.path);
     }

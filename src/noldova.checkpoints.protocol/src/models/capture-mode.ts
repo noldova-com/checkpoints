@@ -6,6 +6,8 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import "@noldova/context.core";
+
 import { UnknownCaptureModeException } from "../exceptions/unknown-capture-mode.exception.ts";
 
 export class CaptureMode {
@@ -20,7 +22,7 @@ export class CaptureMode {
 
   public static fromJson(value: unknown): CaptureMode {
     const mode = CaptureMode.ALL.find(t => t.value === value);
-    if (mode === undefined)
+    if (Object.isUndefined(mode))
       throw new UnknownCaptureModeException(String(value));
     return mode;
   }

@@ -12,6 +12,7 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { describe, it, type TestContext } from "node:test";
 
+import "@noldova/context.core";
 import { CaptureMode } from "@noldova/checkpoints.protocol";
 
 import { FolderWalker } from "../../src/services/folder-walker.ts";
@@ -37,7 +38,7 @@ describe("FolderWalker on a subfolder deleted while it walks", () => {
 
     const result = await new FolderWalker(process.platform).walkAsync(folder, CaptureMode.EveryFile, new AbortController().signal);
 
-    assert.ok(result !== null);
+    assert.ok(!Object.isNull(result));
     assert.deepEqual(result.entries, []);
     assert.deepEqual([...result.folderTimes.keys()], [""]);
   });

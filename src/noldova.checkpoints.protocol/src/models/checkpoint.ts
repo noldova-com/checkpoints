@@ -6,6 +6,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import "@noldova/context.core";
 import type { JsonObject } from "@noldova/context.json";
 
 import { InvalidDateException } from "../exceptions/invalid-date.exception.ts";
@@ -28,7 +29,7 @@ export class Checkpoint {
 
   public constructor(id: string, time: Date, mode: CaptureMode, label: string | null, unreadPaths: readonly UnreadPath[]) {
     CheckpointId.check(id);
-    if (label !== null && label.length > Resources.maximumLabelLength)
+    if (!Object.isNull(label) && label.length > Resources.maximumLabelLength)
       throw new LabelTooLongException(label.length);
     if (Number.isNaN(time.getTime()))
       throw new InvalidDateException();

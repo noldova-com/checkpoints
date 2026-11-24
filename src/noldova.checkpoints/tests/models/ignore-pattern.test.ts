@@ -9,12 +9,14 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
+import "@noldova/context.core";
+
 import { IgnorePattern } from "../../src/models/ignore-pattern.ts";
 
 describe("IgnorePattern", { concurrency: true }, () => {
   const parse = (line: string): IgnorePattern => {
     const pattern = IgnorePattern.parse(line, false);
-    if (pattern === null)
+    if (Object.isNull(pattern))
       throw new Error(`The line ${JSON.stringify(line)} gave no pattern.`);
     return pattern;
   };

@@ -6,6 +6,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import "@noldova/context.core";
 import type { JsonObject } from "@noldova/context.json";
 
 import { PreviewPlanMismatchException } from "../exceptions/preview-plan-mismatch.exception.ts";
@@ -20,7 +21,7 @@ export class PreviewResult {
   public readonly plan: RestorePlan | null;
 
   public constructor(outcome: PreviewOutcome, plan: RestorePlan | null) {
-    if (outcome.isPlanned !== (plan !== null))
+    if (outcome.isPlanned !== (!Object.isNull(plan)))
       throw new PreviewPlanMismatchException(outcome);
 
     this.outcome = outcome;
@@ -30,10 +31,10 @@ export class PreviewResult {
   public static fromJson(value: unknown): PreviewResult {
     const reader = WireForm.read(value, Resources.previewResultModel, PreviewResult.FIELDS);
     const plan = reader.readValue(Resources.planField);
-    return new PreviewResult(PreviewOutcome.fromJson(reader.readValue(Resources.outcomeField)), plan === null ? null : RestorePlan.fromJson(plan));
+    return new PreviewResult(PreviewOutcome.fromJson(reader.readValue(Resources.outcomeField)), Object.isNull(plan) ? null : RestorePlan.fromJson(plan));
   }
 
   public toJson(): JsonObject {
-    return { [Resources.outcomeField]: this.outcome.toJson(), [Resources.planField]: this.plan === null ? null : this.plan.toJson() };
+    return { [Resources.outcomeField]: this.outcome.toJson(), [Resources.planField]: Object.isNull(this.plan) ? null : this.plan.toJson() };
   }
 }

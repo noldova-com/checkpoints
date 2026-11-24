@@ -6,6 +6,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import "@noldova/context.core";
 import type { JsonObject } from "@noldova/context.json";
 
 import { Resources } from "../resources.ts";
@@ -17,7 +18,7 @@ export class DiffTarget {
   public readonly checkpoint: string | null;
 
   public constructor(checkpoint: string | null) {
-    if (checkpoint !== null)
+    if (!Object.isNull(checkpoint))
       CheckpointId.check(checkpoint);
 
     this.checkpoint = checkpoint;

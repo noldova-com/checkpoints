@@ -6,6 +6,8 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import "@noldova/context.core";
+
 import { StoreCountMissingException } from "../exceptions/store-count-missing.exception.ts";
 import { Resources } from "../resources.ts";
 
@@ -29,7 +31,7 @@ export class ObjectCounts {
     }));
     const read = (name: string): number => {
       const value = counts.get(name);
-      if (value === undefined)
+      if (Object.isUndefined(value))
         throw new StoreCountMissingException(name);
       return value;
     };

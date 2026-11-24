@@ -11,6 +11,7 @@ import { mkdir, readdir, readFile, rename, rm, symlink, writeFile } from "node:f
 import path from "node:path";
 import { describe, it } from "node:test";
 
+import "@noldova/context.core";
 import { ChangeSide, KeepReason, KeptPath, PathKind, PreviewOutcome, RestoreAction, RestoreStep, type RestorePlan } from "@noldova/checkpoints.protocol";
 
 import { AccessFixture } from "../fixtures/access.fixture.ts";
@@ -20,7 +21,7 @@ describe("RestorePlanner", { concurrency: true }, () => {
   const text = (size: number): ChangeSide => new ChangeSide(PathKind.File, size, true);
   const folder = new ChangeSide(PathKind.Folder, null, false);
   const planOf = (plan: RestorePlan | null): RestorePlan => {
-    if (plan === null)
+    if (Object.isNull(plan))
       throw new Error("The preview gave no plan.");
     return plan;
   };

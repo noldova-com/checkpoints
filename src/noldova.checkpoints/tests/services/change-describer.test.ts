@@ -10,6 +10,7 @@ import assert from "node:assert/strict";
 import { lstat } from "node:fs/promises";
 import { describe, it, type TestContext } from "node:test";
 
+import "@noldova/context.core";
 import { Change, ChangeSide, ChangeStatus, PathKind, UnreadReason } from "@noldova/checkpoints.protocol";
 
 import { EntryKind } from "../../src/models/entry-kind.ts";
@@ -42,7 +43,7 @@ describe("ChangeDescriber", { concurrency: true }, () => {
     const tree = await harness.treeAsync(await harness.checkpointAsync(null));
     const stored = (treePath: string): TreeFile => {
       const entry = tree.get(treePath);
-      assert.ok(entry !== undefined);
+      assert.ok(!Object.isUndefined(entry));
       return new TreeFile(EntryKind.File, entry.objectId);
     };
     const now = await folderFileAsync(await harness.writeAsync("a.txt", "alpha 2"));

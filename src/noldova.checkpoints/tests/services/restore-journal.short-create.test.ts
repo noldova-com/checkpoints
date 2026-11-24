@@ -13,6 +13,8 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { describe, it } from "node:test";
 
+import "@noldova/context.core";
+
 import { JournalRecord } from "../../src/models/journal-record.ts";
 import { RestoreScript } from "../../src/models/restore-script.ts";
 import { RestoreJournal } from "../../src/services/restore-journal.ts";
@@ -28,10 +30,10 @@ describe("RestoreJournal's short create", () => {
     await opened.close();
     await rm(path.join(folder, "probe"));
     const isWriting = (value: unknown): value is Pick<FileHandle, "write"> =>
-      typeof value === "object" && value !== null && "write" in value && typeof value.write === "function";
+      Object.isObject(value) && "write" in value && Object.isFunction(value.write);
     assert.ok(isWriting(prototype));
     t.mock.method(prototype, "write", async function (this: FileHandle, data: string | Buffer): Promise<{ bytesWritten: number; buffer: string | Buffer }> {
-      const bytes = typeof data === "string" ? Buffer.from(data) : data;
+      const bytes = Object.isString(data) ? Buffer.from(data) : data;
       return { bytesWritten: writeSync(this.fd, bytes, 0, 20), buffer: data };
     }, { times: 1 });
 
