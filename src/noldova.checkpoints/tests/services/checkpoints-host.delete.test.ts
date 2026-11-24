@@ -162,7 +162,7 @@ describe("CheckpointsHost's storage and delete", { concurrency: true }, () => {
 
     const listing = service.storageAsync();
     await reading;
-    const moving = CheckpointsHarness.appearedAsync(path.join(harness.context.moduleFolder, "deleted"));
+    const moving = CheckpointsHarness.appearedAsync(path.join(harness.context.moduleFolder, "deleted"), t.signal);
     const deleting = service.deleteFolderAsync(new DeleteFolderRequest(harness.reference));
     await moving;
     release();

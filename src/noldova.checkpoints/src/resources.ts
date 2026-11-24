@@ -203,6 +203,7 @@ export class Resources {
   public static readonly linkRefusedCodes: readonly string[] = ["EPERM", "EACCES"];
   public static readonly linksField: string = "links";
   public static readonly localeVariable: string = "LC_ALL";
+  public static readonly lockSuffix: string = ".lock";
   public static readonly looseCount: string = "count";
   public static readonly looseObjectLimit: number = 6_700;
   public static readonly looseSizeCount: string = "size";
@@ -238,6 +239,7 @@ export class Resources {
   public static readonly occupiedReason: string = "something now has its name, so what the restore moved aside can't go back";
   public static readonly ownerExecuteBit: bigint = 0o100n;
   public static readonly packCount: string = "packs";
+  public static readonly packedRefsLockFile: string = "packed-refs.lock";
   public static readonly packFolder: string = "pack";
   public static readonly packLimit: number = 50;
   public static readonly packRefsArguments: readonly string[] = ["--all"];
@@ -272,6 +274,7 @@ export class Resources {
   public static readonly reasonField: string = "reason";
   public static readonly recordField: string = "record";
   public static readonly recoveredLabel: string = "Recovered after restore";
+  public static readonly refsFolder: string = "refs";
   public static readonly relativePathSeparator: string = "/";
   public static readonly removeField: string = "remove";
   public static readonly removeRetries: number = 5;
@@ -394,6 +397,10 @@ export class Resources {
 
   public static formatDeletedName(name: string, id: string): string {
     return `${name}-${id}`;
+  }
+
+  public static formatDiscardFailed(identity: string, reason: string): string {
+    return `A restore of the folder ${identity} changed nothing, but what it staged stays until the folder is next opened: ${reason}`;
   }
 
   public static formatErrorsUnclosed(command: string, errors: string, milliseconds: number): string {

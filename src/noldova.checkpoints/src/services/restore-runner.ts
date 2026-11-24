@@ -47,6 +47,7 @@ import { RelativePath } from "./relative-path.ts";
 import { RestoreScope } from "./restore-scope.ts";
 import { RestoreApplier } from "./restore-applier.ts";
 import type { RestoreJournal } from "./restore-journal.ts";
+import { RestorePaths } from "./restore-paths.ts";
 import type { RestorePlanner } from "./restore-planner.ts";
 import type { RestoreRollback } from "./restore-rollback.ts";
 import { StoreFile } from "./store-file.ts";
@@ -122,8 +123,8 @@ export class RestoreRunner {
     }
     catch (error) {
       this.log.write(Resources.formatRestoreFailed(request.folder.identity, Failures.messageOf(error)));
-      await RestoreRunner.discardAsync(run);
-      return new RestoreResult(RestoreOutcome.RolledBack, before, null);
+      return await this.discardAsync(run, request.folder.identity) ? new RestoreResult(RestoreOutcome.RolledBack, before, null)
+        : new RestoreResult(RestoreOutcome.HeldUp, null, null);
     }
     const finished = await this.finishAsync(run, request.folder.identity, journal.records);
     return new RestoreResult(finished.outcome, finished.outcome === RestoreOutcome.HeldUp ? null : before, finished.recovered);
@@ -141,10 +142,8 @@ export class RestoreRunner {
       return false;
     }
     const run = new RestoreRun(store, folder, script, journal, new PathGuard(folder, script.folders), await RestoreRunner.readIndexAsync(store));
-    if (!reading.records.some(t => t.type === JournalRecordType.Applying)) {
-      await RestoreRunner.discardAsync(run);
-      return true;
-    }
+    if (!reading.records.some(t => t.type === JournalRecordType.Applying))
+      return await this.discardAsync(run, identity);
     return (await this.finishAsync(run, identity, reading.records)).isClosed;
   }
 
@@ -204,9 +203,17 @@ export class RestoreRunner {
     return id;
   }
 
-  private static async discardAsync(run: RestoreRun): Promise<void> {
-    await rm(run.locationOf(run.script.staging), { recursive: true, force: true });
+  private async discardAsync(run: RestoreRun, identity: string): Promise<boolean> {
+    try {
+      await RestorePaths.retryAsync(run.script.staging, () => rm(run.locationOf(run.script.staging), { recursive: true, force: true }));
+    }
+    catch (error) {
+      this.log.write(Resources.formatDiscardFailed(identity, Failures.messageOf(error)));
+      this.heldUp.publish(new RestoreHeldUpEvent(identity, [run.script.staging]).toJson());
+      return false;
+    }
     await run.journal.removeAsync();
+    return true;
   }
 
   private static matchesBefore(planned: PlannedRestore, before: Checkpoint, index: ReadonlyMap<string, IndexEntry>): boolean {

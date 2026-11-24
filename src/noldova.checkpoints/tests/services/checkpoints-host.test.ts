@@ -136,7 +136,7 @@ describe("CheckpointsHost", { concurrency: true }, () => {
 });
 
 describe("CheckpointsHost's housekeeping", { concurrency: true }, () => {
-  const passedAsync = async (harness: CheckpointsHarness): Promise<void> => await CheckpointsHarness.appearedAsync(path.join(harness.store, "housekeeping.json"));
+  const passedAsync = async (harness: CheckpointsHarness, signal: AbortSignal): Promise<void> => await CheckpointsHarness.appearedAsync(path.join(harness.store, "housekeeping.json"), signal);
 
   it("packs and prunes a folder's store once no request for it has come for the delay after a capture, and not a millisecond before", async t => {
     const harness = await CheckpointsHarness.startAsync(t);
@@ -146,7 +146,7 @@ describe("CheckpointsHost's housekeeping", { concurrency: true }, () => {
 
     await service.captureAsync(new CaptureRequest(harness.reference, null));
     const captured = harness.context.requests.length;
-    const passed = passedAsync(harness);
+    const passed = passedAsync(harness, t.signal);
     harness.clock.tick(29_999);
     await setImmediate();
     const early = [harness.commandsSince(captured), existsSync(path.join(harness.store, "housekeeping.json")), harness.clock.pending.includes(1)];
@@ -179,7 +179,7 @@ describe("CheckpointsHost's housekeeping", { concurrency: true }, () => {
     assert.equal((await listed).length, 1);
     assert.deepEqual([harness.context.started.filter(u => u.command === "repack").length, harness.context.running.length], [1, 0]);
     assert.equal(existsSync(path.join(harness.store, "housekeeping.json")), false);
-    const passed = passedAsync(harness);
+    const passed = passedAsync(harness, t.signal);
     harness.clock.tick(30_000);
     await passed;
     assert.equal((await harness.context.started.filter(u => u.command === "repack").at(-1)?.owned.exited)?.code, 0);

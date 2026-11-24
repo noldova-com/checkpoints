@@ -36,6 +36,7 @@ export class StoreHousekeeping {
     const record = await StoreFile.readAsync(store.housekeepingFile, t => HousekeepingRecord.fromJson(t));
     await this.git.stopStoreAsync(store, [Resources.fastImportCommand]);
     await this.removeTemporaryFilesAsync(store);
+    await StoreHousekeeping.removeReferenceLocksAsync(store);
     const counts = ObjectCounts.parse((await this.git.runAsync(store, Resources.countObjectsCommand, Resources.countObjectsArguments, "", signal))
       .toString(Resources.utf8Encoding));
     if (await this.readFreeAsync(store.folder) < Resources.spaceMargin + (counts.looseSize + counts.packSize) * Resources.bytesPerKibibyte)
@@ -62,6 +63,19 @@ export class StoreHousekeeping {
     for (const name of await readdir(folder))
       if (Resources.temporaryPackPrefixes.some(t => name.startsWith(t)) || name.endsWith(Resources.keepSuffix))
         await rm(path.join(folder, name), { force: true, maxRetries: Resources.removeRetries, retryDelay: Resources.retryDelayMilliseconds });
+  }
+
+  /**
+   * Removes the reference locks a Git command left when it was stopped, as Windows ends a process without its clean-up, so the pass's `pack-refs` doesn't
+   * fail on them: a pass runs in the folder's queue once the store's fast-import has stopped, so no Git command of the store holds one.
+   */
+  private static async removeReferenceLocksAsync(store: FolderStore): Promise<void> {
+    const locks = [path.join(store.gitFolder, Resources.packedRefsLockFile)];
+    for (const entry of await readdir(path.join(store.gitFolder, Resources.refsFolder), { recursive: true, withFileTypes: true }))
+      if (entry.isFile() && entry.name.endsWith(Resources.lockSuffix))
+        locks.push(path.join(entry.parentPath, entry.name));
+    for (const lock of locks)
+      await rm(lock, { force: true, maxRetries: Resources.removeRetries, retryDelay: Resources.retryDelayMilliseconds });
   }
 
   private async removeCrashReportsAsync(store: FolderStore, time: number): Promise<void> {
