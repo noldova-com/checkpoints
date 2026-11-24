@@ -38,8 +38,15 @@ export class RestoreJournal {
   public async appendAsync(record: JournalRecord): Promise<void> {
     const handle = await open(this.file, Resources.appendFlag);
     try {
-      await handle.write(RestoreJournal.lineOf(record));
-      await handle.sync();
+      const { size } = await handle.stat();
+      try {
+        await handle.write(RestoreJournal.lineOf(record));
+        await handle.sync();
+      }
+      catch (error) {
+        await RestoreJournal.truncateAsync(this.file, size);
+        throw error;
+      }
     }
     finally {
       await handle.close();
