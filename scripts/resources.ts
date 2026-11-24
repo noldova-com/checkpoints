@@ -45,6 +45,7 @@ export class Resources {
     "src/noldova.checkpoints/tests/services/restore-rollback.test.ts",
     "src/noldova.checkpoints/tests/services/restore-runner.aside-changed.test.ts",
     "src/noldova.checkpoints/tests/services/restore-runner.aside-gone.test.ts",
+    "src/noldova.checkpoints/tests/services/restore-runner.held-staging.test.ts",
     "src/noldova.checkpoints/tests/services/restore-runner.interrupted.test.ts",
     "src/noldova.checkpoints/tests/services/restore-runner.link-swapped.test.ts",
     "src/noldova.checkpoints/tests/services/restore-runner.retries.test.ts",
