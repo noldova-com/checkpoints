@@ -90,10 +90,10 @@ export class CheckpointsHarness {
     return path.join(this.context.moduleFolder, "folders", CheckpointsHarness.identity);
   }
 
-  /** Waits until the file or folder exists, however long the work that makes it takes: Node's limit on a test is the suite's one hang limit. */
-  public static async appearedAsync(location: string): Promise<void> {
+  /** Waits until the file or folder exists, however long the work that makes it takes, or until the test's signal aborts: Node's limit on a test is the suite's one hang limit. */
+  public static async appearedAsync(location: string, signal: AbortSignal): Promise<void> {
     while (!existsSync(location))
-      await setTimeout(CheckpointsHarness.appearInterval);
+      await setTimeout(CheckpointsHarness.appearInterval, undefined, { signal });
   }
 
   public static async startAsync(t: ICleanups): Promise<CheckpointsHarness> {
