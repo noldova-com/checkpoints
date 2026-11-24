@@ -11,6 +11,7 @@ import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { describe, it } from "node:test";
 
+import "@noldova/context.core";
 import { RestoreOutcome } from "@noldova/checkpoints.protocol";
 
 import { JournalRecordType } from "../../src/models/journal-record-type.ts";
@@ -33,7 +34,7 @@ describe("RestoreRunner on a moved-aside folder changed during its walk", () => 
     ListingFixture.beforeListing(t, [() => aside, async folder => {
       await writeFile(path.join(folder, "late.txt"), "late");
       await mkdir(path.join(folder, "sub"));
-    }], [() => aside === null ? null : path.join(aside, "sub"), async folder => await rm(path.join(path.dirname(folder), "late.txt"))]);
+    }], [() => Object.isNull(aside) ? null : path.join(aside, "sub"), async folder => await rm(path.join(path.dirname(folder), "late.txt"))]);
     const service = await harness.createServiceAsync(ServiceSeams.system.withJournals(file => new ScriptedJournal(file, async record => {
       if (record.type === JournalRecordType.Aside)
         aside = await RestoreFolder.of(harness).asideOfAsync("d");

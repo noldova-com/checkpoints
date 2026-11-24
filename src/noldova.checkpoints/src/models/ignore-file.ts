@@ -6,6 +6,8 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import "@noldova/context.core";
+
 import { Resources } from "../resources.ts";
 import { IgnorePattern } from "./ignore-pattern.ts";
 
@@ -21,7 +23,7 @@ export class IgnoreFile {
     this.base = IgnoreFile.bytesOf(folderPath);
     this.content = content;
     this.folderPath = folderPath;
-    this.patterns = text.toString(Resources.latin1Encoding).split(Resources.lineFeed).map(t => IgnorePattern.parse(t, ignoresCase)).filter(t => t !== null);
+    this.patterns = text.toString(Resources.latin1Encoding).split(Resources.lineFeed).map(t => IgnorePattern.parse(t, ignoresCase)).filter(t => !Object.isNull(t));
   }
 
   public static bytesOf(text: string): string {
@@ -31,6 +33,6 @@ export class IgnoreFile {
   public decide(path: string, name: string, isFolder: boolean): boolean | null {
     const relativePath = this.base === "" ? path : path.slice(this.base.length + 1);
     const pattern = this.patterns.findLast(t => t.matches(relativePath, name, isFolder));
-    return pattern === undefined ? null : !pattern.isNegated;
+    return Object.isUndefined(pattern) ? null : !pattern.isNegated;
   }
 }

@@ -13,11 +13,13 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { describe, it } from "node:test";
 
+import "@noldova/context.core";
+
 import { RuntimePart } from "../src/api/index.ts";
 import { CheckpointsContext } from "./fixtures/checkpoints-context.fixture.ts";
 import { JsonFixture, type JsonFields } from "./fixtures/json.fixture.ts";
 
-const CONTEXT_PEERS: readonly string[] = ["@noldova/context.exceptions", "@noldova/context.json"];
+const CONTEXT_PEERS: readonly string[] = ["@noldova/context.core", "@noldova/context.exceptions", "@noldova/context.json"];
 
 async function readObjectAsync(file: string): Promise<JsonFields> {
   return JsonFixture.parse(await readFile(new URL(`../${file}`, import.meta.url), "utf8"));
@@ -37,7 +39,7 @@ function rangeFrom(lowest: string): string {
 
 function lowestOf(range: string): string {
   const lowest = /^>=(\d+\.\d+\.\d+) /.exec(range)?.[1];
-  if (lowest === undefined)
+  if (Object.isUndefined(lowest))
     throw new TypeError(`${range} is not a range of versions from its lowest.`);
   return lowest;
 }

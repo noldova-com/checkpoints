@@ -6,6 +6,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import "@noldova/context.core";
 import { PathKind } from "@noldova/checkpoints.protocol";
 
 import type { PendingChange } from "../models/pending-change.ts";
@@ -20,7 +21,7 @@ export class RestoreScope {
   }
 
   public includes(relativePath: string): boolean {
-    return this.paths === null || this.paths.some(t => relativePath === t || RestoreScope.isUnder(relativePath, t));
+    return Object.isNull(this.paths) || this.paths.some(t => relativePath === t || RestoreScope.isUnder(relativePath, t));
   }
 
   public needs(change: PendingChange): boolean {
@@ -41,7 +42,7 @@ export class RestoreScope {
   }
 
   private isAbove(relativePath: string): boolean {
-    return this.paths !== null && this.paths.some(t => RestoreScope.isUnder(t, relativePath));
+    return !Object.isNull(this.paths) && this.paths.some(t => RestoreScope.isUnder(t, relativePath));
   }
 
   private static pathOf(found: { readonly path: string }): string {

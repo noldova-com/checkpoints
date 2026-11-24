@@ -6,6 +6,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import "@noldova/context.core";
 import type { JsonObject } from "@noldova/context.json";
 
 import { InvalidRelativePathException } from "../exceptions/invalid-relative-path.exception.ts";
@@ -24,7 +25,7 @@ export class UnreadPath {
   public constructor(path: string, reason: UnreadReason, code: string | null) {
     if (!RelativePath.isValid(path))
       throw new InvalidRelativePathException(path);
-    if ((reason === UnreadReason.Unreadable) !== (code !== null))
+    if ((reason === UnreadReason.Unreadable) !== (!Object.isNull(code)))
       throw new UnreadCodeMismatchException(reason);
 
     this.path = path;

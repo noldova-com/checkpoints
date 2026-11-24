@@ -12,6 +12,8 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { describe, it, type TestContext } from "node:test";
 
+import "@noldova/context.core";
+
 import { FolderRecord } from "../../src/models/folder-record.ts";
 import { StoreFile } from "../../src/services/store-file.ts";
 
@@ -30,7 +32,7 @@ describe("StoreFile's syncs", () => {
     await opened.close();
     await rm(path.join(folder, "probe"));
     const isSyncing = (value: unknown): value is Pick<FileHandle, "sync"> =>
-      typeof value === "object" && value !== null && "sync" in value && typeof value.sync === "function";
+      Object.isObject(value) && "sync" in value && Object.isFunction(value.sync);
     assert.ok(isSyncing(prototype));
     const sync = t.mock.method(prototype, "sync");
 

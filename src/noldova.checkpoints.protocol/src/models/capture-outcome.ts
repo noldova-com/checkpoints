@@ -6,6 +6,8 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import "@noldova/context.core";
+
 import { UnknownCaptureOutcomeException } from "../exceptions/unknown-capture-outcome.exception.ts";
 
 export class CaptureOutcome {
@@ -25,7 +27,7 @@ export class CaptureOutcome {
 
   public static fromJson(value: unknown): CaptureOutcome {
     const outcome = CaptureOutcome.ALL.find(t => t.value === value);
-    if (outcome === undefined)
+    if (Object.isUndefined(outcome))
       throw new UnknownCaptureOutcomeException(String(value));
     return outcome;
   }

@@ -13,6 +13,7 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { describe, it } from "node:test";
 
+import "@noldova/context.core";
 import { CaptureMode } from "@noldova/checkpoints.protocol";
 
 import type { WalkResult } from "../../src/models/walk-result.ts";
@@ -20,7 +21,7 @@ import { FolderWalker } from "../../src/services/folder-walker.ts";
 
 const walkAsync = async (walker: FolderWalker, folder: string, mode: CaptureMode, signal: AbortSignal = new AbortController().signal): Promise<WalkResult> => {
   const result = await walker.walkAsync(folder, mode, signal);
-  assert.ok(result !== null);
+  assert.ok(!Object.isNull(result));
   return result;
 };
 
@@ -34,7 +35,7 @@ describe("FolderWalker on an item of no kind it keeps", () => {
     const stats = await lstat(location, { bigint: true });
     const prototype: unknown = stats.constructor.prototype;
     const isTelling = (value: unknown): value is Pick<BigIntStats, "isFile"> =>
-      typeof value === "object" && value !== null && "isFile" in value && typeof value.isFile === "function";
+      Object.isObject(value) && "isFile" in value && Object.isFunction(value.isFile);
     assert.ok(isTelling(prototype));
     t.mock.method(prototype, "isFile", function (this: BigIntStats): boolean {
       return this.ino !== stats.ino && (this.mode & BigInt(constants.S_IFMT)) === BigInt(constants.S_IFREG);

@@ -12,6 +12,7 @@ import { lstat, lutimes, readlink, symlink, unlink } from "node:fs/promises";
 import path from "node:path";
 import { describe, it } from "node:test";
 
+import "@noldova/context.core";
 import { RestoreOutcome } from "@noldova/checkpoints.protocol";
 
 import type { JournalRecord } from "../../src/models/journal-record.ts";
@@ -45,7 +46,7 @@ describe("RestoreRunner on a link another program swaps", () => {
     const lstatAsync = RestorePaths.lstatAsync;
     t.mock.method(RestorePaths, "lstatAsync", async (location: string) => {
       const stats = await lstatAsync(location);
-      if (stats === null || swapped === null || location !== movedAside)
+      if (Object.isNull(stats) || Object.isNull(swapped) || location !== movedAside)
         return stats;
       stats.dev = swapped.dev;
       stats.ino = swapped.ino;

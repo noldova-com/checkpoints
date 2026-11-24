@@ -11,6 +11,8 @@ import { lstat, open, readdir, readlink, rename, stat, symlink, unlink, type lin
 import path from "node:path";
 import timers from "node:timers/promises";
 
+import "@noldova/context.core";
+
 import { RestoreStepFailedException } from "../exceptions/restore-step-failed.exception.ts";
 import { RestoreStepException } from "../exceptions/restore-step.exception.ts";
 import { Resources } from "../resources.ts";
@@ -30,7 +32,7 @@ export class RestorePaths {
   }
 
   public static isFolder(stats: BigIntStats | null): boolean {
-    return stats !== null && stats.isDirectory() && !stats.isSymbolicLink();
+    return !Object.isNull(stats) && stats.isDirectory() && !stats.isSymbolicLink();
   }
 
   public static async isEmptyFolderAsync(location: string): Promise<boolean> {
@@ -52,7 +54,7 @@ export class RestorePaths {
     recorded: readonly (string | null)[]): Promise<void> {
     if (moving.isDirectory()) {
       await RestorePaths.retryAsync(relativePath, async () => {
-        if (await RestorePaths.lstatAsync(to) !== null)
+        if (!Object.isNull(await RestorePaths.lstatAsync(to)))
           throw new taken(relativePath);
         await rename(from, to);
       });
@@ -61,7 +63,7 @@ export class RestorePaths {
     const own = [...recorded];
     const made = await RestorePaths.retryAsync(relativePath, async () => {
       const earlier = await RestorePaths.lstatAsync(to);
-      if (earlier !== null && own.includes(RestorePaths.fileIdOf(earlier)) && RestorePaths.fileIdOf(earlier) !== RestorePaths.fileIdOf(moving))
+      if (!Object.isNull(earlier) && own.includes(RestorePaths.fileIdOf(earlier)) && RestorePaths.fileIdOf(earlier) !== RestorePaths.fileIdOf(moving))
         await unlink(to);
       return await RestorePaths.makeAsync(from, moving, to, createLink, async copy => {
         own.push(RestorePaths.fileIdOf(copy));
@@ -69,7 +71,7 @@ export class RestorePaths {
       });
     });
     const there = await RestorePaths.lstatAsync(to);
-    if (there === null || (!made && !await RestorePaths.isSameAsync(from, moving, to, there)))
+    if (Object.isNull(there) || (!made && !await RestorePaths.isSameAsync(from, moving, to, there)))
       throw new taken(relativePath);
     await RestorePaths.retryAsync(relativePath, () => unlink(from));
   }

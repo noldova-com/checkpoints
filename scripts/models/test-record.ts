@@ -8,6 +8,8 @@
 
 import type { EventData } from "node:test";
 
+import "@noldova/context.core";
+
 import { TestResultUnreadableException } from "../exceptions/test-result-unreadable.exception.ts";
 import { Resources } from "../resources.ts";
 
@@ -40,13 +42,13 @@ export class TestRecord {
         throw error;
       throw new TestResultUnreadableException(resultsFile, line, error);
     }
-    const fields = typeof value === "object" && value !== null && !Array.isArray(value) ? new Map<string, unknown>(Object.entries(value)) : new Map<string, unknown>();
+    const fields = Object.isObject(value) && !Array.isArray(value) ? new Map<string, unknown>(Object.entries(value)) : new Map<string, unknown>();
     const file = fields.get(Resources.testFileField);
     const name = fields.get(Resources.testNameField);
     const isTopLevel = fields.get(Resources.testTopLevelField);
     const duration = fields.get(Resources.testDurationField);
     const isSkippedWithoutReason = fields.get(Resources.testSkippedWithoutReasonField);
-    if (typeof file !== "string" || typeof name !== "string" || typeof isTopLevel !== "boolean" || typeof duration !== "number" || typeof isSkippedWithoutReason !== "boolean")
+    if (!Object.isString(file) || !Object.isString(name) || !Object.isBoolean(isTopLevel) || !Object.isNumber(duration) || !Object.isBoolean(isSkippedWithoutReason))
       throw new TestResultUnreadableException(resultsFile, line);
     return new TestRecord(file, name, isTopLevel, duration, isSkippedWithoutReason);
   }

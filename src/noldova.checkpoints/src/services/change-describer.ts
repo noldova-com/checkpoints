@@ -6,6 +6,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import "@noldova/context.core";
 import { Change, ChangeSide, PathKind } from "@noldova/checkpoints.protocol";
 
 import { FolderFile } from "../models/folder-file.ts";
@@ -38,7 +39,7 @@ export class ChangeDescriber {
   }
 
   private static async sideOfAsync(folder: string, file: SideEntry | null, objects: ObjectBatch): Promise<ChangeSide | null> {
-    if (file === null)
+    if (Object.isNull(file))
       return null;
     if (file instanceof TreeFile)
       return TextProbe.sideOfObject(file.kind, objects.get(file.objectId));

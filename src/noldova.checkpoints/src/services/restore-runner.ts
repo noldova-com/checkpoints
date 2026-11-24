@@ -9,6 +9,7 @@
 import { randomBytes } from "node:crypto";
 import { mkdir, readFile, rm } from "node:fs/promises";
 
+import "@noldova/context.core";
 import {
   CaptureOutcome,
   PathKind,
@@ -103,7 +104,7 @@ export class RestoreRunner {
       return new RestoreResult(RestoreOutcome.LowDiskSpace, null, null);
     if (captured.outcome === CaptureOutcome.TooLarge)
       return new RestoreResult(RestoreOutcome.TooLarge, null, null, captured.contentSize, captured.contentLimit);
-    if (captured.checkpoint === null)
+    if (Object.isNull(captured.checkpoint))
       return new RestoreResult(RestoreOutcome.FolderMissing, null, null);
     const before = captured.checkpoint;
     const index = await RestoreRunner.readIndexAsync(store);
@@ -117,7 +118,7 @@ export class RestoreRunner {
     const run = new RestoreRun(store, request.folder.path, script, journal, new PathGuard(request.folder.path, script.folders), index);
     try {
       await mkdir(run.locationOf(script.staging));
-      await this.stager.stageAsync(store, script.steps.filter(t => t.stage !== null).map(t =>
+      await this.stager.stageAsync(store, script.steps.filter(t => !Object.isNull(t.stage)).map(t =>
         new StagedBlob(t.readObjectId(), run.locationOf(t.readStage()), t.readKind(), t.linkKind)));
       await journal.appendAsync(JournalRecord.Applying);
     }
@@ -133,10 +134,10 @@ export class RestoreRunner {
   public async recoverAsync(store: FolderStore, identity: string, folder: string): Promise<boolean> {
     const journal = this.journals(store.restoreFile);
     const reading = await journal.readAsync();
-    if (reading === null)
+    if (Object.isNull(reading))
       return true;
     const script = reading.script;
-    if (script === null) {
+    if (Object.isNull(script)) {
       this.log.write(Resources.formatJournalUnreadable(identity));
       this.heldUp.publish(new RestoreHeldUpEvent(identity, []).toJson());
       return false;
@@ -162,7 +163,7 @@ export class RestoreRunner {
     }
     if (!read.some(t => t.type === JournalRecordType.RollingBack) && read.some(t => t.type === JournalRecordType.Cleaning)) {
       const cleaned = await this.cleanUpAsync(run, identity, read);
-      if (cleaned !== null)
+      if (!Object.isNull(cleaned))
         return cleaned;
     }
     const failed = await this.rollback.rollBackAsync(run, read);
@@ -176,7 +177,7 @@ export class RestoreRunner {
     let recovered: Checkpoint | null = null;
     try {
       const changed = await this.applier.findChangedAsync(run);
-      if (changed === null) {
+      if (Object.isNull(changed)) {
         this.log.write(Resources.formatRestoreFailed(identity, Resources.repositoryReason));
         return null;
       }
@@ -196,7 +197,7 @@ export class RestoreRunner {
 
   private async keepingIdAsync(run: RestoreRun, records: readonly JournalRecord[]): Promise<string> {
     const keeping = records.find(t => t.type === JournalRecordType.Keeping);
-    if (keeping !== undefined)
+    if (!Object.isUndefined(keeping))
       return keeping.readCheckpoint();
     const id = this.capture.newId();
     await run.journal.appendAsync(JournalRecord.keeping(id));
@@ -219,10 +220,10 @@ export class RestoreRunner {
   private static matchesBefore(planned: PlannedRestore, before: Checkpoint, index: ReadonlyMap<string, IndexEntry>): boolean {
     for (const change of planned.changes) {
       const file = change.before;
-      if (file === null || file instanceof SideFolder)
+      if (Object.isNull(file) || file instanceof SideFolder)
         continue;
       const entry = index.get(change.path);
-      if (entry === undefined || entry.objectId !== file.objectId || entry.fileId !== file.fileId)
+      if (Object.isUndefined(entry) || entry.objectId !== file.objectId || entry.fileId !== file.fileId)
         return false;
     }
     const isWithin = (path: string, folder: string): boolean => path === folder || path.startsWith(`${folder}${Resources.relativePathSeparator}`);
@@ -240,14 +241,14 @@ export class RestoreRunner {
     const walk = planned.walk;
     const steps = planned.plan.steps.map((t, u) => {
       const after = planned.changes[u]?.after ?? null;
-      const stage = after !== null && after.kind !== PathKind.Folder ? RelativePath.join(staging, String(u)) : null;
+      const stage = !Object.isNull(after) && after.kind !== PathKind.Folder ? RelativePath.join(staging, String(u)) : null;
       const aside = t.action === RestoreAction.Write ? null : RelativePath.join(staging, `${u}${Resources.asideSuffix}`);
       return new ScriptStep(u, t.path, t.action, stage, aside, after?.kind ?? null, after instanceof SideFile ? after.objectId : null, planned.record.linkKindOf(t.path));
     });
-    const moved = new Set(steps.filter(t => t.aside !== null).map(t => t.path));
+    const moved = new Set(steps.filter(t => !Object.isNull(t.aside)).map(t => t.path));
 
     const needed = new Set<string>();
-    for (const step of steps.filter(t => t.kind !== null)) {
+    for (const step of steps.filter(t => !Object.isNull(t.kind))) {
       if (step.kind === PathKind.Folder)
         needed.add(step.path);
       for (let folder = RelativePath.parentOf(step.path); folder !== ""; folder = RelativePath.parentOf(folder))
@@ -272,7 +273,7 @@ export class RestoreRunner {
     }
     const folders = new Map([...guarded].flatMap(t => {
       const fileId = walk.folderIds.get(t);
-      return fileId === undefined ? [] : [[t, fileId] as const];
+      return Object.isUndefined(fileId) ? [] : [[t, fileId] as const];
     }));
     return new RestoreScript(restoreId, planned.plan.checkpoint, before.id, steps, DepthOrder.ShallowestFirst.sort(create), DepthOrder.DeepestFirst.sort(remove), folders);
   }

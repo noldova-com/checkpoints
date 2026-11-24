@@ -6,6 +6,8 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import "@noldova/context.core";
+
 import { UnknownLinkKindException } from "../exceptions/unknown-link-kind.exception.ts";
 
 export class LinkKind {
@@ -20,7 +22,7 @@ export class LinkKind {
 
   public static fromJson(value: unknown): LinkKind {
     const kind = LinkKind.ALL.find(t => t.value === value);
-    if (kind === undefined)
+    if (Object.isUndefined(kind))
       throw new UnknownLinkKindException(String(value));
     return kind;
   }

@@ -6,6 +6,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import "@noldova/context.core";
 import { CaptureOutcome, CapturePausedEvent, CaptureResumedEvent, type CaptureResult } from "@noldova/checkpoints.protocol";
 import { NotificationPost, NotificationSeverity, QualifiedName } from "@noldova/desktop.protocol";
 import type { EventChannel, IRuntimePartContext, NotificationHandle } from "@noldova/desktop.runtime";
@@ -27,14 +28,14 @@ export class CapturePause {
 
   public report(identity: string, result: CaptureResult): void {
     const [free, needed] = [result.spaceFree, result.spaceNeeded];
-    if (result.outcome === CaptureOutcome.LowDiskSpace && free !== null && needed !== null) {
+    if (result.outcome === CaptureOutcome.LowDiskSpace && !Object.isNull(free) && !Object.isNull(needed)) {
       this.notifications.set(identity, this.context.postNotification(new NotificationPost(CapturePause.KIND, identity, Resources.lowDiskSpaceTitle,
         Resources.formatLowDiskSpace(free, needed), NotificationSeverity.Warning, null, [], null)));
       this.paused.publish(new CapturePausedEvent(identity, free, needed).toJson());
       return;
     }
     const notification = this.notifications.get(identity);
-    if (result.outcome !== CaptureOutcome.Captured || notification === undefined)
+    if (result.outcome !== CaptureOutcome.Captured || Object.isUndefined(notification))
       return;
     notification.dismiss();
     this.notifications.delete(identity);

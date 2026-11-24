@@ -8,6 +8,7 @@
 
 import type { Readable } from "node:stream";
 
+import "@noldova/context.core";
 import type { OwnedProcess } from "@noldova/desktop.runtime";
 
 import { GitExitedException } from "../exceptions/git-exited.exception.ts";
@@ -42,7 +43,7 @@ export class GitProcess {
   }
 
   public static failureOf(command: string, exitCode: number | null, errors: string): GitException {
-    return exitCode === null ? new GitStoppedException(command, errors) : new GitExitedException(command, exitCode, errors);
+    return Object.isNull(exitCode) ? new GitStoppedException(command, errors) : new GitExitedException(command, exitCode, errors);
   }
 
   public get hasExited(): boolean {
@@ -73,7 +74,7 @@ export class GitProcess {
 
   public async nextChunkAsync(): Promise<Buffer> {
     const unread = this.unread;
-    if (unread !== undefined) {
+    if (!Object.isUndefined(unread)) {
       this.unread = undefined;
       return unread;
     }

@@ -6,6 +6,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import "@noldova/context.core";
 import { CaptureMode, Checkpoint, UnreadPath, UnreadReason } from "@noldova/checkpoints.protocol";
 import type { JsonObject } from "@noldova/context.json";
 
@@ -36,7 +37,7 @@ export class CheckpointRecord {
   public constructor(
     checkpoint: Checkpoint, emptyFolders: readonly string[], links: readonly LinkRecord[], ignoreRules: IgnoreRecord | null,
     earlierPaths: readonly string[] = []) {
-    if ((checkpoint.mode === CaptureMode.IgnoreFiles) !== (ignoreRules !== null))
+    if ((checkpoint.mode === CaptureMode.IgnoreFiles) !== (!Object.isNull(ignoreRules)))
       throw new IgnoreRulesMismatchException(checkpoint.mode);
 
     this.checkpoint = checkpoint;
@@ -57,7 +58,7 @@ export class CheckpointRecord {
     const links = StoreFormat.readArray(reader, Resources.linksField).map(t => LinkRecord.fromJson(t));
     const ignoreRules = reader.readValue(Resources.ignoreRulesField);
     const earlierPaths = version === Resources.checkpointFormatVersion ? reader.readStringArray(Resources.earlierPathsField) : [];
-    return new CheckpointRecord(checkpoint, emptyFolders, links, ignoreRules === null ? null : IgnoreRecord.fromJson(ignoreRules), earlierPaths);
+    return new CheckpointRecord(checkpoint, emptyFolders, links, Object.isNull(ignoreRules) ? null : IgnoreRecord.fromJson(ignoreRules), earlierPaths);
   }
 
   public linkKindOf(relativePath: string): LinkKind | null {
@@ -70,7 +71,7 @@ export class CheckpointRecord {
       [Resources.checkpointField]: this.checkpoint.toJson(),
       [Resources.emptyFoldersField]: [...this.emptyFolders],
       [Resources.linksField]: this.links.map(t => t.toJson()),
-      [Resources.ignoreRulesField]: this.ignoreRules === null ? null : this.ignoreRules.toJson(),
+      [Resources.ignoreRulesField]: Object.isNull(this.ignoreRules) ? null : this.ignoreRules.toJson(),
       [Resources.earlierPathsField]: [...this.earlierPaths]
     };
   }

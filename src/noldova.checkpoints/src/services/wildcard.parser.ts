@@ -6,6 +6,8 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import "@noldova/context.core";
+
 import { ByteSet } from "../models/byte-set.ts";
 import { Resources } from "../resources.ts";
 
@@ -40,7 +42,7 @@ export class WildcardParser {
     const parts: string[] = [Resources.patternStart];
     while (this.position < this.pattern.length) {
       const part = this.readPlace();
-      if (part === null)
+      if (Object.isNull(part))
         return null;
       parts.push(part);
     }
@@ -145,7 +147,7 @@ export class WildcardParser {
           return null;
         if (end > nameStart && this.codeAt(end - 1) === Resources.wildcardColon) {
           const test = WildcardParser.CLASSES.get(this.pattern.slice(nameStart, end - 1));
-          if (test === undefined)
+          if (Object.isUndefined(test))
             return null;
           tests.push(t => test(t, this.ignoresCase));
           current = 0;

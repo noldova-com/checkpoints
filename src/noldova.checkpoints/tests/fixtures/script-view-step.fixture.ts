@@ -6,6 +6,8 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import "@noldova/context.core";
+
 import { JsonFixture, type JsonFields } from "./json.fixture.ts";
 
 export class ScriptViewStep {
@@ -24,6 +26,6 @@ export class ScriptViewStep {
   }
 
   private static textOrNullOf(value: unknown): string | null {
-    return value === null ? null : JsonFixture.textOf(value);
+    return Object.isNull(value) ? null : JsonFixture.textOf(value);
   }
 }

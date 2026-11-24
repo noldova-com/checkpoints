@@ -9,6 +9,8 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 
+import "@noldova/context.core";
+
 import { PackageException } from "../exceptions/package.exception.ts";
 import { PeerManifestUnreadableException } from "../exceptions/peer-manifest-unreadable.exception.ts";
 import { PeerVersionsNotJsonException } from "../exceptions/peer-versions-not-json.exception.ts";
@@ -47,7 +49,7 @@ export class PeerMove {
       const chosen = new Map<string, string>();
       for (const [name, ranges] of await this.readRangesAsync()) {
         const version = await this.newestAsync(name, ranges);
-        if (version === undefined)
+        if (Object.isUndefined(version))
           return 1;
         chosen.set(name, version);
       }
@@ -86,7 +88,7 @@ export class PeerMove {
   }
 
   private static fieldsOf(json: unknown): ReadonlyMap<string, unknown> {
-    return typeof json === "object" && json !== null && !Array.isArray(json) ? new Map<string, unknown>(Object.entries(json)) : new Map<string, unknown>();
+    return Object.isObject(json) && !Array.isArray(json) ? new Map<string, unknown>(Object.entries(json)) : new Map<string, unknown>();
   }
 
   private static parseVersions(name: string, output: string): unknown {
@@ -105,7 +107,7 @@ export class PeerMove {
     for (const part of await this.layout.readPartsAsync()) {
       const manifest: unknown = JSON.parse(await readFile(path.join(this.root, part.folder, Resources.manifestFile), Resources.utf8Encoding));
       for (const [name, range] of PeerMove.fieldsOf(PeerMove.fieldsOf(manifest).get(Resources.peerDependenciesField)))
-        if (name.startsWith(Resources.contextPrefix) && typeof range === "string")
+        if (name.startsWith(Resources.contextPrefix) && Object.isString(range))
           ranges.set(name, [...ranges.get(name) ?? [], range]);
     }
     return ranges;
@@ -113,9 +115,9 @@ export class PeerMove {
 
   private async newestAsync(name: string, ranges: readonly string[]): Promise<string | undefined> {
     const parsed = ranges.map(t => VersionRange.parse(t));
-    const holding = parsed.filter(t => t !== null);
+    const holding = parsed.filter(t => !Object.isNull(t));
     if (holding.length !== parsed.length) {
-      for (const range of ranges.filter(t => VersionRange.parse(t) === null))
+      for (const range of ranges.filter(t => Object.isNull(VersionRange.parse(t))))
         this.report(Resources.formatPeerRangeInvalid(Resources.manifestFile, name, range));
       return undefined;
     }
@@ -126,9 +128,9 @@ export class PeerMove {
     }
     const published = PeerMove.parseVersions(name, result.output);
     const versions = (Array.isArray(published) ? published : [published])
-      .filter((t: unknown): t is string => typeof t === "string" && Resources.plainVersionPattern.test(t) && holding.every(u => u.holds(t)));
-    const newest = versions.reduce<string | undefined>((found, t) => found === undefined || VersionRange.isNewer(t, found) ? t : found, undefined);
-    if (newest === undefined)
+      .filter((t: unknown): t is string => Object.isString(t) && Resources.plainVersionPattern.test(t) && holding.every(u => u.holds(t)));
+    const newest = versions.reduce<string | undefined>((found, t) => Object.isUndefined(found) || VersionRange.isNewer(t, found) ? t : found, undefined);
+    if (Object.isUndefined(newest))
       this.report(Resources.formatPeerNoVersion(name, [...new Set(ranges)]));
     return newest;
   }

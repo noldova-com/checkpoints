@@ -6,6 +6,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import "@noldova/context.core";
 import type { JsonObject } from "@noldova/context.json";
 
 import { InvalidFolderPathException } from "../exceptions/invalid-folder-path.exception.ts";
@@ -22,7 +23,7 @@ export class FolderUsage {
 
   public constructor(identity: string, path: string | null, bytes: number) {
     FolderIdentity.check(identity);
-    if (path !== null && !Resources.absolutePathPattern.test(path))
+    if (!Object.isNull(path) && !Resources.absolutePathPattern.test(path))
       throw new InvalidFolderPathException(path);
     ByteSize.check(bytes);
 

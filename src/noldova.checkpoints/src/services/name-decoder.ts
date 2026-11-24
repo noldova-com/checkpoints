@@ -8,6 +8,7 @@
 
 import { TextDecoder } from "node:util";
 
+import "@noldova/context.core";
 import { UnreadPath, UnreadReason } from "@noldova/checkpoints.protocol";
 
 import type { WalkResult } from "../models/walk-result.ts";
@@ -22,7 +23,7 @@ export class NameDecoder {
     const decoded: string[] = [];
     for (const name of names) {
       const text = NameDecoder.decodeOrNull(name);
-      if (text === null)
+      if (Object.isNull(text))
         result.addUnreadPath(new UnreadPath(RelativePath.join(folderPath, name.toString(Resources.utf8Encoding)), UnreadReason.InvalidName, null));
       else
         decoded.push(text);

@@ -6,6 +6,8 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import "@noldova/context.core";
+
 import { Resources } from "../resources.ts";
 import { IgnoreFile } from "./ignore-file.ts";
 
@@ -48,7 +50,7 @@ export class IgnoreRules {
     do {
       folder = folder.slice(0, Math.max(folder.lastIndexOf(Resources.relativePathSeparator), 0));
       const decision = this.fileMap.get(folder)?.decide(bytes, name, isFolder) ?? null;
-      if (decision !== null)
+      if (!Object.isNull(decision))
         return decision;
     } while (folder !== "" && !this.repositoryFolderSet.has(folder));
     return false;

@@ -6,6 +6,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import "@noldova/context.core";
 import type {
   CaptureMode,
   CaptureRequest,
@@ -991,7 +992,7 @@ export declare abstract class CheckpointsService {
    * export async function restoreAsync(checkpoints: CheckpointsService, checkpoint: string): Promise<string> {
    *   const folder = new FolderReference("project-1", "/work/project");
    *   const preview = await checkpoints.previewRestoreAsync(new PreviewRequest(folder, checkpoint, null));
-   *   if (preview.plan === null)
+   *   if (Object.isNull(preview.plan))
    *     return preview.outcome.value;
    *   return (await checkpoints.restoreAsync(new RestoreRequest(folder, preview.plan))).outcome.value;
    * }

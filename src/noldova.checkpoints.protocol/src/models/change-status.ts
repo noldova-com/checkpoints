@@ -6,6 +6,8 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import "@noldova/context.core";
+
 import { UnknownChangeStatusException } from "../exceptions/unknown-change-status.exception.ts";
 
 export class ChangeStatus {
@@ -25,7 +27,7 @@ export class ChangeStatus {
 
   public static fromJson(value: unknown): ChangeStatus {
     const status = ChangeStatus.ALL.find(t => t.value === value);
-    if (status === undefined)
+    if (Object.isUndefined(status))
       throw new UnknownChangeStatusException(String(value));
     return status;
   }

@@ -6,6 +6,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import "@noldova/context.core";
 import { UnreadPath, UnreadReason, type CaptureMode } from "@noldova/checkpoints.protocol";
 
 import { StoreObjectMissingException } from "../exceptions/store-object-missing.exception.ts";
@@ -59,7 +60,7 @@ export class SideLoader {
 
   public async loadFolderWalkAsync(store: FolderStore, folder: string, mode: CaptureMode, signal: AbortSignal): Promise<WalkedListing | null> {
     const walk = await this.walker.walkAsync(folder, mode, signal);
-    if (walk === null)
+    if (Object.isNull(walk))
       return null;
     const index = await StoreFile.readAsync(store.indexFile, t => FolderIndex.fromJson(t)) ?? FolderIndex.Empty;
     const files = new Map<string, FolderFile>();
@@ -72,7 +73,7 @@ export class SideLoader {
         continue;
       }
       const known = index.findUnchanged(entry);
-      const read = known === null ? await this.reader.readAsync(discarded, entry) : IndexEntry.of(entry, known.objectId);
+      const read = Object.isNull(known) ? await this.reader.readAsync(discarded, entry) : IndexEntry.of(entry, known.objectId);
       if (read instanceof IndexEntry)
         files.set(entry.path, new FolderFile(read.kind, read.objectId, entry.location, read.size, read.fileId));
       if (read instanceof UnreadPath)
@@ -83,7 +84,7 @@ export class SideLoader {
   }
 
   private async readRulesAsync(store: FolderStore, record: CheckpointRecord, ruleObjects: ReadonlyMap<string, string>, signal: AbortSignal): Promise<IgnoreRules | null> {
-    if (record.ignoreRules === null)
+    if (Object.isNull(record.ignoreRules))
       return null;
 
     const rules = new IgnoreRules(record.ignoreRules.ignoresCase);

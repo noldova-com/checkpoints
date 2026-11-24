@@ -6,6 +6,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import "@noldova/context.core";
 import type { JsonObject } from "@noldova/context.json";
 
 import { RestoreCheckpointsMismatchException } from "../exceptions/restore-checkpoints-mismatch.exception.ts";
@@ -28,13 +29,13 @@ export class RestoreResult {
 
   public constructor(
     outcome: RestoreOutcome, before: Checkpoint | null, recovered: Checkpoint | null, contentSize: number | null = null, contentLimit: number | null = null) {
-    if ((before !== null) !== (outcome.isRestored || outcome === RestoreOutcome.RolledBack) || recovered !== null && !outcome.isRestored)
+    if ((!Object.isNull(before)) !== (outcome.isRestored || outcome === RestoreOutcome.RolledBack) || !Object.isNull(recovered) && !outcome.isRestored)
       throw new RestoreCheckpointsMismatchException(outcome);
     const contents = [contentSize, contentLimit];
-    if (contents.some(t => (t !== null) !== (outcome === RestoreOutcome.TooLarge)))
+    if (contents.some(t => (!Object.isNull(t)) !== (outcome === RestoreOutcome.TooLarge)))
       throw new RestoreContentMismatchException(outcome);
     for (const size of contents)
-      if (size !== null)
+      if (!Object.isNull(size))
         ByteSize.check(size);
 
     this.before = before;
@@ -50,16 +51,16 @@ export class RestoreResult {
     const recovered = reader.readValue(Resources.recoveredField);
     return new RestoreResult(
       RestoreOutcome.fromJson(reader.readValue(Resources.outcomeField)),
-      before === null ? null : Checkpoint.fromJson(before),
-      recovered === null ? null : Checkpoint.fromJson(recovered),
+      Object.isNull(before) ? null : Checkpoint.fromJson(before),
+      Object.isNull(recovered) ? null : Checkpoint.fromJson(recovered),
       WireForm.readNullableNumber(reader, Resources.contentSizeField), WireForm.readNullableNumber(reader, Resources.contentLimitField));
   }
 
   public toJson(): JsonObject {
     return {
       [Resources.outcomeField]: this.outcome.toJson(),
-      [Resources.beforeField]: this.before === null ? null : this.before.toJson(),
-      [Resources.recoveredField]: this.recovered === null ? null : this.recovered.toJson(),
+      [Resources.beforeField]: Object.isNull(this.before) ? null : this.before.toJson(),
+      [Resources.recoveredField]: Object.isNull(this.recovered) ? null : this.recovered.toJson(),
       [Resources.contentSizeField]: this.contentSize,
       [Resources.contentLimitField]: this.contentLimit
     };

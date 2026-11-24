@@ -6,6 +6,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import "@noldova/context.core";
 import { RestoreAction } from "@noldova/checkpoints.protocol";
 import type { JsonObject } from "@noldova/context.json";
 
@@ -69,7 +70,7 @@ export class RestoreScript {
 
   public stepAt(index: number): ScriptStep {
     const step = this.steps[index];
-    if (step === undefined)
+    if (Object.isUndefined(step))
       throw new ScriptStepMissingException(index);
     return step;
   }

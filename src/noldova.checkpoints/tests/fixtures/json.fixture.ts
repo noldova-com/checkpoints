@@ -6,6 +6,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import "@noldova/context.core";
 import type { JsonObject, JsonValue } from "@noldova/context.json";
 
 export type JsonFields = Readonly<Record<string, unknown>>;
@@ -13,17 +14,17 @@ export type JsonFields = Readonly<Record<string, unknown>>;
 export class JsonFixture {
   public static fieldOf(value: JsonValue, name: string): JsonValue {
     const field = JsonFixture.isJsonObject(value) ? value[name] : undefined;
-    if (field === undefined)
+    if (Object.isUndefined(field))
       throw new Error(`${JSON.stringify(value)} has no field ${name}.`);
     return field;
   }
 
   public static isJsonObject(value: JsonValue): value is JsonObject {
-    return typeof value === "object" && value !== null && !Array.isArray(value);
+    return Object.isObject(value) && !Array.isArray(value);
   }
 
   public static isObject(value: unknown): value is JsonFields {
-    return typeof value === "object" && value !== null && !Array.isArray(value);
+    return Object.isObject(value) && !Array.isArray(value);
   }
 
   public static objectOf(value: unknown): JsonFields {
@@ -47,19 +48,19 @@ export class JsonFixture {
   }
 
   public static booleanOf(value: unknown): boolean {
-    if (typeof value !== "boolean")
+    if (!Object.isBoolean(value))
       throw new Error(`${JSON.stringify(value)} isn't a JSON boolean.`);
     return value;
   }
 
   public static numberOf(value: unknown): number {
-    if (typeof value !== "number")
+    if (!Object.isNumber(value))
       throw new Error(`${JSON.stringify(value)} isn't a JSON number.`);
     return value;
   }
 
   public static textOf(value: unknown): string {
-    if (typeof value !== "string")
+    if (!Object.isString(value))
       throw new Error(`${JSON.stringify(value)} isn't a JSON string.`);
     return value;
   }

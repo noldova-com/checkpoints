@@ -6,6 +6,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import "@noldova/context.core";
 import type { JsonObject } from "@noldova/context.json";
 
 import { Resources } from "../resources.ts";
@@ -22,7 +23,7 @@ export class CompareRequest {
 
   public constructor(folder: FolderReference, from: string, to: string | null) {
     for (const id of [from, to])
-      if (id !== null)
+      if (!Object.isNull(id))
         CheckpointId.check(id);
 
     this.folder = folder;

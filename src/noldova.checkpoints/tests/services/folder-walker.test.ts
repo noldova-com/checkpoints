@@ -13,6 +13,7 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { describe, it, type TestContext } from "node:test";
 
+import "@noldova/context.core";
 import { CaptureMode, UnreadPath, UnreadReason } from "@noldova/checkpoints.protocol";
 
 import { EntryKind } from "../../src/models/entry-kind.ts";
@@ -27,7 +28,7 @@ import { LinkFixture } from "../fixtures/link.fixture.ts";
 const withoutLinks = await LinkFixture.withoutLinksAsync();
 const walkAsync = async (walker: FolderWalker, folder: string, mode: CaptureMode, signal: AbortSignal = new AbortController().signal): Promise<WalkResult> => {
   const result = await walker.walkAsync(folder, mode, signal);
-  assert.ok(result !== null);
+  assert.ok(!Object.isNull(result));
   return result;
 };
 

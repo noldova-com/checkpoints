@@ -8,6 +8,7 @@
 
 import { stat } from "node:fs/promises";
 
+import "@noldova/context.core";
 import { CompareOutcome, CompareResult, type CaptureMode, type CompareRequest } from "@noldova/checkpoints.protocol";
 
 import type { FolderStore } from "../models/folder-store.ts";
@@ -29,7 +30,7 @@ export class CheckpointComparer {
 
   public async compareAsync(store: FolderStore, request: CompareRequest, signal: AbortSignal): Promise<CompareResult> {
     const from = await StoreOpener.existsAsync(store) ? await this.loader.loadCheckpointAsync(store, request.from, signal) : null;
-    if (from === null)
+    if (Object.isNull(from))
       return new CompareResult(CompareOutcome.CheckpointMissing, []);
 
     const to = await this.loadToAsync(store, request, from.record.checkpoint.mode, signal);
@@ -39,7 +40,7 @@ export class CheckpointComparer {
   }
 
   private async loadToAsync(store: FolderStore, request: CompareRequest, mode: CaptureMode, signal: AbortSignal): Promise<SideListing | CompareOutcome> {
-    if (request.to !== null)
+    if (!Object.isNull(request.to))
       return (await this.loader.loadCheckpointAsync(store, request.to, signal))?.listing ?? CompareOutcome.CheckpointMissing;
     if (!await Failures.recoverAsync(stat(request.folder.path).then(t => t.isDirectory()), t => Failures.isAbsent(t), false))
       return CompareOutcome.FolderMissing;

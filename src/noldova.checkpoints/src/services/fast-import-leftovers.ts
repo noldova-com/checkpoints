@@ -9,6 +9,8 @@
 import { readdir, rm } from "node:fs/promises";
 import path from "node:path";
 
+import "@noldova/context.core";
+
 import type { FolderStore } from "../models/folder-store.ts";
 import { Resources } from "../resources.ts";
 
@@ -26,7 +28,7 @@ export class FastImportLeftovers {
 
   public async removeAddedAsync(): Promise<void> {
     const before = this.before;
-    if (before === null)
+    if (Object.isNull(before))
       return;
     for (const item of await this.listAsync())
       if (!before.has(item))

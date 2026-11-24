@@ -6,6 +6,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import "@noldova/context.core";
 import type { JsonObject } from "@noldova/context.json";
 
 import { ChangeSidesMismatchException } from "../exceptions/change-sides-mismatch.exception.ts";
@@ -31,9 +32,9 @@ export class Change {
   public constructor(path: string, status: ChangeStatus, before: ChangeSide | null, after: ChangeSide | null, unreadReason: UnreadReason | null) {
     if (!RelativePath.isValid(path))
       throw new InvalidRelativePathException(path);
-    if (status !== ChangeStatus.Unknown && ((before === null) !== (status === ChangeStatus.Added) || (after === null) !== (status === ChangeStatus.Deleted)))
+    if (status !== ChangeStatus.Unknown && ((Object.isNull(before)) !== (status === ChangeStatus.Added) || (Object.isNull(after)) !== (status === ChangeStatus.Deleted)))
       throw new ChangeSidesMismatchException(status);
-    if ((unreadReason !== null) !== (status === ChangeStatus.Unknown))
+    if ((!Object.isNull(unreadReason)) !== (status === ChangeStatus.Unknown))
       throw new UnreadReasonMismatchException(status);
 
     this.after = after;
@@ -51,18 +52,18 @@ export class Change {
     return new Change(
       reader.readString(Resources.pathField),
       ChangeStatus.fromJson(reader.readValue(Resources.statusField)),
-      before === null ? null : ChangeSide.fromJson(before),
-      after === null ? null : ChangeSide.fromJson(after),
-      unreadReason === null ? null : UnreadReason.fromJson(unreadReason));
+      Object.isNull(before) ? null : ChangeSide.fromJson(before),
+      Object.isNull(after) ? null : ChangeSide.fromJson(after),
+      Object.isNull(unreadReason) ? null : UnreadReason.fromJson(unreadReason));
   }
 
   public toJson(): JsonObject {
     return {
       [Resources.pathField]: this.path,
       [Resources.statusField]: this.status.toJson(),
-      [Resources.beforeField]: this.before === null ? null : this.before.toJson(),
-      [Resources.afterField]: this.after === null ? null : this.after.toJson(),
-      [Resources.unreadReasonField]: this.unreadReason === null ? null : this.unreadReason.toJson()
+      [Resources.beforeField]: Object.isNull(this.before) ? null : this.before.toJson(),
+      [Resources.afterField]: Object.isNull(this.after) ? null : this.after.toJson(),
+      [Resources.unreadReasonField]: Object.isNull(this.unreadReason) ? null : this.unreadReason.toJson()
     };
   }
 }

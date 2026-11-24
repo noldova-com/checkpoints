@@ -8,6 +8,7 @@
 
 import { access, stat } from "node:fs/promises";
 
+import "@noldova/context.core";
 import {
   ChangeStatus,
   KeepReason,
@@ -56,14 +57,14 @@ export class RestorePlanner {
     if (await Failures.recoverAsync(access(store.restoreFile).then(() => true), t => Failures.isAbsent(t), false))
       return NoPlan.HeldUp;
     const loaded = await StoreOpener.existsAsync(store) ? await this.loader.loadCheckpointAsync(store, checkpoint, signal) : null;
-    if (loaded === null)
+    if (Object.isNull(loaded))
       return NoPlan.CheckpointMissing;
     if (!await Failures.recoverAsync(stat(folder.path).then(t => t.isDirectory()), t => Failures.isAbsent(t), false))
       return NoPlan.FolderMissing;
 
     const { record, listing: saved } = loaded;
     const walked = await this.loader.loadFolderWalkAsync(store, folder.path, record.checkpoint.mode, signal);
-    if (walked === null)
+    if (Object.isNull(walked))
       return NoPlan.FolderMissing;
     const { listing: now, walk } = walked;
     const stays = RestorePlanner.findStays(now, saved, walk);
@@ -72,7 +73,7 @@ export class RestorePlanner {
     const changes: PendingChange<FolderFile | SideFolder>[] = [];
     for (const change of ListingComparer.compare(now, saved).filter(t => scope.needs(t))) {
       const reason = RestorePlanner.keepReasonOf(change, saved, now, walk, canLink);
-      if (reason === null)
+      if (Object.isNull(reason))
         changes.push(change);
       else if (!stays.has(change.path))
         stays.set(change.path, reason);
@@ -109,7 +110,7 @@ export class RestorePlanner {
   private static isUnderStay(relativePath: string, stays: ReadonlyMap<string, KeepReason>): boolean {
     for (let folder = RelativePath.parentOf(relativePath); folder !== ""; folder = RelativePath.parentOf(folder)) {
       const reason = stays.get(folder);
-      if (reason !== undefined && reason !== KeepReason.RepositoryFolder)
+      if (!Object.isUndefined(reason) && reason !== KeepReason.RepositoryFolder)
         return true;
     }
     return false;
@@ -136,9 +137,9 @@ export class RestorePlanner {
       if (RestorePlanner.isUnderStay(t.path, stays))
         return false;
       const reason = t.before?.kind === PathKind.Folder ? above.get(t.path) : undefined;
-      if (reason !== undefined)
+      if (!Object.isUndefined(reason))
         stays.set(t.path, reason);
-      return reason === undefined;
+      return Object.isUndefined(reason);
     });
   }
 

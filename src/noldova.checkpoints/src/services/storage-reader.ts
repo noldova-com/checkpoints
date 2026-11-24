@@ -9,6 +9,7 @@
 import type { Dirent } from "node:fs";
 import path from "node:path";
 
+import "@noldova/context.core";
 import { FolderReference, FolderUsage, StorageList } from "@noldova/checkpoints.protocol";
 
 import { StoreException } from "../exceptions/store.exception.ts";
@@ -39,7 +40,7 @@ export class StorageReader {
       if (!entry.isDirectory() || !Resources.identityPattern.test(entry.name))
         continue;
       const usage = await this.reads.readAsync(entry.name, () => this.readFolderAsync(moduleFolder, entry.name, signal));
-      if (usage !== null)
+      if (!Object.isNull(usage))
         usages.push(usage);
     }
     return new StorageList(usages.sort((a, b) => b.bytes - a.bytes || (a.identity < b.identity ? -1 : 1)));
@@ -48,7 +49,7 @@ export class StorageReader {
   private async readFolderAsync(moduleFolder: string, identity: string, signal: AbortSignal): Promise<FolderUsage | null> {
     const store = new FolderStore(moduleFolder, identity);
     const bytes = await this.sumAsync(store.folder, signal);
-    return bytes === null ? null : new FolderUsage(identity, await StorageReader.readPathAsync(store), bytes);
+    return Object.isNull(bytes) ? null : new FolderUsage(identity, await StorageReader.readPathAsync(store), bytes);
   }
 
   private async listAsync(folder: string): Promise<Dirent[] | null> {
@@ -69,7 +70,7 @@ export class StorageReader {
 
   private async sumAsync(folder: string, signal: AbortSignal): Promise<number | null> {
     const entries = await this.listAsync(folder);
-    if (entries === null)
+    if (Object.isNull(entries))
       return null;
     let bytes = 0;
     for (const entry of entries) {

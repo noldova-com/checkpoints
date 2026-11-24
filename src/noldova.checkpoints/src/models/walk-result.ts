@@ -6,6 +6,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import "@noldova/context.core";
 import { UnreadPath } from "@noldova/checkpoints.protocol";
 
 import { RelativePath } from "../services/relative-path.ts";
@@ -98,9 +99,9 @@ export class WalkResult {
 
   public addFailure(path: string, failure: ReadFailure): boolean {
     const unread = failure.unreadOf(path);
-    if (unread !== null)
+    if (!Object.isNull(unread))
       this.unreadPathList.push(unread);
-    return unread !== null;
+    return !Object.isNull(unread);
   }
 
   public addLink(link: LinkRecord): void {

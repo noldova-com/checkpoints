@@ -6,6 +6,8 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import "@noldova/context.core";
+
 import { UnknownReadOutcomeException } from "../exceptions/unknown-read-outcome.exception.ts";
 
 export class ReadOutcome {
@@ -28,7 +30,7 @@ export class ReadOutcome {
 
   public static fromJson(value: unknown): ReadOutcome {
     const outcome = ReadOutcome.ALL.find(t => t.value === value);
-    if (outcome === undefined)
+    if (Object.isUndefined(outcome))
       throw new UnknownReadOutcomeException(String(value));
     return outcome;
   }

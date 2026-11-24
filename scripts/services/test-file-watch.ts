@@ -10,6 +10,8 @@ import path from "node:path";
 import type { EventData } from "node:test";
 import type { TestEvent } from "node:test/reporters";
 
+import "@noldova/context.core";
+
 import { Resources } from "../resources.ts";
 
 export class TestFileWatch {
@@ -28,14 +30,14 @@ export class TestFileWatch {
   }
 
   public static fileTestOf(data: EventData.TestDequeue | EventData.TestComplete | EventData.TestPass | EventData.TestFail): string | undefined {
-    return data.nesting === 0 && data.file !== undefined && path.resolve(data.name) === data.file ? data.file : undefined;
+    return data.nesting === 0 && !Object.isUndefined(data.file) && path.resolve(data.name) === data.file ? data.file : undefined;
   }
 
   public observe(event: TestEvent): void {
     const file = event.type === "test:dequeue" || event.type === "test:complete" ? TestFileWatch.fileTestOf(event.data) : undefined;
-    if (file !== undefined && event.type === "test:dequeue")
+    if (!Object.isUndefined(file) && event.type === "test:dequeue")
       this.running.add(file);
-    else if (file !== undefined)
+    else if (!Object.isUndefined(file))
       this.running.delete(file);
     clearTimeout(this.timer);
     this.timer = this.running.size === 0 ? undefined : setTimeout(() => this.nameRunning(), this.limit).unref();

@@ -8,6 +8,7 @@
 
 import type { BigIntStats } from "node:fs";
 
+import "@noldova/context.core";
 import { PathKind } from "@noldova/checkpoints.protocol";
 
 import { UnknownEntryKindException } from "../exceptions/unknown-entry-kind.exception.ts";
@@ -39,14 +40,14 @@ export class EntryKind {
 
   public static ofGitMode(mode: string): EntryKind {
     const kind = EntryKind.ALL.find(t => t.gitMode === mode);
-    if (kind === undefined)
+    if (Object.isUndefined(kind))
       throw new UnknownGitModeException(mode);
     return kind;
   }
 
   public static fromJson(value: unknown): EntryKind {
     const kind = EntryKind.ALL.find(t => t.value === value);
-    if (kind === undefined)
+    if (Object.isUndefined(kind))
       throw new UnknownEntryKindException(String(value));
     return kind;
   }

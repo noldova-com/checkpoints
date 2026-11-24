@@ -10,6 +10,7 @@ import { createHash } from "node:crypto";
 import { open, readFile, rename, rm, type FileHandle } from "node:fs/promises";
 import path from "node:path";
 
+import "@noldova/context.core";
 import { ProtocolException } from "@noldova/checkpoints.protocol";
 import { JsonException, JsonReader } from "@noldova/context.json";
 
@@ -76,7 +77,7 @@ export class RestoreJournal {
         return null;
       throw t;
     });
-    if (bytes === null)
+    if (Object.isNull(bytes))
       return null;
 
     const lines = bytes.toString(Resources.utf8Encoding).split(Resources.lineFeed).slice(0, -1);
@@ -89,7 +90,7 @@ export class RestoreJournal {
         break;
       }
       const record = RestoreJournal.parse(line);
-      if (record === null)
+      if (Object.isNull(record))
         return this.unreadable();
       records.push(record);
       whole += Buffer.byteLength(line) + 1;

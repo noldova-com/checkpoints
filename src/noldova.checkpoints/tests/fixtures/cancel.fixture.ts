@@ -8,6 +8,8 @@
 
 import { mock, type TestContext } from "node:test";
 
+import "@noldova/context.core";
+
 export class CancelFixture {
   private static readonly JOINED: WeakMap<AbortSignal, CancelFixture> = new WeakMap();
   private static readonly SPIES: (() => void)[] = [];
@@ -48,8 +50,8 @@ export class CancelFixture {
     const joining = mock.method(AbortSignal, "any", (signals: Iterable<AbortSignal>): AbortSignal => {
       const all = [...signals];
       const joined = any(all);
-      const fixture = all.map(t => CancelFixture.JOINED.get(t)).find(t => t !== undefined);
-      if (fixture !== undefined)
+      const fixture = all.map(t => CancelFixture.JOINED.get(t)).find(t => !Object.isUndefined(t));
+      if (!Object.isUndefined(fixture))
         CancelFixture.JOINED.set(joined, fixture);
       return joined;
     });

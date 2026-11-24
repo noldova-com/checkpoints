@@ -6,6 +6,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import "@noldova/context.core";
 import { JsonException, JsonReader, type JsonValue } from "@noldova/context.json";
 
 import { InvalidTimeException } from "../exceptions/invalid-time.exception.ts";
@@ -13,10 +14,10 @@ import { Resources } from "../resources.ts";
 
 export class WireForm {
   public static read(value: unknown, model: string, fields: readonly string[]): JsonReader {
-    const names = typeof value === "object" && value !== null ? Object.keys(value) : [];
+    const names = Object.isObject(value) ? Object.keys(value) : [];
     const reader = JsonReader.fromValue(value, model);
     const unknown = names.find(t => !fields.includes(t));
-    if (unknown !== undefined)
+    if (!Object.isUndefined(unknown))
       throw new JsonException(Resources.unknownField, Resources.formatFieldPath(reader.path, unknown));
 
     return reader;
@@ -30,11 +31,11 @@ export class WireForm {
   }
 
   public static readNullableNumber(reader: JsonReader, field: string): number | null {
-    return reader.readValue(field) === null ? null : reader.readNumber(field);
+    return Object.isNull(reader.readValue(field)) ? null : reader.readNumber(field);
   }
 
   public static readNullableTime(reader: JsonReader, field: string): Date | null {
-    return reader.readValue(field) === null ? null : WireForm.readTime(reader, field);
+    return Object.isNull(reader.readValue(field)) ? null : WireForm.readTime(reader, field);
   }
 
   public static readTime(reader: JsonReader, field: string): Date {
@@ -45,6 +46,6 @@ export class WireForm {
   }
 
   public static readNullableStringArray(reader: JsonReader, field: string): readonly string[] | null {
-    return reader.readValue(field) === null ? null : reader.readStringArray(field);
+    return Object.isNull(reader.readValue(field)) ? null : reader.readStringArray(field);
   }
 }

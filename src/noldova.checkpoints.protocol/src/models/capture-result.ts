@@ -6,6 +6,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import "@noldova/context.core";
 import type { JsonObject } from "@noldova/context.json";
 
 import { CaptureCheckpointMismatchException } from "../exceptions/capture-checkpoint-mismatch.exception.ts";
@@ -32,16 +33,16 @@ export class CaptureResult {
   public constructor(
     outcome: CaptureOutcome, checkpoint: Checkpoint | null, spaceFree: number | null, spaceNeeded: number | null,
     contentSize: number | null = null, contentLimit: number | null = null) {
-    if (outcome.isCaptured !== (checkpoint !== null))
+    if (outcome.isCaptured !== (!Object.isNull(checkpoint)))
       throw new CaptureCheckpointMismatchException(outcome);
     const sizes = [spaceFree, spaceNeeded];
-    if (sizes.some(t => (t !== null) !== (outcome === CaptureOutcome.LowDiskSpace)))
+    if (sizes.some(t => (!Object.isNull(t)) !== (outcome === CaptureOutcome.LowDiskSpace)))
       throw new CaptureSpaceMismatchException(outcome);
     const contents = [contentSize, contentLimit];
-    if (contents.some(t => (t !== null) !== (outcome === CaptureOutcome.TooLarge)))
+    if (contents.some(t => (!Object.isNull(t)) !== (outcome === CaptureOutcome.TooLarge)))
       throw new CaptureContentMismatchException(outcome);
     for (const size of [...sizes, ...contents])
-      if (size !== null)
+      if (!Object.isNull(size))
         ByteSize.check(size);
 
     this.checkpoint = checkpoint;
@@ -55,7 +56,7 @@ export class CaptureResult {
   public static fromJson(value: unknown): CaptureResult {
     const reader = WireForm.read(value, Resources.captureResultModel, CaptureResult.FIELDS);
     const checkpoint = reader.readValue(Resources.checkpointField);
-    return new CaptureResult(CaptureOutcome.fromJson(reader.readValue(Resources.outcomeField)), checkpoint === null ? null : Checkpoint.fromJson(checkpoint),
+    return new CaptureResult(CaptureOutcome.fromJson(reader.readValue(Resources.outcomeField)), Object.isNull(checkpoint) ? null : Checkpoint.fromJson(checkpoint),
       WireForm.readNullableNumber(reader, Resources.spaceFreeField), WireForm.readNullableNumber(reader, Resources.spaceNeededField),
       WireForm.readNullableNumber(reader, Resources.contentSizeField), WireForm.readNullableNumber(reader, Resources.contentLimitField));
   }
@@ -63,7 +64,7 @@ export class CaptureResult {
   public toJson(): JsonObject {
     return {
       [Resources.outcomeField]: this.outcome.toJson(),
-      [Resources.checkpointField]: this.checkpoint === null ? null : this.checkpoint.toJson(),
+      [Resources.checkpointField]: Object.isNull(this.checkpoint) ? null : this.checkpoint.toJson(),
       [Resources.spaceFreeField]: this.spaceFree,
       [Resources.spaceNeededField]: this.spaceNeeded,
       [Resources.contentSizeField]: this.contentSize,

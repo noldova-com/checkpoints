@@ -6,6 +6,8 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import "@noldova/context.core";
+
 import { StoreAnswersMismatchException } from "../exceptions/store-answers-mismatch.exception.ts";
 import { StoredObject } from "./stored-object.ts";
 
@@ -17,7 +19,7 @@ export class ObjectBatch {
     const byName = new Map<string, StoredObject>();
     for (const name of names) {
       const answer = answers.shift();
-      if (answer === undefined)
+      if (Object.isUndefined(answer))
         throw new StoreAnswersMismatchException(names.length, objects.length);
       byName.set(name, answer);
     }

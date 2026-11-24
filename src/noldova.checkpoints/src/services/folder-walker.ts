@@ -10,6 +10,7 @@ import type { BigIntStats } from "node:fs";
 import { lstat, readdir, stat } from "node:fs/promises";
 import path from "node:path";
 
+import "@noldova/context.core";
 import { CaptureMode } from "@noldova/checkpoints.protocol";
 
 import { EntryKind } from "../models/entry-kind.ts";
@@ -95,7 +96,7 @@ export class FolderWalker {
       rules.addRepositoryFolder(folderPath);
 
     const content = await IgnoreFileReader.readAsync(path.join(location, Resources.ignoreFileName));
-    if (content !== null)
+    if (!Object.isNull(content))
       rules.addFile(new IgnoreFile(folderPath, content, rules.ignoresCase));
   }
 
@@ -104,11 +105,11 @@ export class FolderWalker {
       .catch((t: unknown) => ReadFailure.of(t));
     if (read instanceof ReadFailure)
       return result.addFailure(childPath, read);
-    if (read === null)
+    if (Object.isNull(read))
       return false;
 
     const { stats, names } = read;
-    if (names !== null) {
+    if (!Object.isNull(names)) {
       result.addFolder(childPath, FolderWalker.idOf(stats), FolderWalker.timeOf(stats));
       if (!await this.walkNamesAsync(location, childPath, names, result, signal))
         result.addEmptyFolder(childPath);
@@ -121,7 +122,7 @@ export class FolderWalker {
     }
 
     const kind = EntryKind.ofStats(this.platform, stats);
-    if (kind === null)
+    if (Object.isNull(kind))
       return false;
     if (kind !== EntryKind.Link || this.platform !== Resources.windowsPlatform) {
       result.addEntry(new WalkedEntry(childPath, location, kind, stats));
@@ -144,7 +145,7 @@ export class FolderWalker {
     if (repositoryNames.length > 0)
       result.addRepositoryFolder(folderPath);
     const repositories = await FolderWalker.readRepositoryIdsAsync(location, repositoryNames);
-    if (result.rules !== null)
+    if (!Object.isNull(result.rules))
       await FolderWalker.readRulesAsync(result.rules, location, folderPath, repositoryNames);
     let kept = decoded.length < names.length;
     for (const name of decoded.filter(t => !RepositoryName.matches(t))) {

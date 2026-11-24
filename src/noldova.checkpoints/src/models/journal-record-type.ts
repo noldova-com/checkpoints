@@ -6,6 +6,8 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import "@noldova/context.core";
+
 import { UnknownJournalRecordException } from "../exceptions/unknown-journal-record.exception.ts";
 import { Resources } from "../resources.ts";
 
@@ -38,7 +40,7 @@ export class JournalRecordType {
 
   public static fromJson(value: string): JournalRecordType {
     const type = JournalRecordType.ALL.find(t => t.value === value);
-    if (type === undefined)
+    if (Object.isUndefined(type))
       throw new UnknownJournalRecordException(value);
     return type;
   }

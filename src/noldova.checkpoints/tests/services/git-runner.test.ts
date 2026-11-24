@@ -15,6 +15,7 @@ import { buffer } from "node:stream/consumers";
 import { describe, it, mock, type TestContext } from "node:test";
 import { setImmediate } from "node:timers/promises";
 
+import "@noldova/context.core";
 import { ProcessRequest, type OwnedProcess } from "@noldova/desktop.runtime";
 
 import { GitExitedException, GitStoppedException } from "../../src/api/index.ts";
@@ -614,7 +615,7 @@ describe("GitRunner's idle stop", { concurrency: true }, () => {
     const [git, store, context] = await startClockedAsync(t, clock);
     await git.batchAsync(store, `info ${"0".repeat(40)}\n`, u => u.readLineAsync(), uncancelled);
     const input = context.running.find(u => u.command === "cat-file")?.owned.input;
-    assert.ok(input !== undefined);
+    assert.ok(!Object.isUndefined(input));
     const failed = new Promise(resolve => input.once("error", resolve));
     input.destroy(new Error("The input failed."));
     await failed;

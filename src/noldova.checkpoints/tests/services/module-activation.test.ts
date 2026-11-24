@@ -12,6 +12,7 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { describe, it, type TestContext } from "node:test";
 
+import "@noldova/context.core";
 import {
   CaptureResult,
   CheckpointList,
@@ -51,7 +52,7 @@ class UnstartedContext extends CheckpointsContext {
 
   protected override async startAsync(request: ProcessRequest): Promise<OwnedProcess> {
     this.requests.push(request);
-    if (this.failure !== null)
+    if (!Object.isNull(this.failure))
       throw this.failure;
     const { promise, reject } = Promise.withResolvers<OwnedProcess>();
     request.signal?.addEventListener("abort", () => reject(this.stopFailure ?? request.signal?.reason), { once: true });

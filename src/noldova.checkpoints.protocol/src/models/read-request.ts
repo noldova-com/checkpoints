@@ -6,6 +6,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import "@noldova/context.core";
 import type { JsonObject } from "@noldova/context.json";
 
 import { InvalidReadLimitException } from "../exceptions/invalid-read-limit.exception.ts";
@@ -49,7 +50,7 @@ export class ReadRequest {
       FolderReference.fromJson(reader.readValue(Resources.folderField)),
       reader.readString(Resources.checkpointField),
       reader.readString(Resources.pathField),
-      against === null ? null : DiffTarget.fromJson(against),
+      Object.isNull(against) ? null : DiffTarget.fromJson(against),
       reader.readNumber(Resources.limitField));
   }
 
@@ -58,7 +59,7 @@ export class ReadRequest {
       [Resources.folderField]: this.folder.toJson(),
       [Resources.checkpointField]: this.checkpoint,
       [Resources.pathField]: this.path,
-      [Resources.againstField]: this.against === null ? null : this.against.toJson(),
+      [Resources.againstField]: Object.isNull(this.against) ? null : this.against.toJson(),
       [Resources.limitField]: this.limit
     };
   }

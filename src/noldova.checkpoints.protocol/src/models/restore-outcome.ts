@@ -6,6 +6,8 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import "@noldova/context.core";
+
 import { UnknownRestoreOutcomeException } from "../exceptions/unknown-restore-outcome.exception.ts";
 
 export class RestoreOutcome {
@@ -31,7 +33,7 @@ export class RestoreOutcome {
 
   public static fromJson(value: unknown): RestoreOutcome {
     const outcome = RestoreOutcome.ALL.find(t => t.value === value);
-    if (outcome === undefined)
+    if (Object.isUndefined(outcome))
       throw new UnknownRestoreOutcomeException(String(value));
     return outcome;
   }
