@@ -23,6 +23,8 @@ import { ReleaseManifestNotObjectException } from "../exceptions/release-manifes
 import { ReleaseVariableMissingException } from "../exceptions/release-variable-missing.exception.ts";
 import { ReleaseVersionInvalidException } from "../exceptions/release-version-invalid.exception.ts";
 import { ReleaseException } from "../exceptions/release.exception.ts";
+import type { GitBuilds } from "../models/git-builds.ts";
+import type { SourceArchive } from "../models/git-sources.ts";
 import { ReleaseArchive } from "../models/release-archive.ts";
 import { RootManifest } from "../models/root-manifest.ts";
 import type { WorkspacePart } from "../models/workspace-part.ts";
@@ -42,6 +44,7 @@ export class Release {
   private readonly environment: NodeJS.ProcessEnv;
   private readonly output: Writable;
   private readonly archiveReader: ArchiveReader = new ArchiveReader();
+  private readonly published: Map<string, Promise<number | null>> = new Map();
 
   public constructor(root: string, runner: ProcessRunner, environment: NodeJS.ProcessEnv, output: Writable) {
     this.root = root;
@@ -82,6 +85,10 @@ export class Release {
     if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed))
       throw new ReleaseManifestNotObjectException(context);
     return Object.fromEntries(Object.entries(parsed));
+  }
+
+  private static objectOf(value: unknown): Readonly<Record<string, unknown>> | null {
+    return typeof value === "object" && value !== null && !Array.isArray(value) ? Object.fromEntries(Object.entries(value)) : null;
   }
 
   private static validateVersion(version: string | undefined): string {
@@ -140,8 +147,9 @@ export class Release {
     ];
 
     const names = archives.map(t => t.part.name);
+    const builds = await new WorkspaceLayout(this.root).readBuildsAsync();
     for (const archive of archives.filter(t => found.includes(path.basename(t.filePath))))
-      findings.push(...await this.checkArchiveAsync(archive, version, commit, scope, names, pins));
+      findings.push(...await this.checkArchiveAsync(archive, version, commit, scope, names, pins, builds));
 
     if (findings.length > 0)
       throw new ReleaseFindingsException(findings);
@@ -150,7 +158,7 @@ export class Release {
   }
 
   private async checkArchiveAsync(archive: ReleaseArchive, version: string, commit: string, scope: string, names: readonly string[],
-    pins: ReadonlyMap<string, string>): Promise<readonly string[]> {
+    pins: ReadonlyMap<string, string>, builds: GitBuilds): Promise<readonly string[]> {
     const archiveName = path.basename(archive.filePath);
     const tooLarge = ArchiveCheck.checkSize(archiveName, (await stat(archive.filePath)).size);
     if (tooLarge !== null)
@@ -190,8 +198,29 @@ export class Release {
       }
     }
     findings.push(...ArchiveCheck.check(archiveName, archive.part, manifest, entries, pins));
+    const target = builds.targets.find(t => WorkspaceLayout.gitPackageName(t.target) === archive.part.name);
+    const source = target === undefined ? undefined : builds.sources.archives.get(target.sourceArchive);
+    if (source !== undefined)
+      findings.push(...await this.checkSourceArchiveAsync(archiveName, manifest, source));
 
     return findings;
+  }
+
+  // A Git package names the archive of its build's complete source, which must be the one builds.json pins and must be
+  // published at its address, as large as builds.json says, before the package is.
+  private async checkSourceArchiveAsync(archiveName: string, manifest: Readonly<Record<string, unknown>>, source: SourceArchive): Promise<readonly string[]> {
+    const archive = Release.objectOf(Release.objectOf(Release.objectOf(manifest[Resources.ownField])?.[Resources.gitField])?.[Resources.sourceArchiveField]);
+    const expected = { url: source.url, size: source.size, sha256: source.sha256 };
+    if (JSON.stringify(archive) !== JSON.stringify(expected))
+      return [Resources.formatSourceArchiveRecordDiffers(archiveName, source.url)];
+
+    let published = this.published.get(source.url);
+    if (published === undefined) {
+      published = fetch(source.url, { method: Resources.headMethod, signal: AbortSignal.timeout(Resources.downloadTimeout) })
+        .then(t => t.ok ? Number(t.headers.get(Resources.contentLengthHeader)) : null, () => null);
+      this.published.set(source.url, published);
+    }
+    return await published === source.size ? [] : [Resources.formatSourceArchiveNotPublished(archiveName, source.url, source.size)];
   }
 
   private async checkHeadAsync(commit: string): Promise<void> {

@@ -34,7 +34,12 @@
       ],
       "version": "2.56.1",
       "source": "https://github.com/git/git/tree/v2.56.1",
-      "build": "https://github.com/desktop/dugite-native/releases/download/v2.56.1/dugite-native-v2.56.1-238326e-ubuntu-x64.tar.gz"
+      "build": "https://github.com/desktop/dugite-native/releases/download/v2.56.1/dugite-native-v2.56.1-238326e-ubuntu-x64.tar.gz",
+      "sourceArchive": {
+        "url": "https://github.com/noldova-com/checkpoints/releases/download/git-sources-2.56.1/git-2.56.1-source-dugite.tar",
+        "size": 8541696,
+        "sha256": "e15e171cb320d4efe7533313ded81cfce065348cc785ba4b3276b3b534fe9ad7"
+      }
     }
   },
   "noldovaDesktop": {

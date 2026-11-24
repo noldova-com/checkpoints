@@ -27,6 +27,7 @@ export class GitTarget {
   public readonly sha256: string;
   public readonly size: number;
   public readonly source: string;
+  public readonly sourceArchive: string;
   public readonly target: string;
   public readonly url: string;
 
@@ -50,6 +51,7 @@ export class GitTarget {
     const reportedVersion = fields[Resources.reportedVersionField] === undefined ? null : text(Resources.reportedVersionField);
     const sha256 = text(Resources.sha256Field);
     const source = text(Resources.sourceField);
+    const sourceArchive = text(Resources.sourceArchiveField);
     const url = text(Resources.urlField);
     const size = fields[Resources.sizeField];
     if (typeof size !== "number" || !Number.isSafeInteger(size) || size <= 0)
@@ -73,6 +75,7 @@ export class GitTarget {
     this.sha256 = sha256;
     this.size = size;
     this.source = source;
+    this.sourceArchive = sourceArchive;
     this.target = target;
     this.url = url;
   }

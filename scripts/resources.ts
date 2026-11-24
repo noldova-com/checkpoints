@@ -66,6 +66,7 @@ export class Resources {
   public static readonly architectureGroup: string = "architecture";
   public static readonly archiveExtension: string = ".tgz";
   public static readonly archiveFolder: string = "package";
+  public static readonly archivesField: string = "archives";
   public static readonly archivesFolder: string = "_packages";
   public static readonly authorizationHeader: string = "Authorization";
   public static readonly binFolder: string = "bin";
@@ -76,6 +77,7 @@ export class Resources {
   public static readonly buildWorkFolder: string = "_build";
   public static readonly carriageReturnLineFeed: string = "\r\n";
   public static readonly checkCommand: string = "check";
+  public static readonly checkpointsRepository: string = "noldova-com/checkpoints";
   public static readonly ciCommand: string = "ci";
   public static readonly citedTestPattern: RegExp = /"(?<name>(?:[^"\\]|\\.)*)"/g;
   public static readonly clauseSeparator: string = "; ";
@@ -118,9 +120,11 @@ export class Resources {
   public static readonly examplesFolder: string = "examples";
   public static readonly examplesInclude: string = "**/*.ts";
   public static readonly exampleStart: string = "```ts";
+  public static readonly filesField: string = "files";
   public static readonly forwardedSignals: readonly NodeJS.Signals[] = ["SIGINT", "SIGTERM"];
   public static readonly gitHubBodyLimit: number = 16 * 1024 * 1024;
   public static readonly gitHubTimeout: number = 60_000;
+  public static readonly headMethod: string = "HEAD";
   public static readonly killSignal: NodeJS.Signals = "SIGKILL";
   public static readonly licenseGroupClose: string = ")";
   public static readonly licenseGroupOpen: string = "(";
@@ -241,6 +245,7 @@ export class Resources {
   public static readonly packageVersionsFolder: string = "package-versions";
   public static readonly packCommand: string = "pack";
   public static readonly packDestinationOption: string = "--pack-destination";
+  public static readonly packedSourcesFolder: string = "git-sources";
   public static readonly parentFolderName: string = "..";
   public static readonly partProjects: readonly string[] = ["src/tsconfig.json", "tests/tsconfig.json"];
   public static readonly pathField: string = "path";
@@ -274,6 +279,7 @@ export class Resources {
   public static readonly regularMode: number = 0o644;
   public static readonly relativePrefix: string = "./";
   public static readonly releaseCommitVariable: string = "RELEASE_COMMIT";
+  public static readonly releaseField: string = "release";
   public static readonly releasePagePattern: RegExp = /^https:\/\/github\.com\/[A-Za-z0-9._/-]+$/;
   public static readonly releaseTagPattern: RegExp = /^[A-Za-z0-9._-]+$/;
   public static readonly releaseUsage: string = "Usage: check <folder> <version> <commit>\n";
@@ -299,15 +305,21 @@ export class Resources {
   public static readonly scriptsField: string = "scripts";
   public static readonly settingsFile: string = "settings.json";
   public static readonly sha256Algorithm: string = "sha256";
+  public static readonly sha256Extension: string = ".sha256";
   public static readonly sha256Field: string = "sha256";
   public static readonly sha256Pattern: RegExp = /^[0-9a-f]{64}$/;
   public static readonly sharedProjects: readonly string[] = ["scripts/tsconfig.json", "tsconfig.declarations.json"];
   public static readonly signalExitCode: number = 128;
   public static readonly sizeField: string = "size";
+  public static readonly sourceArchiveField: string = "sourceArchive";
+  public static readonly sourceArchiveNamePattern: RegExp = /^git-[0-9][0-9A-Za-z.]*-source-[a-z0-9]+[.]tar$/;
   public static readonly sourceExtension: string = ".ts";
   public static readonly sourceField: string = "source";
+  public static readonly sourceFilesFolder: string = "git-source-files";
   public static readonly sourceMapOption: string = "--sourceMap";
+  public static readonly sourcesField: string = "sources";
   public static readonly sourcesFolder: string = "src";
+  public static readonly sourcesReleasePattern: RegExp = /^git-sources-[0-9][0-9A-Za-z.]*$/;
   public static readonly startedCommands: readonly string[] = ["git-receive-pack", "git-upload-archive", "git-upload-pack"];
   public static readonly stateField: string = "state";
   public static readonly statusCommand: string = "status";
@@ -383,6 +395,7 @@ export class Resources {
   public static readonly windowsPathSeparator: string = "\\";
   public static readonly windowsPlatform: string = "win32";
   public static readonly workflowOptions: readonly string[] = ["--skip-test-details", "--skip-coverage-details"];
+  public static readonly writeFlag: string = "w";
   public static readonly zipCentralCommentLengthOffset: number = 32;
   public static readonly zipCentralCompressedSizeOffset: number = 20;
   public static readonly zipCentralExtraLengthOffset: number = 30;
@@ -406,6 +419,10 @@ export class Resources {
   public static readonly declarationImportReplacement: string = `$1${Resources.scriptExtension}"`;
   public static readonly consumerManifest: string = `${JSON.stringify({ name: Resources.consumerFolder, private: true, type: "module" }, null, Resources.jsonIndent)}${Resources.lineFeed}`;
   public static readonly rootPinFields: readonly string[] = [Resources.dependenciesField, Resources.devDependenciesField];
+
+  public static fileNameOf(url: string): string {
+    return decodeURIComponent(new URL(url).pathname.split(Resources.pathSeparator).at(-1) ?? "");
+  }
 
   public static formatAlreadyFiled(title: string, url: string): string {
     return `${title}: filed before, at ${url}.`;
@@ -521,6 +538,10 @@ export class Resources {
 
   public static formatCachedArchive(target: string, sha256: string, kind: string): string {
     return `${target}-${sha256}.${kind}`;
+  }
+
+  public static formatCachedSource(sha256: string, name: string): string {
+    return `${sha256}-${name}`;
   }
 
   public static formatCitedTestMissing(file: string, line: number, name: string): string {
@@ -687,9 +708,11 @@ export class Resources {
     return `GitHub answered ${status} when reading ${context}: ${body}`;
   }
 
-  public static formatGitLicense(packageName: string, gitVersion: string, target: string, source: string, license: string): string {
+  public static formatGitLicense(packageName: string, gitVersion: string, target: string, source: string, license: string, sourceArchive: string): string {
     return [
       `${packageName} holds Git ${gitVersion} for ${target}, built from ${source}, and the components that build ships.`,
+      '',
+      `The complete corresponding source of the build and of each component is published with it at ${sourceArchive}.`,
       '',
       "Its licence, as an SPDX expression of its components' licences:",
       '',
@@ -720,7 +743,8 @@ export class Resources {
     return `${archiveName}'s package.json names its Git program as ${program}, which the archive lacks.`;
   }
 
-  public static formatGitReadme(packageName: string, gitVersion: string, target: string, url: string, sha256: string, source: string, rows: readonly string[]): string {
+  public static formatGitReadme(packageName: string, gitVersion: string, target: string, url: string, sha256: string, source: string, sourceArchive: string,
+    sourceArchiveSha256: string, rows: readonly string[]): string {
     return [
       `# ${packageName}`,
       '',
@@ -728,6 +752,7 @@ export class Resources {
       '',
       `- The build: ${url}, with the SHA-256 ${sha256}.`,
       `- Its source: ${source}.`,
+      `- The complete corresponding source of the build and of each component, as one tar: ${sourceArchive}, with the SHA-256 ${sourceArchiveSha256}.`,
       `- Its components' licences: in the \`${Resources.licensesFolder}\` folder, one folder for each component.`,
       '',
       "| Component | Version | Licence |",
@@ -1039,8 +1064,36 @@ export class Resources {
     return `The root package.json must declare a version of the form major.minor.patch, with an optional prerelease such as -rc.1, but declares ${found === undefined ? "none" : JSON.stringify(found)}.`;
   }
 
+  public static formatSha256Line(sha256: string, name: string): string {
+    return `${sha256}  ${name}${Resources.lineFeed}`;
+  }
+
   public static formatSkipWithoutReason(file: string, name: string): string {
     return `${file}: "${name}" is skipped without a reason; a skip names why, beside its test.`;
+  }
+
+  public static formatSourceArchiveAddress(release: string, name: string): string {
+    return `${Resources.formatReleaseDownloadPrefix(Resources.checkpointsRepository)}${release}/${name}`;
+  }
+
+  public static formatSourceArchiveDiffers(name: string, size: number, sha256: string, pinnedSize: number, pinnedSha256: string): string {
+    return `${name} packs to ${String(size)} bytes with the SHA-256 ${sha256}; ${Resources.buildsFile} pins ${String(pinnedSize)} bytes and ${pinnedSha256}.`;
+  }
+
+  public static formatSourceArchiveNotPublished(archiveName: string, url: string, size: number): string {
+    return `${archiveName}'s Git source archive isn't published as ${String(size)} bytes at ${url}; run the "Publish the Git sources" workflow at the commit first.`;
+  }
+
+  public static formatSourceArchivePacked(name: string, files: number, size: number): string {
+    return `Packed ${name}: ${String(files)} source files, ${String(size)} bytes.`;
+  }
+
+  public static formatSourceArchiveRecordDiffers(archiveName: string, url: string): string {
+    return `${archiveName}'s package.json doesn't name the Git source archive ${Resources.buildsFile} pins, ${url}, with its size and SHA-256.`;
+  }
+
+  public static formatSourcesFieldInvalid(file: string, field: string): string {
+    return `${file}'s ${field} is missing or not valid.`;
   }
 
   public static formatSupersededBy(title: string, url: string): string {

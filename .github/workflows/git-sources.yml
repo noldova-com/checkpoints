@@ -1,0 +1,97 @@
+# @license
+# Copyright (c) Noldova.
+#
+# This source code is licensed under the license found in the
+# LICENSE file in the root directory of this source tree.
+
+name: Publish the Git sources
+
+on:
+  workflow_dispatch:
+    inputs:
+      commit:
+        description: The full hash of the commit on main whose builds.json pins the Git sources to publish
+        required: true
+        type: string
+
+permissions: {}
+
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  versions:
+    name: Versions
+    uses: noldova-com/.github/.github/workflows/versions.yml@aded76d5bd26adfaace92fe98adf4890a969c4ca # v2.44.0
+    permissions: {}
+
+  publish:
+    name: Pack and publish the Git sources
+    needs: versions
+    runs-on: ${{ fromJSON(needs.versions.outputs.runs-on-linux-x64) }}
+    timeout-minutes: 60
+    environment: release
+    permissions:
+      contents: write
+    steps:
+      - name: Check the commit
+        env:
+          COMMIT: ${{ inputs.commit }}
+        run: |
+          if [[ ! "$COMMIT" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "::error::The commit must be a full 40-digit lowercase hash; got $COMMIT."
+            exit 1
+          fi
+
+      - name: Check out the commit
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ inputs.commit }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Check that the commit is on main
+        env:
+          COMMIT: ${{ inputs.commit }}
+        run: |
+          if ! git merge-base --is-ancestor "$COMMIT" origin/main; then
+            echo "::error::$COMMIT is not on main."
+            exit 1
+          fi
+
+      - name: Set up Node.js
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: ${{ needs.versions.outputs.node-version }}
+          package-manager-cache: false
+
+      - name: Pack the sources builds.json pins
+        run: node scripts/pack-git-sources.ts
+
+      - name: Publish them, or check the ones published
+        env:
+          GH_TOKEN: ${{ github.token }}
+          COMMIT: ${{ inputs.commit }}
+        run: |
+          release=$(node -p 'JSON.parse(require("node:fs").readFileSync("src/noldova.checkpoints.git/builds.json", "utf8")).sources.release')
+          cd _build/git-sources
+          if gh release view "$release" --repo "$GITHUB_REPOSITORY" > /dev/null 2>&1; then
+            published=$(gh api "repos/$GITHUB_REPOSITORY/releases/tags/$release" --jq '.assets[] | "\(.digest | ltrimstr("sha256:"))  \(.name)"' | grep -v '[.]sha256$' | sort)
+            packed=$(cat ./*.sha256 | sort)
+            if [[ "$published" != "$packed" ]]; then
+              echo "::error::$release holds other source archives than this commit packs:"
+              diff <(echo "$published") <(echo "$packed") || true
+              exit 1
+            fi
+            echo "$release already holds these source archives."
+          else
+            gh release create "$release" --repo "$GITHUB_REPOSITORY" --target "$COMMIT" --latest=false \
+              --title "$release" \
+              --notes "The complete corresponding source of the Git builds the checkpoints module's Git packages ship, one tar for each family of builds, each with its SHA-256, as builds.json at $COMMIT pins them." \
+              ./*.tar ./*.sha256
+          fi
