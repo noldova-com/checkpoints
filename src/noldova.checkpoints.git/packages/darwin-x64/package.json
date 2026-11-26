@@ -1,6 +1,6 @@
 {
   "name": "@noldova/checkpoints.git.darwin-x64",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "Git 2.56.1 for darwin-x64, which the checkpoints module runs as its own Git.",
   "license": "GPL-2.0-only",
   "repository": {

@@ -1,6 +1,6 @@
 {
   "name": "@noldova/checkpoints.git.linux-arm64",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "Git 2.56.1 for linux-arm64, which the checkpoints module runs as its own Git.",
   "license": "GPL-2.0-only AND (Artistic-1.0-Perl OR GPL-1.0-or-later)",
   "repository": {
