@@ -16,11 +16,11 @@
     "test:timing": "node scripts/test-timing.ts"
   },
   "devDependencies": {
-    "@noldova/context.collections": "0.0.14",
-    "@noldova/context.core": "0.0.14",
-    "@noldova/context.exceptions": "0.0.14",
-    "@noldova/context.json": "0.0.14",
-    "@noldova/context.text": "0.0.14",
+    "@noldova/context.collections": "0.0.15",
+    "@noldova/context.core": "0.0.15",
+    "@noldova/context.exceptions": "0.0.15",
+    "@noldova/context.json": "0.0.15",
+    "@noldova/context.text": "0.0.15",
     "@noldova/desktop.protocol": "0.0.17",
     "@noldova/desktop.runtime": "0.0.17",
     "@types/node": "26.6.6",
