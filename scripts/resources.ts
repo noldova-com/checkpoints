@@ -352,7 +352,7 @@ export class Resources {
   public static readonly testDurationField: string = "duration";
   public static readonly testFileBudget: number = 1_000;
   public static readonly testFileField: string = "file";
-  public static readonly testFiles: readonly string[] = ["src/*/tests/**/*.test.ts"];
+  public static readonly testFiles: readonly string[] = ["src/*/tests/**/*.test.ts", "scripts/tests/**/*.test.ts"];
   public static readonly testNameField: string = "name";
   public static readonly testNameSeparator: string = " > ";
   public static readonly testParameters: readonly string[] = [
@@ -929,7 +929,7 @@ export class Resources {
   }
 
   public static formatPeerMoved(dependency: string, version: string): string {
-    return `Moved ${dependency} to ${version}, the newest published version inside the packages' peer ranges.`;
+    return `Moved ${dependency} to ${version}, the newest version every context package has published inside the packages' peer ranges.`;
   }
 
   public static formatPeerMoveFailed(exitCode: number | null, output: string): string {
@@ -958,6 +958,10 @@ export class Resources {
 
   public static formatPeerPinMissing(archiveName: string, dependency: string, pin: string): string {
     return `${archiveName} takes the peer ${dependency}, which the root package.json pins at ${pin}, not at one exact major.minor.patch version.`;
+  }
+
+  public static formatPeerNoCommonVersion(dependencies: readonly string[]): string {
+    return `npm view gives no version that ${dependencies.join(", ")} have all published inside the packages' peer ranges.`;
   }
 
   public static formatPeerNoVersion(dependency: string, ranges: readonly string[]): string {
